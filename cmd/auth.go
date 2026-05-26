@@ -1,13 +1,37 @@
 package cmd
 
 import (
+	"context"
 	"fmt"
+	"os"
 
 	"github.com/learners-superpumped/aicompany-platform/cli/internal/api"
 	"github.com/learners-superpumped/aicompany-platform/cli/internal/auth"
 	"github.com/learners-superpumped/aicompany-platform/cli/internal/config"
 	"github.com/spf13/cobra"
 )
+
+// ensureDefaultTeam returns the team id to set as the profile default for a
+// freshly logged-in user. When the user has no teams it explicitly creates a
+// "personal" team (the backend never auto-creates). It returns ("", false, nil)
+// when the user already has a default team set and need not change it.
+func ensureDefaultTeam(ctx context.Context, client *api.Client, currentDefault string) (teamID string, created bool, err error) {
+	teams, err := client.ListTeams(ctx)
+	if err != nil {
+		return "", false, err
+	}
+	if len(teams) == 0 {
+		t, err := client.CreateTeam(ctx, "personal")
+		if err != nil {
+			return "", false, err
+		}
+		return t.ID, true, nil
+	}
+	if currentDefault == "" {
+		return teams[0].ID, false, nil
+	}
+	return "", false, nil
+}
 
 func newAuthCmds() []*cobra.Command {
 	return []*cobra.Command{
@@ -60,27 +84,24 @@ func newLoginCmd() *cobra.Command {
 
 			// Bootstrap: ensure the user has a team to work in. The backend never
 			// auto-creates teams; on first login the CLI explicitly creates one.
+			// Auth already succeeded and credentials are saved, so a failure here
+			// is demoted to a warning rather than failing the login.
 			endpoint := prof.APIEndpoint
 			if endpoint == "" {
 				endpoint = defaultEndpoint
 			}
 			client := api.New(endpoint, ts.AccessToken)
-			teams, err := client.ListTeams(cmd.Context())
-			if err != nil {
-				return err
-			}
-			if len(teams) == 0 {
-				team, err := client.CreateTeam(cmd.Context(), "personal")
-				if err != nil {
+			teamID, created, berr := ensureDefaultTeam(cmd.Context(), client, prof.Team)
+			if berr != nil {
+				fmt.Fprintf(os.Stderr, "warning: could not set up your team (run `aic teams create <name>`): %v\n", berr)
+			} else if teamID != "" {
+				prof.Team = teamID
+				if err := config.Save(prof); err != nil {
 					return err
 				}
-				prof.Team = team.ID
-				fmt.Printf("Created your personal team %s.\n", team.ID)
-			} else if prof.Team == "" {
-				prof.Team = teams[0].ID
-			}
-			if err := config.Save(prof); err != nil {
-				return err
+				if created {
+					fmt.Printf("Created your personal team %s.\n", teamID)
+				}
 			}
 			fmt.Println("Login successful. Credentials saved.")
 			return nil
