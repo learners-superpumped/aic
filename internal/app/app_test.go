@@ -46,3 +46,15 @@ func newTestRenderer() (*Renderer, *bytes.Buffer) {
 	r, _ := NewRenderer("table", &buf)
 	return r, &buf
 }
+
+func TestRequireTeam(t *testing.T) {
+	out, _ := newTestRenderer()
+	a := &App{Team: "", Out: out}
+	if err := a.RequireTeam(); err == nil {
+		t.Fatal("expected error when no team selected")
+	}
+	a.Team = "team_x"
+	if err := a.RequireTeam(); err != nil {
+		t.Fatalf("unexpected error with team set: %v", err)
+	}
+}

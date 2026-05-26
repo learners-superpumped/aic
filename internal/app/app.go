@@ -23,6 +23,7 @@ func NewRenderer(format string, w io.Writer) (*Renderer, error) {
 type App struct {
 	Client  *api.Client
 	Project string
+	Team    string
 	Out     *Renderer
 }
 
@@ -30,6 +31,14 @@ type App struct {
 func (a *App) RequireProject() error {
 	if a.Project == "" {
 		return errors.New("no project selected: pass --project or run `aic projects use <id>`")
+	}
+	return nil
+}
+
+// RequireTeam returns an error if no team is in scope.
+func (a *App) RequireTeam() error {
+	if a.Team == "" {
+		return errors.New("no team selected; run 'aic teams switch <id>' or 'aic login'")
 	}
 	return nil
 }

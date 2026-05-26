@@ -18,6 +18,7 @@ type Profile struct {
 	IDToken        string
 	ExpiresAt      time.Time
 	DefaultProject string
+	Team           string
 	Output         string
 	APIEndpoint    string
 	Issuer         string
@@ -75,6 +76,7 @@ func Save(p *Profile) error {
 	cfg := loadOrNew(cfgPath)
 	csec := cfg.Section(p.Name)
 	csec.Key("default_project").SetValue(p.DefaultProject)
+	csec.Key("team").SetValue(p.Team)
 	csec.Key("output").SetValue(p.Output)
 	csec.Key("api_endpoint").SetValue(p.APIEndpoint)
 	csec.Key("issuer").SetValue(p.Issuer)
@@ -112,6 +114,7 @@ func Load(name string) (*Profile, error) {
 	if cfg, e := ini.Load(cfgPath); e == nil {
 		c := cfg.Section(name)
 		p.DefaultProject = c.Key("default_project").String()
+		p.Team = c.Key("team").String()
 		p.Output = c.Key("output").String()
 		p.APIEndpoint = c.Key("api_endpoint").String()
 		p.Issuer = c.Key("issuer").String()

@@ -30,6 +30,13 @@ func resolveProject(flag, def string) string {
 	return def
 }
 
+func resolveTeam(flag, def string) string {
+	if flag != "" {
+		return flag
+	}
+	return def
+}
+
 type buildAppArgs struct {
 	profileName    string
 	output         string
@@ -37,6 +44,8 @@ type buildAppArgs struct {
 	token          string
 	defaultProject string
 	projectFlag    string
+	defaultTeam    string
+	teamFlag       string
 	refreshFn      func(context.Context) (*api.Tokens, error)
 	onRefresh      func(*api.Tokens)
 }
@@ -53,6 +62,7 @@ func buildApp(a buildAppArgs) (*app.App, error) {
 	return &app.App{
 		Client:  client,
 		Project: resolveProject(a.projectFlag, a.defaultProject),
+		Team:    resolveTeam(a.teamFlag, a.defaultTeam),
 		Out:     renderer,
 	}, nil
 }
@@ -78,6 +88,7 @@ func NewRootCmd() *cobra.Command {
 	}
 
 	root.PersistentFlags().StringP("project", "p", "", "target project (overrides the default project)")
+	root.PersistentFlags().StringP("team", "t", "", "target team (overrides the default team)")
 	root.PersistentFlags().StringP("output", "o", "table", "output format: table|json|yaml")
 	root.PersistentFlags().String("profile", "default", "credentials profile to use")
 
@@ -87,6 +98,7 @@ func NewRootCmd() *cobra.Command {
 		}
 		profileName, _ := cmd.Flags().GetString("profile")
 		projectFlag, _ := cmd.Flags().GetString("project")
+		teamFlag, _ := cmd.Flags().GetString("team")
 		outFlag, _ := cmd.Flags().GetString("output")
 
 		prof, err := config.Load(profileName)
@@ -135,6 +147,8 @@ func NewRootCmd() *cobra.Command {
 			token:          prof.AccessToken,
 			defaultProject: prof.DefaultProject,
 			projectFlag:    projectFlag,
+			defaultTeam:    prof.Team,
+			teamFlag:       teamFlag,
 			refreshFn:      refreshFn,
 			onRefresh:      onRefresh,
 		})

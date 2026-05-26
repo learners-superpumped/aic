@@ -94,3 +94,20 @@ func TestSaveAndLoadAudienceScope(t *testing.T) {
 		t.Fatalf("audience_scope not round-tripped: %+v", got)
 	}
 }
+
+func TestProfileTeamRoundTrip(t *testing.T) {
+	dir := t.TempDir()
+	t.Setenv("AIC_CONFIG_DIR", dir)
+
+	in := &Profile{Name: "default", Team: "team_abc"}
+	if err := Save(in); err != nil {
+		t.Fatal(err)
+	}
+	out, err := Load("default")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if out.Team != "team_abc" {
+		t.Fatalf("Team round-trip: want team_abc, got %q", out.Team)
+	}
+}
