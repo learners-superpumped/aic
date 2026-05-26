@@ -45,6 +45,23 @@ func TestDiscoverBuildsConfig(t *testing.T) {
 	}
 }
 
+func TestDiscoverDeduplicatesScopes(t *testing.T) {
+	srv := newDiscoveryServer(t)
+	oc, err := Discover(context.Background(), srv.URL, "c1", "openid", "openid")
+	if err != nil {
+		t.Fatal(err)
+	}
+	n := 0
+	for _, s := range oc.OAuth2.Scopes {
+		if s == "openid" {
+			n++
+		}
+	}
+	if n != 1 {
+		t.Fatalf("expected openid exactly once, got %d in %v", n, oc.OAuth2.Scopes)
+	}
+}
+
 func TestDiscoverAppendsExtraScopes(t *testing.T) {
 	srv := newDiscoveryServer(t)
 	withScope, err := Discover(context.Background(), srv.URL, "c1", "urn:zitadel:iam:org:project:id:123:aud")

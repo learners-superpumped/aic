@@ -42,7 +42,17 @@ func Discover(ctx context.Context, issuer, clientID string, extraScopes ...strin
 
 	scopes := []string{oidc.ScopeOpenID, "profile", "email", oidc.ScopeOfflineAccess}
 	for _, s := range extraScopes {
-		if s != "" {
+		if s == "" {
+			continue
+		}
+		dup := false
+		for _, existing := range scopes {
+			if existing == s {
+				dup = true
+				break
+			}
+		}
+		if !dup {
 			scopes = append(scopes, s)
 		}
 	}

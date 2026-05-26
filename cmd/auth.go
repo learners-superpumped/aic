@@ -24,8 +24,11 @@ func newLoginCmd() *cobra.Command {
 		Short: "Authenticate via your browser and store credentials",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			profileName, _ := cmd.Flags().GetString("profile")
-			prof, _ := config.Load(profileName)
+			prof, loadErr := config.Load(profileName)
 			if prof == nil || prof.Issuer == "" || prof.ClientID == "" {
+				if loadErr != nil {
+					return fmt.Errorf("could not read configuration: %w (run `aic configure --issuer <url> --client-id <id>` if not yet configured)", loadErr)
+				}
 				return fmt.Errorf("OIDC issuer/client not configured: run `aic configure --issuer <url> --client-id <id>`")
 			}
 
@@ -135,7 +138,7 @@ func newConfigureCmd() *cobra.Command {
 			if clientID != "" {
 				prof.ClientID = clientID
 			}
-			if audienceScope != "" {
+			if cmd.Flags().Changed("audience-scope") {
 				prof.AudienceScope = audienceScope
 			}
 			if err := config.Save(prof); err != nil {
