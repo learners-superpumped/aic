@@ -30,7 +30,7 @@ type OIDCConfig struct {
 // Discover performs OIDC discovery against issuer and returns a ready oauth2
 // config for the given public clientID. RedirectURL is set per-flow by the
 // loopback login.
-func Discover(ctx context.Context, issuer, clientID string) (*OIDCConfig, error) {
+func Discover(ctx context.Context, issuer, clientID string, extraScopes ...string) (*OIDCConfig, error) {
 	provider, err := oidc.NewProvider(ctx, issuer)
 	if err != nil {
 		return nil, err
@@ -39,6 +39,13 @@ func Discover(ctx context.Context, issuer, clientID string) (*OIDCConfig, error)
 		DeviceAuthURL string `json:"device_authorization_endpoint"`
 	}
 	_ = provider.Claims(&extra)
+
+	scopes := []string{oidc.ScopeOpenID, "profile", "email", oidc.ScopeOfflineAccess}
+	for _, s := range extraScopes {
+		if s != "" {
+			scopes = append(scopes, s)
+		}
+	}
 
 	return &OIDCConfig{
 		Provider:      provider,
@@ -50,7 +57,7 @@ func Discover(ctx context.Context, issuer, clientID string) (*OIDCConfig, error)
 				TokenURL:      provider.Endpoint().TokenURL,
 				DeviceAuthURL: extra.DeviceAuthURL,
 			},
-			Scopes: []string{oidc.ScopeOpenID, "profile", "email", oidc.ScopeOfflineAccess},
+			Scopes: scopes,
 		},
 	}, nil
 }

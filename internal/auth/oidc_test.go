@@ -44,3 +44,26 @@ func TestDiscoverBuildsConfig(t *testing.T) {
 		t.Fatalf("device url: %q", oc.DeviceAuthURL)
 	}
 }
+
+func TestDiscoverAppendsExtraScopes(t *testing.T) {
+	srv := newDiscoveryServer(t)
+	withScope, err := Discover(context.Background(), srv.URL, "c1", "urn:zitadel:iam:org:project:id:123:aud")
+	if err != nil {
+		t.Fatal(err)
+	}
+	found := false
+	for _, s := range withScope.OAuth2.Scopes {
+		if s == "urn:zitadel:iam:org:project:id:123:aud" {
+			found = true
+		}
+	}
+	if !found {
+		t.Fatalf("extra scope not appended: %v", withScope.OAuth2.Scopes)
+	}
+	plain, _ := Discover(context.Background(), srv.URL, "c1")
+	for _, s := range plain.OAuth2.Scopes {
+		if s == "urn:zitadel:iam:org:project:id:123:aud" {
+			t.Fatalf("unexpected audience scope when none configured: %v", plain.OAuth2.Scopes)
+		}
+	}
+}

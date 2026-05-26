@@ -79,3 +79,18 @@ func TestSaveAndLoadOIDCFields(t *testing.T) {
 		t.Fatalf("oidc fields not round-tripped: %+v", got)
 	}
 }
+
+func TestSaveAndLoadAudienceScope(t *testing.T) {
+	dir := t.TempDir()
+	t.Setenv("AIC_CONFIG_DIR", dir)
+	if err := Save(&Profile{Name: "default", AudienceScope: "urn:zitadel:iam:org:project:id:123:aud"}); err != nil {
+		t.Fatal(err)
+	}
+	got, err := Load("default")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got.AudienceScope != "urn:zitadel:iam:org:project:id:123:aud" {
+		t.Fatalf("audience_scope not round-tripped: %+v", got)
+	}
+}

@@ -22,6 +22,7 @@ type Profile struct {
 	APIEndpoint    string
 	Issuer         string
 	ClientID       string
+	AudienceScope  string
 }
 
 const timeFormat = time.RFC3339
@@ -78,6 +79,7 @@ func Save(p *Profile) error {
 	csec.Key("api_endpoint").SetValue(p.APIEndpoint)
 	csec.Key("issuer").SetValue(p.Issuer)
 	csec.Key("client_id").SetValue(p.ClientID)
+	csec.Key("audience_scope").SetValue(p.AudienceScope)
 	return cfg.SaveTo(cfgPath)
 }
 
@@ -114,6 +116,7 @@ func Load(name string) (*Profile, error) {
 		p.APIEndpoint = c.Key("api_endpoint").String()
 		p.Issuer = c.Key("issuer").String()
 		p.ClientID = c.Key("client_id").String()
+		p.AudienceScope = c.Key("audience_scope").String()
 	}
 	return p, nil
 }

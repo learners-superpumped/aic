@@ -29,7 +29,7 @@ func newLoginCmd() *cobra.Command {
 				return fmt.Errorf("OIDC issuer/client not configured: run `aic configure --issuer <url> --client-id <id>`")
 			}
 
-			oc, err := auth.Discover(cmd.Context(), prof.Issuer, prof.ClientID)
+			oc, err := auth.Discover(cmd.Context(), prof.Issuer, prof.ClientID, prof.AudienceScope)
 			if err != nil {
 				return err
 			}
@@ -110,7 +110,7 @@ func newWhoamiCmd() *cobra.Command {
 }
 
 func newConfigureCmd() *cobra.Command {
-	var endpoint, output, issuer, clientID string
+	var endpoint, output, issuer, clientID, audienceScope string
 	cmd := &cobra.Command{
 		Use:   "configure",
 		Short: "Set CLI configuration (API endpoint, output format)",
@@ -135,6 +135,9 @@ func newConfigureCmd() *cobra.Command {
 			if clientID != "" {
 				prof.ClientID = clientID
 			}
+			if audienceScope != "" {
+				prof.AudienceScope = audienceScope
+			}
 			if err := config.Save(prof); err != nil {
 				return err
 			}
@@ -146,5 +149,6 @@ func newConfigureCmd() *cobra.Command {
 	cmd.Flags().StringVar(&output, "output-format", "", "default output format: table|json|yaml")
 	cmd.Flags().StringVar(&issuer, "issuer", "", "OIDC issuer URL")
 	cmd.Flags().StringVar(&clientID, "client-id", "", "OIDC client id for the CLI")
+	cmd.Flags().StringVar(&audienceScope, "audience-scope", "", "extra OIDC scope to request the API audience (provider-specific)")
 	return cmd
 }

@@ -116,7 +116,7 @@ func NewRootCmd() *cobra.Command {
 		var refreshFn func(context.Context) (*api.Tokens, error)
 		if prof.Issuer != "" && prof.ClientID != "" && prof.RefreshToken != "" {
 			refreshFn = func(ctx context.Context) (*api.Tokens, error) {
-				oc, err := auth.Discover(ctx, prof.Issuer, prof.ClientID)
+				oc, err := auth.Discover(ctx, prof.Issuer, prof.ClientID, prof.AudienceScope)
 				if err != nil {
 					return nil, err
 				}
