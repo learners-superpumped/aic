@@ -29,26 +29,48 @@ func (c *Client) BillingStatus(ctx context.Context) (*BillingStatus, error) {
 	return &s, c.do(ctx, http.MethodGet, "/v1/billing/status", nil, &s)
 }
 
-// --- Projects ---
+// --- Teams ---
 
-func (c *Client) ListProjects(ctx context.Context) ([]Project, error) {
-	var out []Project
-	return out, c.do(ctx, http.MethodGet, "/v1/projects", nil, &out)
+func (c *Client) ListTeams(ctx context.Context) ([]Team, error) {
+	var out []Team
+	return out, c.do(ctx, http.MethodGet, "/v1/teams", nil, &out)
 }
 
-func (c *Client) CreateProject(ctx context.Context, name string) (*Project, error) {
+func (c *Client) CreateTeam(ctx context.Context, name string) (*Team, error) {
+	var t Team
+	return &t, c.do(ctx, http.MethodPost, "/v1/teams",
+		map[string]string{"name": name}, &t)
+}
+
+func (c *Client) GetTeam(ctx context.Context, id string) (*Team, error) {
+	var t Team
+	return &t, c.do(ctx, http.MethodGet, "/v1/teams/"+url.PathEscape(id), nil, &t)
+}
+
+// --- Projects (scoped to a team) ---
+
+func teamProjectsPath(teamID string) string {
+	return "/v1/teams/" + url.PathEscape(teamID) + "/projects"
+}
+
+func (c *Client) ListProjects(ctx context.Context, teamID string) ([]Project, error) {
+	var out []Project
+	return out, c.do(ctx, http.MethodGet, teamProjectsPath(teamID), nil, &out)
+}
+
+func (c *Client) CreateProject(ctx context.Context, teamID, name string) (*Project, error) {
 	var p Project
-	return &p, c.do(ctx, http.MethodPost, "/v1/projects",
+	return &p, c.do(ctx, http.MethodPost, teamProjectsPath(teamID),
 		map[string]string{"name": name}, &p)
 }
 
-func (c *Client) GetProject(ctx context.Context, id string) (*Project, error) {
+func (c *Client) GetProject(ctx context.Context, teamID, id string) (*Project, error) {
 	var p Project
-	return &p, c.do(ctx, http.MethodGet, "/v1/projects/"+url.PathEscape(id), nil, &p)
+	return &p, c.do(ctx, http.MethodGet, teamProjectsPath(teamID)+"/"+url.PathEscape(id), nil, &p)
 }
 
-func (c *Client) DeleteProject(ctx context.Context, id string) error {
-	return c.do(ctx, http.MethodDelete, "/v1/projects/"+url.PathEscape(id), nil, nil)
+func (c *Client) DeleteProject(ctx context.Context, teamID, id string) error {
+	return c.do(ctx, http.MethodDelete, teamProjectsPath(teamID)+"/"+url.PathEscape(id), nil, nil)
 }
 
 // --- Domains ---

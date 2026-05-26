@@ -16,7 +16,7 @@ func runProjectsList(t *testing.T, srvURL string) string {
 	t.Helper()
 	var buf bytes.Buffer
 	r, _ := app.NewRenderer("json", &buf)
-	a := &app.App{Client: api.New(srvURL, "tok"), Out: r}
+	a := &app.App{Client: api.New(srvURL, "tok"), Team: "team_1", Out: r}
 
 	cmd := newProjectsCmd()
 	for _, sub := range cmd.Commands() {
@@ -31,7 +31,9 @@ func runProjectsList(t *testing.T, srvURL string) string {
 }
 
 func TestProjectsList(t *testing.T) {
+	var gotPath string
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		gotPath = r.URL.Path
 		w.Write([]byte(`[{"id":"p1","name":"alpha"}]`))
 	}))
 	defer srv.Close()
@@ -39,6 +41,24 @@ func TestProjectsList(t *testing.T) {
 	out := runProjectsList(t, srv.URL)
 	if !strings.Contains(out, "alpha") {
 		t.Fatalf("expected alpha in output: %s", out)
+	}
+	if gotPath != "/v1/teams/team_1/projects" {
+		t.Fatalf("path: want /v1/teams/team_1/projects, got %s", gotPath)
+	}
+}
+
+func TestProjectsListRequiresTeam(t *testing.T) {
+	var buf bytes.Buffer
+	r, _ := app.NewRenderer("json", &buf)
+	a := &app.App{Client: api.New("http://unused", "tok"), Team: "", Out: r}
+	cmd := newProjectsCmd()
+	for _, sub := range cmd.Commands() {
+		if sub.Name() == "list" {
+			sub.SetContext(app.NewContext(t.Context(), a))
+			if err := sub.RunE(sub, nil); err == nil {
+				t.Fatal("expected error when no team selected")
+			}
+		}
 	}
 }
 

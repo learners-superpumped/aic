@@ -2,6 +2,14 @@ package api
 
 import "time"
 
+// Team is an ownership boundary that contains projects.
+type Team struct {
+	ID        string    `json:"id" yaml:"id"`
+	Name      string    `json:"name" yaml:"name"`
+	Role      string    `json:"role" yaml:"role"`
+	CreatedAt time.Time `json:"created_at" yaml:"created_at"`
+}
+
 // Project is a provisioning project.
 type Project struct {
 	ID        string    `json:"id" yaml:"id"`

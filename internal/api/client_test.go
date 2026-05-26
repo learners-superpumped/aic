@@ -49,7 +49,7 @@ func TestDoStructuredError(t *testing.T) {
 
 func TestListProjects(t *testing.T) {
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if r.URL.Path != "/v1/projects" || r.Method != http.MethodGet {
+		if r.URL.Path != "/v1/teams/team_1/projects" || r.Method != http.MethodGet {
 			t.Errorf("unexpected request: %s %s", r.Method, r.URL.Path)
 		}
 		w.Write([]byte(`[{"id":"p1","name":"alpha"},{"id":"p2","name":"beta"}]`))
@@ -57,7 +57,7 @@ func TestListProjects(t *testing.T) {
 	defer srv.Close()
 
 	c := New(srv.URL, "tok")
-	got, err := c.ListProjects(context.Background())
+	got, err := c.ListProjects(context.Background(), "team_1")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -152,5 +152,57 @@ func TestSessionTokenUnmarshal(t *testing.T) {
 	}
 	if s.Tokens == nil || s.AccessToken != "a" || s.RefreshToken != "r" {
 		t.Fatalf("embedded tokens not unmarshaled: %+v", s)
+	}
+}
+
+func TestListTeamsHitsTeamsPath(t *testing.T) {
+	var gotPath string
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		gotPath = r.URL.Path
+		w.Write([]byte(`[{"id":"team_1","name":"acme","role":"owner"}]`))
+	}))
+	defer srv.Close()
+
+	teams, err := New(srv.URL, "tok").ListTeams(context.Background())
+	if err != nil {
+		t.Fatal(err)
+	}
+	if gotPath != "/v1/teams" {
+		t.Fatalf("path: want /v1/teams, got %s", gotPath)
+	}
+	if len(teams) != 1 || teams[0].ID != "team_1" || teams[0].Role != "owner" {
+		t.Fatalf("teams: %+v", teams)
+	}
+}
+
+func TestCreateTeamPostsName(t *testing.T) {
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodPost || r.URL.Path != "/v1/teams" {
+			t.Errorf("want POST /v1/teams, got %s %s", r.Method, r.URL.Path)
+		}
+		w.WriteHeader(http.StatusCreated)
+		w.Write([]byte(`{"id":"team_1","name":"personal","role":"owner"}`))
+	}))
+	defer srv.Close()
+
+	team, err := New(srv.URL, "tok").CreateTeam(context.Background(), "personal")
+	if err != nil || team.ID != "team_1" {
+		t.Fatalf("create team: %+v err=%v", team, err)
+	}
+}
+
+func TestListProjectsScopedToTeam(t *testing.T) {
+	var gotPath string
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		gotPath = r.URL.Path
+		w.Write([]byte(`[{"id":"p1","name":"alpha"}]`))
+	}))
+	defer srv.Close()
+
+	if _, err := New(srv.URL, "tok").ListProjects(context.Background(), "team_1"); err != nil {
+		t.Fatal(err)
+	}
+	if gotPath != "/v1/teams/team_1/projects" {
+		t.Fatalf("path: want /v1/teams/team_1/projects, got %s", gotPath)
 	}
 }

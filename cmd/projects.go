@@ -34,7 +34,10 @@ func newProjectsListCmd() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			items, err := a.Client.ListProjects(cmd.Context())
+			if err := a.RequireTeam(); err != nil {
+				return err
+			}
+			items, err := a.Client.ListProjects(cmd.Context(), a.Team)
 			if err != nil {
 				return err
 			}
@@ -56,7 +59,10 @@ func newProjectsCreateCmd() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			p, err := a.Client.CreateProject(cmd.Context(), args[0])
+			if err := a.RequireTeam(); err != nil {
+				return err
+			}
+			p, err := a.Client.CreateProject(cmd.Context(), a.Team, args[0])
 			if err != nil {
 				return err
 			}
@@ -79,7 +85,10 @@ func newProjectsDeleteCmd() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			if err := a.Client.DeleteProject(cmd.Context(), args[0]); err != nil {
+			if err := a.RequireTeam(); err != nil {
+				return err
+			}
+			if err := a.Client.DeleteProject(cmd.Context(), a.Team, args[0]); err != nil {
 				return err
 			}
 			fmt.Printf("Project %s deleted.\n", args[0])
@@ -98,7 +107,10 @@ func newProjectsShowCmd() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			p, err := a.Client.GetProject(cmd.Context(), args[0])
+			if err := a.RequireTeam(); err != nil {
+				return err
+			}
+			p, err := a.Client.GetProject(cmd.Context(), a.Team, args[0])
 			if err != nil {
 				return err
 			}
