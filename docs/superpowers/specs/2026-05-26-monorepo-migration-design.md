@@ -26,11 +26,11 @@ aicompany-platform/                 (one git repo)
 ├── go.work                         # use ./cli ./auth   (./api added in the backend slice)
 ├── README.md
 ├── cli/                            # = former aicompany-cli, moved wholesale (own go.mod)
-│   ├── go.mod                      #   module github.com/learners-superpumped/aic   (unchanged)
+│   ├── go.mod                      #   module github.com/learners-superpumped/aicompany-platform/cli   (unchanged)
 │   ├── main.go, cmd/, internal/{api,app,auth,config,output}/
 │   └── docs/superpowers/...
 └── auth/                           # = former aicompany-auth, moved wholesale (own go.mod)
-    ├── go.mod                      #   module github.com/learners-superpumped/aic-auth (unchanged)
+    ├── go.mod                      #   module github.com/learners-superpumped/aicompany-platform/auth (unchanged)
     ├── pkg/oidcauth/
     ├── deploy/{local,terraform}/
     └── docs/superpowers/...
