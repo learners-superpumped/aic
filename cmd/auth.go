@@ -3,6 +3,7 @@ package cmd
 import (
 	"fmt"
 
+	"github.com/learners-superpumped/aicompany-platform/cli/internal/api"
 	"github.com/learners-superpumped/aicompany-platform/cli/internal/auth"
 	"github.com/learners-superpumped/aicompany-platform/cli/internal/config"
 	"github.com/spf13/cobra"
@@ -53,6 +54,31 @@ func newLoginCmd() *cobra.Command {
 			prof.RefreshToken = ts.RefreshToken
 			prof.IDToken = ts.IDToken
 			prof.ExpiresAt = ts.Expiry
+			if err := config.Save(prof); err != nil {
+				return err
+			}
+
+			// Bootstrap: ensure the user has a team to work in. The backend never
+			// auto-creates teams; on first login the CLI explicitly creates one.
+			endpoint := prof.APIEndpoint
+			if endpoint == "" {
+				endpoint = defaultEndpoint
+			}
+			client := api.New(endpoint, ts.AccessToken)
+			teams, err := client.ListTeams(cmd.Context())
+			if err != nil {
+				return err
+			}
+			if len(teams) == 0 {
+				team, err := client.CreateTeam(cmd.Context(), "personal")
+				if err != nil {
+					return err
+				}
+				prof.Team = team.ID
+				fmt.Printf("Created your personal team %s.\n", team.ID)
+			} else if prof.Team == "" {
+				prof.Team = teams[0].ID
+			}
 			if err := config.Save(prof); err != nil {
 				return err
 			}
