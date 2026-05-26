@@ -29,11 +29,11 @@ func (e *Error) Error() string {
 // refresh an expired access token on a 401 response when configured via
 // WithRefresh.
 type Client struct {
-	baseURL      string
-	token        string
-	refreshToken string
-	onRefresh    func(*Tokens)
-	http         *http.Client
+	baseURL   string
+	token     string
+	refreshFn func(context.Context) (*Tokens, error)
+	onRefresh func(*Tokens)
+	http      *http.Client
 }
 
 // New returns a Client for baseURL authenticating with token.
@@ -45,11 +45,11 @@ func New(baseURL, token string) *Client {
 	}
 }
 
-// WithRefresh enables transparent access-token refresh on 401 responses.
-// refreshToken obtains a new access token; onRefresh (if non-nil) is invoked
-// to persist the new tokens. Returns c for chaining.
-func (c *Client) WithRefresh(refreshToken string, onRefresh func(*Tokens)) *Client {
-	c.refreshToken = refreshToken
+// WithRefresh enables transparent access-token refresh on 401. refreshFn obtains
+// new tokens (e.g. via the OIDC token endpoint); onRefresh (if non-nil) persists
+// them. Returns c for chaining.
+func (c *Client) WithRefresh(refreshFn func(context.Context) (*Tokens, error), onRefresh func(*Tokens)) *Client {
+	c.refreshFn = refreshFn
 	c.onRefresh = onRefresh
 	return c
 }
@@ -87,27 +87,14 @@ func (c *Client) doOnce(ctx context.Context, method, path string, body any) (int
 	return resp.StatusCode, data, nil
 }
 
-// refresh exchanges the refresh token for a new access token. It uses doOnce
-// directly (not do) to avoid recursive refresh attempts.
 func (c *Client) refresh(ctx context.Context) error {
-	status, data, err := c.doOnce(ctx, http.MethodPost, "/v1/auth/token/refresh",
-		map[string]string{"refresh_token": c.refreshToken})
+	t, err := c.refreshFn(ctx)
 	if err != nil {
 		return err
 	}
-	if status >= 400 {
-		return &Error{Status: status}
-	}
-	var t Tokens
-	if err := json.Unmarshal(data, &t); err != nil {
-		return err
-	}
 	c.token = t.AccessToken
-	if t.RefreshToken != "" {
-		c.refreshToken = t.RefreshToken
-	}
 	if c.onRefresh != nil {
-		c.onRefresh(&t)
+		c.onRefresh(t)
 	}
 	return nil
 }
@@ -118,7 +105,7 @@ func (c *Client) do(ctx context.Context, method, path string, body, out any) err
 		return err
 	}
 	// On a 401, attempt a one-time transparent refresh and retry.
-	if status == http.StatusUnauthorized && c.refreshToken != "" {
+	if status == http.StatusUnauthorized && c.refreshFn != nil {
 		if rerr := c.refresh(ctx); rerr == nil {
 			status, data, err = c.doOnce(ctx, method, path, body)
 			if err != nil {

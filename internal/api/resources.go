@@ -7,23 +7,6 @@ import (
 	"net/url"
 )
 
-// --- Auth ---
-
-func (c *Client) StartLoginSession(ctx context.Context) (*Session, error) {
-	var s Session
-	return &s, c.do(ctx, http.MethodPost, "/v1/auth/sessions", nil, &s)
-}
-
-func (c *Client) PollLoginSession(ctx context.Context, id string) (*Session, error) {
-	var s Session
-	return &s, c.do(ctx, http.MethodGet, "/v1/auth/sessions/"+url.PathEscape(id), nil, &s)
-}
-
-func (c *Client) Whoami(ctx context.Context) (*Identity, error) {
-	var id Identity
-	return &id, c.do(ctx, http.MethodGet, "/v1/auth/whoami", nil, &id)
-}
-
 // --- Billing ---
 
 func (c *Client) StartCardSession(ctx context.Context) (*Session, error) {

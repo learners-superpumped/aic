@@ -93,38 +93,40 @@ func TestCreateInboxPostsAddress(t *testing.T) {
 func TestRefreshOn401ThenRetry(t *testing.T) {
 	xCalls := 0
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		switch r.URL.Path {
-		case "/v1/auth/token/refresh":
-			w.Write([]byte(`{"access_token":"newtok","refresh_token":"newref"}`))
-		case "/v1/x":
-			xCalls++
-			if xCalls == 1 {
-				w.WriteHeader(http.StatusUnauthorized)
-				w.Write([]byte(`{"code":"expired","message":"token expired"}`))
-				return
-			}
-			if got := r.Header.Get("Authorization"); got != "Bearer newtok" {
-				t.Errorf("retry did not use refreshed token: %q", got)
-			}
-			w.Write([]byte(`{"id":"p1","name":"alpha"}`))
+		if r.URL.Path != "/v1/x" {
+			t.Errorf("unexpected path %s", r.URL.Path)
 		}
+		xCalls++
+		if xCalls == 1 {
+			w.WriteHeader(http.StatusUnauthorized)
+			w.Write([]byte(`{"code":"expired","message":"token expired"}`))
+			return
+		}
+		if got := r.Header.Get("Authorization"); got != "Bearer newtok" {
+			t.Errorf("retry did not use refreshed token: %q", got)
+		}
+		w.Write([]byte(`{"id":"p1","name":"alpha"}`))
 	}))
 	defer srv.Close()
 
+	refreshed := false
 	persisted := ""
-	c := New(srv.URL, "oldtok").WithRefresh("oldref", func(tok *Tokens) { persisted = tok.AccessToken })
+	c := New(srv.URL, "oldtok").WithRefresh(
+		func(ctx context.Context) (*Tokens, error) {
+			refreshed = true
+			return &Tokens{AccessToken: "newtok", RefreshToken: "newref"}, nil
+		},
+		func(tok *Tokens) { persisted = tok.AccessToken },
+	)
 	var out Project
 	if err := c.do(context.Background(), http.MethodGet, "/v1/x", nil, &out); err != nil {
 		t.Fatalf("do: %v", err)
 	}
-	if out.Name != "alpha" {
-		t.Fatalf("expected retry to succeed: %+v", out)
-	}
-	if persisted != "newtok" {
-		t.Fatalf("onRefresh not called with new token, got %q", persisted)
+	if !refreshed || persisted != "newtok" || out.Name != "alpha" {
+		t.Fatalf("refresh wiring wrong: refreshed=%v persisted=%q out=%+v", refreshed, persisted, out)
 	}
 	if xCalls != 2 {
-		t.Fatalf("expected /v1/x to be called exactly twice (401 then retry), got %d", xCalls)
+		t.Fatalf("expected 2 calls, got %d", xCalls)
 	}
 }
 
