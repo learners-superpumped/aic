@@ -19,12 +19,6 @@ func (c *Client) PollLoginSession(ctx context.Context, id string) (*Session, err
 	return &s, c.do(ctx, http.MethodGet, "/v1/auth/sessions/"+url.PathEscape(id), nil, &s)
 }
 
-func (c *Client) RefreshToken(ctx context.Context, refresh string) (*Tokens, error) {
-	var t Tokens
-	return &t, c.do(ctx, http.MethodPost, "/v1/auth/token/refresh",
-		map[string]string{"refresh_token": refresh}, &t)
-}
-
 func (c *Client) Whoami(ctx context.Context) (*Identity, error) {
 	var id Identity
 	return &id, c.do(ctx, http.MethodGet, "/v1/auth/whoami", nil, &id)

@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 )
 
@@ -86,5 +87,68 @@ func TestCreateInboxPostsAddress(t *testing.T) {
 	}
 	if got.Address != "a@x.com" || got.Status != "active" {
 		t.Fatalf("unexpected: %+v", got)
+	}
+}
+
+func TestRefreshOn401ThenRetry(t *testing.T) {
+	xCalls := 0
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		switch r.URL.Path {
+		case "/v1/auth/token/refresh":
+			w.Write([]byte(`{"access_token":"newtok","refresh_token":"newref"}`))
+		case "/v1/x":
+			xCalls++
+			if xCalls == 1 {
+				w.WriteHeader(http.StatusUnauthorized)
+				w.Write([]byte(`{"code":"expired","message":"token expired"}`))
+				return
+			}
+			if got := r.Header.Get("Authorization"); got != "Bearer newtok" {
+				t.Errorf("retry did not use refreshed token: %q", got)
+			}
+			w.Write([]byte(`{"id":"p1","name":"alpha"}`))
+		}
+	}))
+	defer srv.Close()
+
+	persisted := ""
+	c := New(srv.URL, "oldtok").WithRefresh("oldref", func(tok *Tokens) { persisted = tok.AccessToken })
+	var out Project
+	if err := c.do(context.Background(), http.MethodGet, "/v1/x", nil, &out); err != nil {
+		t.Fatalf("do: %v", err)
+	}
+	if out.Name != "alpha" {
+		t.Fatalf("expected retry to succeed: %+v", out)
+	}
+	if persisted != "newtok" {
+		t.Fatalf("onRefresh not called with new token, got %q", persisted)
+	}
+	if xCalls != 2 {
+		t.Fatalf("expected /v1/x to be called exactly twice (401 then retry), got %d", xCalls)
+	}
+}
+
+func TestFriendly401WithoutRefresh(t *testing.T) {
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusUnauthorized)
+		w.Write([]byte(`{"code":"unauthorized","message":"bad token"}`))
+	}))
+	defer srv.Close()
+
+	c := New(srv.URL, "tok") // no refresh configured
+	err := c.do(context.Background(), http.MethodGet, "/v1/x", nil, nil)
+	if err == nil || !strings.Contains(err.Error(), "aic login") {
+		t.Fatalf("expected 401 error mentioning `aic login`, got %v", err)
+	}
+}
+
+func TestSessionTokenUnmarshal(t *testing.T) {
+	var s Session
+	body := `{"session_id":"s1","status":"completed","access_token":"a","refresh_token":"r"}`
+	if err := json.Unmarshal([]byte(body), &s); err != nil {
+		t.Fatal(err)
+	}
+	if s.Tokens == nil || s.AccessToken != "a" || s.RefreshToken != "r" {
+		t.Fatalf("embedded tokens not unmarshaled: %+v", s)
 	}
 }

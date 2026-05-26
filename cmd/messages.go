@@ -49,8 +49,10 @@ func newMessagesSendCmd() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			fmt.Printf("Message sent: %s\n", m.MessageID)
-			return nil
+			return a.Out.Print(*m, []string{"MESSAGE ID"}, func(v any) []string {
+				x := v.(api.Message)
+				return []string{x.MessageID}
+			})
 		},
 	}
 	cmd.Flags().StringVar(&inbox, "inbox", "", "sending inbox address")

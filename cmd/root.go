@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"fmt"
 	"os"
 
 	"github.com/learners-company/aic/internal/api"
@@ -34,6 +35,8 @@ type buildAppArgs struct {
 	token          string
 	defaultProject string
 	projectFlag    string
+	refreshToken   string
+	onRefresh      func(*api.Tokens)
 }
 
 func buildApp(a buildAppArgs) (*app.App, error) {
@@ -41,8 +44,12 @@ func buildApp(a buildAppArgs) (*app.App, error) {
 	if err != nil {
 		return nil, err
 	}
+	client := api.New(a.apiEndpoint, a.token)
+	if a.refreshToken != "" {
+		client = client.WithRefresh(a.refreshToken, a.onRefresh)
+	}
 	return &app.App{
-		Client:  api.New(a.apiEndpoint, a.token),
+		Client:  client,
 		Project: resolveProject(a.projectFlag, a.defaultProject),
 		Out:     renderer,
 	}, nil
@@ -93,6 +100,17 @@ func NewRootCmd() *cobra.Command {
 			output = prof.Output
 		}
 
+		onRefresh := func(tok *api.Tokens) {
+			prof.AccessToken = tok.AccessToken
+			if tok.RefreshToken != "" {
+				prof.RefreshToken = tok.RefreshToken
+			}
+			prof.ExpiresAt = tok.ExpiresAt
+			if err := config.Save(prof); err != nil {
+				fmt.Fprintf(os.Stderr, "warning: could not persist refreshed token: %v\n", err)
+			}
+		}
+
 		a, err := buildApp(buildAppArgs{
 			profileName:    profileName,
 			output:         output,
@@ -100,6 +118,8 @@ func NewRootCmd() *cobra.Command {
 			token:          prof.AccessToken,
 			defaultProject: prof.DefaultProject,
 			projectFlag:    projectFlag,
+			refreshToken:   prof.RefreshToken,
+			onRefresh:      onRefresh,
 		})
 		if err != nil {
 			return err
