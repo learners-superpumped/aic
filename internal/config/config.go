@@ -109,6 +109,28 @@ func Load(name string) (*Profile, error) {
 	return p, nil
 }
 
+// Delete removes a profile's section from both files.
+func Delete(name string) error {
+	credPath, cfgPath, err := paths()
+	if err != nil {
+		return err
+	}
+	if f, err := ini.Load(credPath); err == nil {
+		f.DeleteSection(name)
+		if err := f.SaveTo(credPath); err != nil {
+			return err
+		}
+		_ = os.Chmod(credPath, 0o600)
+	}
+	if f, err := ini.Load(cfgPath); err == nil {
+		f.DeleteSection(name)
+		if err := f.SaveTo(cfgPath); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 func loadOrNew(path string) *ini.File {
 	if f, err := ini.Load(path); err == nil {
 		return f

@@ -15,6 +15,7 @@ const defaultEndpoint = "https://api.aic.example.com"
 // resolution (they run before credentials exist).
 var commandsSkippingApp = map[string]bool{
 	"login":     true,
+	"logout":    true,
 	"configure": true,
 	"help":      true,
 }
@@ -107,8 +108,11 @@ func NewRootCmd() *cobra.Command {
 		return nil
 	}
 
-	// Subcommands are registered by later tasks (each command file adds its
-	// own root.AddCommand call here).
+	// Auth subcommands (login, logout, whoami, configure).
+	// Later tasks add more commands here.
+	for _, c := range newAuthCmds() {
+		root.AddCommand(c)
+	}
 
 	return root
 }
