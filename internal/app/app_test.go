@@ -5,7 +5,7 @@ import (
 	"context"
 	"testing"
 
-	"github.com/learners-superpumped/aic/internal/api"
+	"github.com/learners-superpumped/aicompany-platform/cli/internal/api"
 )
 
 func TestContextRoundTrip(t *testing.T) {

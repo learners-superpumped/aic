@@ -5,10 +5,10 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/learners-superpumped/aic/internal/api"
-	"github.com/learners-superpumped/aic/internal/app"
-	"github.com/learners-superpumped/aic/internal/auth"
-	"github.com/learners-superpumped/aic/internal/config"
+	"github.com/learners-superpumped/aicompany-platform/cli/internal/api"
+	"github.com/learners-superpumped/aicompany-platform/cli/internal/app"
+	"github.com/learners-superpumped/aicompany-platform/cli/internal/auth"
+	"github.com/learners-superpumped/aicompany-platform/cli/internal/config"
 	"github.com/spf13/cobra"
 )
 

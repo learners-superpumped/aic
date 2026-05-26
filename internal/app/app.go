@@ -7,8 +7,8 @@ import (
 	"errors"
 	"io"
 
-	"github.com/learners-superpumped/aic/internal/api"
-	"github.com/learners-superpumped/aic/internal/output"
+	"github.com/learners-superpumped/aicompany-platform/cli/internal/api"
+	"github.com/learners-superpumped/aicompany-platform/cli/internal/output"
 )
 
 // Renderer is re-exported so commands depend only on app.
