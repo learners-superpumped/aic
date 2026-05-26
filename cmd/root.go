@@ -115,6 +115,7 @@ func NewRootCmd() *cobra.Command {
 	}
 
 	root.AddCommand(newProjectsCmd())
+	root.AddCommand(newDomainsCmd())
 
 	return root
 }
