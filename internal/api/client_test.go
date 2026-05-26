@@ -180,6 +180,11 @@ func TestCreateTeamPostsName(t *testing.T) {
 		if r.Method != http.MethodPost || r.URL.Path != "/v1/teams" {
 			t.Errorf("want POST /v1/teams, got %s %s", r.Method, r.URL.Path)
 		}
+		var in map[string]string
+		json.NewDecoder(r.Body).Decode(&in)
+		if in["name"] != "personal" {
+			t.Errorf(`want body {"name":"personal"}, got %v`, in)
+		}
 		w.WriteHeader(http.StatusCreated)
 		w.Write([]byte(`{"id":"team_1","name":"personal","role":"owner"}`))
 	}))
