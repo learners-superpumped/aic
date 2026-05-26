@@ -3,8 +3,8 @@ package cmd
 import (
 	"fmt"
 
-	"github.com/learners-company/aic/internal/api"
-	"github.com/learners-company/aic/internal/config"
+	"github.com/learners-superpumped/aic/internal/api"
+	"github.com/learners-superpumped/aic/internal/config"
 	"github.com/spf13/cobra"
 )
 

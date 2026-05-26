@@ -5,8 +5,8 @@ import (
 	"context"
 	"testing"
 
-	"github.com/learners-company/aic/internal/api"
-	"github.com/learners-company/aic/internal/app"
+	"github.com/learners-superpumped/aic/internal/api"
+	"github.com/learners-superpumped/aic/internal/app"
 	"github.com/spf13/cobra"
 )
 

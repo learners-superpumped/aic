@@ -16,7 +16,7 @@ repositories (local directories and GitHub remotes).
 Target: `aicompany-platform` (GitHub `learners-superpumped/aicompany-platform`, local `~/Developments/aicompany-platform`).
 
 ### Why monorepo, why multi-module
-- A small, single team building tightly-related Go services that **share code** (`pkg/oidcauth` is consumed by the future backend). A monorepo removes private-module version pinning and `replace` friction, and the current Go module paths (`github.com/learners-company/...`) don't even match the GitHub org (`learners-superpumped`) — a single workspace sidesteps cross-repo `go get` entirely.
+- A small, single team building tightly-related Go services that **share code** (`pkg/oidcauth` is consumed by the future backend). A monorepo removes private-module version pinning and `replace` friction, and the current Go module paths (`github.com/learners-superpumped/...`) don't even match the GitHub org (`learners-superpumped`) — a single workspace sidesteps cross-repo `go get` entirely.
 - **Multi-module + `go.work`** is the standard Go monorepo shape for independently-releasable components (CLI / API / shared lib) and is what makes **history-preserving subdirectory import** clean (each repo moves into one subdir, no import-path rewriting).
 
 ## 2. Target Structure
@@ -26,11 +26,11 @@ aicompany-platform/                 (one git repo)
 ├── go.work                         # use ./cli ./auth   (./api added in the backend slice)
 ├── README.md
 ├── cli/                            # = former aicompany-cli, moved wholesale (own go.mod)
-│   ├── go.mod                      #   module github.com/learners-company/aic   (unchanged)
+│   ├── go.mod                      #   module github.com/learners-superpumped/aic   (unchanged)
 │   ├── main.go, cmd/, internal/{api,app,auth,config,output}/
 │   └── docs/superpowers/...
 └── auth/                           # = former aicompany-auth, moved wholesale (own go.mod)
-    ├── go.mod                      #   module github.com/learners-company/aic-auth (unchanged)
+    ├── go.mod                      #   module github.com/learners-superpumped/aic-auth (unchanged)
     ├── pkg/oidcauth/
     ├── deploy/{local,terraform}/
     └── docs/superpowers/...

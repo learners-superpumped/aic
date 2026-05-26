@@ -3,7 +3,7 @@ package cmd
 import (
 	"testing"
 
-	"github.com/learners-company/aic/internal/app"
+	"github.com/learners-superpumped/aic/internal/app"
 )
 
 func TestResolveProjectFlagWins(t *testing.T) {

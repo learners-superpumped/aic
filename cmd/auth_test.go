@@ -3,7 +3,7 @@ package cmd
 import (
 	"testing"
 
-	"github.com/learners-company/aic/internal/config"
+	"github.com/learners-superpumped/aic/internal/config"
 )
 
 func TestNewAuthCmdsRegistersAll(t *testing.T) {

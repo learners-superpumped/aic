@@ -7,8 +7,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/learners-company/aic/internal/api"
-	"github.com/learners-company/aic/internal/app"
+	"github.com/learners-superpumped/aic/internal/api"
+	"github.com/learners-superpumped/aic/internal/app"
 )
 
 // runProjectsList executes the `list` subcommand with an injected App over a test server.

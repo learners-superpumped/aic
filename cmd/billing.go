@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/learners-company/aic/internal/api"
-	"github.com/learners-company/aic/internal/auth"
+	"github.com/learners-superpumped/aic/internal/api"
+	"github.com/learners-superpumped/aic/internal/auth"
 	"github.com/spf13/cobra"
 )
 
