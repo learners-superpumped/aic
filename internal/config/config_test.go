@@ -60,3 +60,22 @@ func TestLoadMissingProfile(t *testing.T) {
 		t.Fatal("expected error loading missing profile")
 	}
 }
+
+func TestSaveAndLoadOIDCFields(t *testing.T) {
+	dir := t.TempDir()
+	t.Setenv("AIC_CONFIG_DIR", dir)
+	if err := Save(&Profile{
+		Name:     "default",
+		Issuer:   "https://auth.example.com",
+		ClientID: "cli-123",
+	}); err != nil {
+		t.Fatal(err)
+	}
+	got, err := Load("default")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got.Issuer != "https://auth.example.com" || got.ClientID != "cli-123" {
+		t.Fatalf("oidc fields not round-tripped: %+v", got)
+	}
+}

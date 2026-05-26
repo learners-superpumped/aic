@@ -19,6 +19,8 @@ type Profile struct {
 	DefaultProject string
 	Output         string
 	APIEndpoint    string
+	Issuer         string
+	ClientID       string
 }
 
 const timeFormat = time.RFC3339
@@ -72,6 +74,8 @@ func Save(p *Profile) error {
 	csec.Key("default_project").SetValue(p.DefaultProject)
 	csec.Key("output").SetValue(p.Output)
 	csec.Key("api_endpoint").SetValue(p.APIEndpoint)
+	csec.Key("issuer").SetValue(p.Issuer)
+	csec.Key("client_id").SetValue(p.ClientID)
 	return cfg.SaveTo(cfgPath)
 }
 
@@ -105,6 +109,8 @@ func Load(name string) (*Profile, error) {
 		p.DefaultProject = c.Key("default_project").String()
 		p.Output = c.Key("output").String()
 		p.APIEndpoint = c.Key("api_endpoint").String()
+		p.Issuer = c.Key("issuer").String()
+		p.ClientID = c.Key("client_id").String()
 	}
 	return p, nil
 }
