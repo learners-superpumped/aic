@@ -38,7 +38,7 @@ func (a *App) RequireProject() error {
 // RequireTeam returns an error if no team is in scope.
 func (a *App) RequireTeam() error {
 	if a.Team == "" {
-		return errors.New("no team selected; run 'aic teams switch <id>' or 'aic login'")
+		return errors.New("no team selected: pass --team or run `aic teams switch <id>` or `aic login`")
 	}
 	return nil
 }
