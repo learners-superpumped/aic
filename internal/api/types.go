@@ -50,12 +50,6 @@ type Card struct {
 	Default  bool   `json:"default" yaml:"default"`
 }
 
-// Identity is the result of whoami.
-type Identity struct {
-	UserID string `json:"user_id" yaml:"user_id"`
-	Email  string `json:"email" yaml:"email"`
-}
-
 // BillingStatus reports whether a payment method exists.
 type BillingStatus struct {
 	HasPaymentMethod bool `json:"has_payment_method" yaml:"has_payment_method"`

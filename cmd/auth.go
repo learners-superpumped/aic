@@ -1,11 +1,8 @@
 package cmd
 
 import (
-	"context"
 	"fmt"
-	"time"
 
-	"github.com/learners-company/aic/internal/api"
 	"github.com/learners-company/aic/internal/auth"
 	"github.com/learners-company/aic/internal/config"
 	"github.com/spf13/cobra"
@@ -21,70 +18,47 @@ func newAuthCmds() []*cobra.Command {
 }
 
 func newLoginCmd() *cobra.Command {
-	return &cobra.Command{
+	var headless bool
+	cmd := &cobra.Command{
 		Use:   "login",
 		Short: "Authenticate via your browser and store credentials",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			profileName, _ := cmd.Flags().GetString("profile")
-
 			prof, _ := config.Load(profileName)
-			endpoint := defaultEndpoint
-			if prof != nil && prof.APIEndpoint != "" {
-				endpoint = prof.APIEndpoint
+			if prof == nil || prof.Issuer == "" || prof.ClientID == "" {
+				return fmt.Errorf("OIDC issuer/client not configured: run `aic configure --issuer <url> --client-id <id>`")
 			}
-			client := api.New(endpoint, "")
 
-			var tokens *api.Tokens
-			_, err := auth.RunFlow(cmd.Context(), auth.Flow{
-				Start: func(ctx context.Context) (string, string, error) {
-					s, err := client.StartLoginSession(ctx)
-					if err != nil {
-						return "", "", err
-					}
-					return s.SessionID, s.BrowserURL, nil
-				},
-				OpenBrowser: auth.OpenBrowser,
-				Poll: func(ctx context.Context, id string) (string, error) {
-					s, err := client.PollLoginSession(ctx, id)
-					if err != nil {
-						return "", err
-					}
-					if s.Status == "completed" {
-						tokens = s.Tokens
-					}
-					return s.Status, nil
-				},
-				Interval: 2 * time.Second,
-				Timeout:  5 * time.Minute,
-			})
+			oc, err := auth.Discover(cmd.Context(), prof.Issuer, prof.ClientID)
 			if err != nil {
 				return err
 			}
-			if tokens == nil {
-				return fmt.Errorf("login completed but no tokens were returned")
+
+			var ts *auth.TokenSet
+			if headless {
+				ts, err = auth.DeviceLogin(cmd.Context(), oc, func(uri, code string) {
+					fmt.Printf("To sign in, visit %s and enter code: %s\n", uri, code)
+				})
+			} else {
+				ts, err = auth.LoopbackLogin(cmd.Context(), oc, auth.OpenBrowser)
+			}
+			if err != nil {
+				return err
 			}
 
-			save := &config.Profile{
-				Name:         profileName,
-				AccessToken:  tokens.AccessToken,
-				RefreshToken: tokens.RefreshToken,
-				ExpiresAt:    tokens.ExpiresAt,
-				APIEndpoint:  endpoint,
-				Output:       "table",
-			}
-			if prof != nil {
-				save.DefaultProject = prof.DefaultProject
-				if prof.Output != "" {
-					save.Output = prof.Output
-				}
-			}
-			if err := config.Save(save); err != nil {
+			prof.AccessToken = ts.AccessToken
+			prof.RefreshToken = ts.RefreshToken
+			prof.IDToken = ts.IDToken
+			prof.ExpiresAt = ts.Expiry
+			if err := config.Save(prof); err != nil {
 				return err
 			}
 			fmt.Println("Login successful. Credentials saved.")
 			return nil
 		},
 	}
+	cmd.Flags().BoolVar(&headless, "headless", false, "use the device code flow (no local browser)")
+	return cmd
 }
 
 func newLogoutCmd() *cobra.Command {
@@ -107,24 +81,36 @@ func newWhoamiCmd() *cobra.Command {
 		Use:   "whoami",
 		Short: "Show the currently authenticated identity",
 		RunE: func(cmd *cobra.Command, args []string) error {
+			profileName, _ := cmd.Flags().GetString("profile")
+			prof, err := config.Load(profileName)
+			if err != nil {
+				return err
+			}
+			if prof.IDToken == "" {
+				return fmt.Errorf("not logged in: run `aic login`")
+			}
+			sub, email, err := auth.ParseIDTokenClaims(prof.IDToken)
+			if err != nil {
+				return err
+			}
 			a, err := appFromCmd(cmd)
 			if err != nil {
 				return err
 			}
-			id, err := a.Client.Whoami(cmd.Context())
-			if err != nil {
-				return err
-			}
-			return a.Out.Print(*id, []string{"USER ID", "EMAIL"}, func(v any) []string {
-				x := v.(api.Identity)
-				return []string{x.UserID, x.Email}
-			})
+			return a.Out.Print(
+				map[string]string{"user_id": sub, "email": email},
+				[]string{"USER ID", "EMAIL"},
+				func(v any) []string {
+					m := v.(map[string]string)
+					return []string{m["user_id"], m["email"]}
+				},
+			)
 		},
 	}
 }
 
 func newConfigureCmd() *cobra.Command {
-	var endpoint, output string
+	var endpoint, output, issuer, clientID string
 	cmd := &cobra.Command{
 		Use:   "configure",
 		Short: "Set CLI configuration (API endpoint, output format)",
@@ -143,6 +129,12 @@ func newConfigureCmd() *cobra.Command {
 				}
 				prof.Output = output
 			}
+			if issuer != "" {
+				prof.Issuer = issuer
+			}
+			if clientID != "" {
+				prof.ClientID = clientID
+			}
 			if err := config.Save(prof); err != nil {
 				return err
 			}
@@ -152,5 +144,7 @@ func newConfigureCmd() *cobra.Command {
 	}
 	cmd.Flags().StringVar(&endpoint, "api-endpoint", "", "backend API endpoint URL")
 	cmd.Flags().StringVar(&output, "output-format", "", "default output format: table|json|yaml")
+	cmd.Flags().StringVar(&issuer, "issuer", "", "OIDC issuer URL")
+	cmd.Flags().StringVar(&clientID, "client-id", "", "OIDC client id for the CLI")
 	return cmd
 }

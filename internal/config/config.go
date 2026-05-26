@@ -15,6 +15,7 @@ type Profile struct {
 	Name           string
 	AccessToken    string
 	RefreshToken   string
+	IDToken        string
 	ExpiresAt      time.Time
 	DefaultProject string
 	Output         string
@@ -59,6 +60,7 @@ func Save(p *Profile) error {
 	sec := cred.Section(p.Name)
 	sec.Key("access_token").SetValue(p.AccessToken)
 	sec.Key("refresh_token").SetValue(p.RefreshToken)
+	sec.Key("id_token").SetValue(p.IDToken)
 	if !p.ExpiresAt.IsZero() {
 		sec.Key("expires_at").SetValue(p.ExpiresAt.UTC().Format(timeFormat))
 	}
@@ -98,6 +100,7 @@ func Load(name string) (*Profile, error) {
 		Name:         name,
 		AccessToken:  sec.Key("access_token").String(),
 		RefreshToken: sec.Key("refresh_token").String(),
+		IDToken:      sec.Key("id_token").String(),
 	}
 	if v := sec.Key("expires_at").String(); v != "" {
 		if t, e := time.Parse(timeFormat, v); e == nil {

@@ -2,6 +2,10 @@ package auth
 
 import (
 	"context"
+	"encoding/base64"
+	"encoding/json"
+	"errors"
+	"strings"
 	"time"
 
 	"github.com/coreos/go-oidc/v3/oidc"
@@ -61,4 +65,36 @@ func tokenSetFrom(tok *oauth2.Token) *TokenSet {
 		ts.IDToken = id
 	}
 	return ts
+}
+
+// ParseIDTokenClaims extracts sub and email from a JWT WITHOUT verifying it
+// (the token was just issued to us over TLS; full verification is the resource
+// server's job).
+func ParseIDTokenClaims(idToken string) (sub, email string, err error) {
+	parts := strings.Split(idToken, ".")
+	if len(parts) < 2 {
+		return "", "", errors.New("malformed id token")
+	}
+	payload, err := base64.RawURLEncoding.DecodeString(parts[1])
+	if err != nil {
+		return "", "", err
+	}
+	var claims struct {
+		Sub   string `json:"sub"`
+		Email string `json:"email"`
+	}
+	if err := json.Unmarshal(payload, &claims); err != nil {
+		return "", "", err
+	}
+	return claims.Sub, claims.Email, nil
+}
+
+// RefreshTokens exchanges a refresh token for a new token set at the OIDC token endpoint.
+func RefreshTokens(ctx context.Context, oc *OIDCConfig, refreshToken string) (*TokenSet, error) {
+	src := oc.OAuth2.TokenSource(ctx, &oauth2.Token{RefreshToken: refreshToken})
+	tok, err := src.Token()
+	if err != nil {
+		return nil, err
+	}
+	return tokenSetFrom(tok), nil
 }

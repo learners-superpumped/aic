@@ -1,11 +1,13 @@
 package cmd
 
 import (
+	"context"
 	"fmt"
 	"os"
 
 	"github.com/learners-company/aic/internal/api"
 	"github.com/learners-company/aic/internal/app"
+	"github.com/learners-company/aic/internal/auth"
 	"github.com/learners-company/aic/internal/config"
 	"github.com/spf13/cobra"
 )
@@ -35,7 +37,7 @@ type buildAppArgs struct {
 	token          string
 	defaultProject string
 	projectFlag    string
-	refreshToken   string
+	refreshFn      func(context.Context) (*api.Tokens, error)
 	onRefresh      func(*api.Tokens)
 }
 
@@ -45,8 +47,8 @@ func buildApp(a buildAppArgs) (*app.App, error) {
 		return nil, err
 	}
 	client := api.New(a.apiEndpoint, a.token)
-	if a.refreshToken != "" {
-		client = client.WithRefresh(a.refreshToken, a.onRefresh)
+	if a.refreshFn != nil {
+		client = client.WithRefresh(a.refreshFn, a.onRefresh)
 	}
 	return &app.App{
 		Client:  client,
@@ -111,6 +113,21 @@ func NewRootCmd() *cobra.Command {
 			}
 		}
 
+		var refreshFn func(context.Context) (*api.Tokens, error)
+		if prof.Issuer != "" && prof.ClientID != "" && prof.RefreshToken != "" {
+			refreshFn = func(ctx context.Context) (*api.Tokens, error) {
+				oc, err := auth.Discover(ctx, prof.Issuer, prof.ClientID)
+				if err != nil {
+					return nil, err
+				}
+				ts, err := auth.RefreshTokens(ctx, oc, prof.RefreshToken)
+				if err != nil {
+					return nil, err
+				}
+				return &api.Tokens{AccessToken: ts.AccessToken, RefreshToken: ts.RefreshToken, ExpiresAt: ts.Expiry}, nil
+			}
+		}
+
 		a, err := buildApp(buildAppArgs{
 			profileName:    profileName,
 			output:         output,
@@ -118,7 +135,7 @@ func NewRootCmd() *cobra.Command {
 			token:          prof.AccessToken,
 			defaultProject: prof.DefaultProject,
 			projectFlag:    projectFlag,
-			refreshToken:   prof.RefreshToken,
+			refreshFn:      refreshFn,
 			onRefresh:      onRefresh,
 		})
 		if err != nil {
