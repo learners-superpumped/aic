@@ -1,0 +1,15 @@
+# Binaries
+aic
+/dist/
+
+# Go
+*.test
+*.out
+vendor/
+
+# Local config / secrets
+.aic/
+*.local
+
+# OS
+.DS_Store
