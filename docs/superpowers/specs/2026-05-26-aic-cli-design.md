@@ -149,6 +149,7 @@ AWS-style, INI-formatted, under `~/.aic/` (override via `AIC_CONFIG_DIR` env).
 [default]
 access_token  = ...
 refresh_token = ...
+id_token      = ...
 expires_at    = 2026-05-26T12:00:00Z
 ```
 
@@ -158,24 +159,32 @@ expires_at    = 2026-05-26T12:00:00Z
 default_project = proj_abc123
 output          = table
 api_endpoint    = https://api.aic.example.com
+issuer          = https://auth.example.com
+client_id       = <oidc-public-client-id>
 ```
+
+The OIDC `issuer` and `client_id` are set via `aic configure --issuer <url> --client-id <id>` (values come from the `aic-auth` Terraform outputs `issuer_url` / `aic_cli_client_id`). The `id_token` is stored for client-side `whoami`.
 
 Multiple profiles supported via section names; selected with `--profile`. Credentials-file values take precedence over config for overlapping keys. Token refresh happens transparently in `auth/`; on unrecoverable auth failure the CLI prints an English message instructing the user to run `aic login`.
 
 ---
 
-## 8. Browser-Delegated Flows (login & add-card share one pattern)
+## 8. Browser-Delegated Flows
 
-Both `aic login` and `aic billing add-card` use the same mechanism, implemented once and reused:
+Two browser-delegated flows exist; they no longer share one backend mechanism.
 
-1. CLI calls backend to **start a session** (returns a session id + a browser URL, and a poll token).
-2. CLI **opens the browser** to that URL (and prints the URL as a fallback for headless environments).
-3. CLI **polls** the backend until the session is `completed` (or `expired`/`denied`), with a timeout.
-4. On success:
-   - **login** → backend returns tokens; CLI writes them to `~/.aic/credentials`.
-   - **add-card** → Stripe-hosted page captures the card; backend confirms; CLI reports success.
+**`aic login` — standard OIDC (against the central IdP, not this backend):**
+- Default: loopback **Authorization Code + PKCE** — the CLI opens the browser to the issuer's authorize endpoint, receives the code on a `127.0.0.1` callback, and exchanges it (with the PKCE verifier) for tokens.
+- `--headless`: **Device Authorization Grant** — the CLI shows a URL + user code to enter in any browser, then polls the token endpoint.
+- On success the CLI writes the access/refresh/ID tokens to `~/.aic/credentials`.
 
-PCI scope stays with the backend/PG (Stripe). No card data ever touches the terminal.
+**`aic billing add-card` — custom card-session flow (against this backend):**
+1. CLI calls `POST /v1/billing/card-sessions` → `{ session_id, browser_url, poll_token, ... }`.
+2. CLI opens the browser to the Stripe-hosted URL (prints it as a headless fallback).
+3. CLI polls `GET /v1/billing/card-sessions/{id}` until `completed` (or `expired`/`denied`).
+4. Stripe-hosted page captures the card; backend confirms; CLI reports success.
+
+PCI scope stays with the backend/PG (Stripe). No card data ever touches the terminal. The reusable poll loop (`auth.RunFlow`) backs the add-card flow; login uses the OIDC-specific loopback/device flows.
 
 ---
 
@@ -190,11 +199,16 @@ PCI scope stays with the backend/PG (Stripe). No card data ever touches the term
 
 The CLI depends on these endpoints. Shapes are indicative; the backend implementation is a follow-up action that will finalize them.
 
-### Auth (device/browser flow)
-- `POST /v1/auth/sessions` → `{ session_id, browser_url, poll_token, expires_at }`
-- `GET  /v1/auth/sessions/{id}` (poll) → `{ status: pending|completed|expired|denied, access_token?, refresh_token?, expires_at? }`
-- `POST /v1/auth/token/refresh` `{ refresh_token }` → `{ access_token, refresh_token, expires_at }`
-- `GET  /v1/auth/whoami` → `{ user_id, email, ... }`
+### Auth (delegated to the central OIDC IdP)
+Authentication is handled by the central OIDC IdP (see the `aic-auth` spec), not by
+this backend. The CLI logs in via standard OIDC against the configured issuer —
+loopback Authorization Code + PKCE by default, or the Device Authorization Grant
+with `--headless` — stores the resulting tokens in `~/.aic`, and sends a Bearer
+access JWT on every API call. Token refresh uses the OIDC `refresh_token` grant at
+the issuer's token endpoint (transparently, on a `401`). This backend issues no auth
+tokens itself; it validates the Bearer JWT (issuer/audience/expiry via JWKS) using
+the shared `oidcauth` middleware and reads `sub`/`email` from the verified token.
+`whoami` is served client-side from the stored ID token (no backend call).
 
 ### Billing
 - `POST /v1/billing/card-sessions` → `{ session_id, browser_url, poll_token, expires_at }` (Stripe-hosted)
