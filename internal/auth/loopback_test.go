@@ -44,6 +44,12 @@ func TestLoopbackLoginExchangesCode(t *testing.T) {
 
 	openBrowser := func(authURL string) error {
 		u, _ := url.Parse(authURL)
+		if u.Query().Get("code_challenge_method") != "S256" {
+			t.Errorf("expected S256 challenge method, got %q", u.Query().Get("code_challenge_method"))
+		}
+		if u.Query().Get("code_challenge") == "" {
+			t.Error("missing code_challenge on auth URL")
+		}
 		redirect := u.Query().Get("redirect_uri")
 		state := u.Query().Get("state")
 		go func() {

@@ -24,7 +24,10 @@ func LoopbackLogin(ctx context.Context, oc *OIDCConfig, openBrowser func(string)
 	cfg := oc.OAuth2
 	cfg.RedirectURL = fmt.Sprintf("http://%s/callback", ln.Addr().String())
 
-	state := randString()
+	state, err := randString()
+	if err != nil {
+		return nil, err
+	}
 	verifier := oauth2.GenerateVerifier()
 
 	type result struct {
@@ -77,8 +80,10 @@ func LoopbackLogin(ctx context.Context, oc *OIDCConfig, openBrowser func(string)
 	return tokenSetFrom(tok), nil
 }
 
-func randString() string {
+func randString() (string, error) {
 	b := make([]byte, 16)
-	_, _ = rand.Read(b)
-	return hex.EncodeToString(b)
+	if _, err := rand.Read(b); err != nil {
+		return "", err
+	}
+	return hex.EncodeToString(b), nil
 }
