@@ -4,120 +4,145 @@ import (
 	"fmt"
 
 	"github.com/learners-superpumped/aicompany-platform/cli/internal/api"
+	"github.com/learners-superpumped/aicompany-platform/cli/internal/app"
 	"github.com/spf13/cobra"
 )
 
 func newDomainsCmd() *cobra.Command {
-	cmd := &cobra.Command{
-		Use:     "domains",
-		Aliases: []string{"domain"},
-		Short:   "Search, buy, and manage domains",
-	}
-	cmd.AddCommand(
-		newDomainsSearchCmd(),
-		newDomainsBuyCmd(),
-		newDomainsListCmd(),
-		newDomainsShowCmd(),
-	)
+	cmd := &cobra.Command{Use: "domains", Aliases: []string{"domain"}, Short: "Search, buy, and renew domains"}
+	cmd.AddCommand(newDomainsSearchCmd(), newDomainsBuyCmd(), newDomainsRenewCmd(), newDomainsListCmd(), newDomainsShowCmd())
 	return cmd
+}
+
+func domainScope(a *app.App) error {
+	if err := a.RequireTeam(); err != nil {
+		return err
+	}
+	return a.RequireProject()
+}
+
+func domainRows() ([]string, func(any) []string) {
+	return []string{"NAME", "STATUS", "AUTO-RENEW", "EXPIRES"}, func(v any) []string {
+		d := v.(api.Domain)
+		exp := ""
+		if !d.ExpiresAt.IsZero() {
+			exp = d.ExpiresAt.Format("2006-01-02")
+		}
+		return []string{d.Name, d.Status, fmt.Sprintf("%t", d.AutoRenew), exp}
+	}
 }
 
 func newDomainsSearchCmd() *cobra.Command {
 	return &cobra.Command{
-		Use:   "search <query>",
-		Short: "Search domain availability and pricing",
-		Args:  cobra.ExactArgs(1),
+		Use: "search <query>", Short: "Search availability and pricing", Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			a, err := appFromCmd(cmd)
 			if err != nil {
 				return err
 			}
-			if err := a.RequireProject(); err != nil {
+			if err := domainScope(a); err != nil {
 				return err
 			}
-			results, err := a.Client.SearchDomains(cmd.Context(), a.Project, args[0])
+			res, err := a.Client.SearchDomains(cmd.Context(), a.Team, a.Project, args[0])
 			if err != nil {
 				return err
 			}
-			return a.Out.Print(results, []string{"DOMAIN", "AVAILABLE", "PRICE"}, func(v any) []string {
+			return a.Out.Print(res, []string{"DOMAIN", "AVAILABLE", "PRICE (USD)"}, func(v any) []string {
 				d := v.(api.DomainSearchResult)
-				return []string{d.Domain, fmt.Sprintf("%t", d.Available), fmt.Sprintf("%.2f %s", d.Price, d.Currency)}
+				return []string{d.Domain, fmt.Sprintf("%t", d.Available), fmt.Sprintf("$%.2f", d.PriceUSD)}
 			})
 		},
 	}
 }
 
 func newDomainsBuyCmd() *cobra.Command {
-	return &cobra.Command{
-		Use:   "buy <domain>",
-		Short: "Purchase a domain in the current project",
-		Args:  cobra.ExactArgs(1),
+	var years int
+	var autoRenew bool
+	cmd := &cobra.Command{
+		Use: "buy <domain>", Short: "Buy a domain (charges team credits)", Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			a, err := appFromCmd(cmd)
 			if err != nil {
 				return err
 			}
-			if err := a.RequireProject(); err != nil {
+			if err := domainScope(a); err != nil {
 				return err
 			}
-			d, err := a.Client.BuyDomain(cmd.Context(), a.Project, args[0])
+			d, err := a.Client.BuyDomain(cmd.Context(), a.Team, a.Project, args[0], years, autoRenew)
 			if err != nil {
 				return err
 			}
-			return a.Out.Print(*d, []string{"DOMAIN", "STATUS"}, func(v any) []string {
-				x := v.(api.Domain)
-				return []string{x.Domain, x.Status}
-			})
+			cols, row := domainRows()
+			return a.Out.Print(*d, cols, row)
 		},
 	}
+	cmd.Flags().IntVar(&years, "years", 1, "registration years (1-10)")
+	cmd.Flags().BoolVar(&autoRenew, "auto-renew", false, "store an auto-renew preference (automatic renewal ships in a later release; use `aic domains renew` meanwhile)")
+	return cmd
+}
+
+func newDomainsRenewCmd() *cobra.Command {
+	var years int
+	cmd := &cobra.Command{
+		Use: "renew <domain>", Short: "Renew a domain (charges team credits)", Args: cobra.ExactArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			a, err := appFromCmd(cmd)
+			if err != nil {
+				return err
+			}
+			if err := domainScope(a); err != nil {
+				return err
+			}
+			d, err := a.Client.RenewDomain(cmd.Context(), a.Team, a.Project, args[0], years)
+			if err != nil {
+				return err
+			}
+			cols, row := domainRows()
+			return a.Out.Print(*d, cols, row)
+		},
+	}
+	cmd.Flags().IntVar(&years, "years", 1, "renewal years (1-10)")
+	return cmd
 }
 
 func newDomainsListCmd() *cobra.Command {
 	return &cobra.Command{
-		Use:     "list",
-		Aliases: []string{"ls"},
-		Short:   "List domains in the current project",
+		Use: "list", Aliases: []string{"ls"}, Short: "List domains in the current project",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			a, err := appFromCmd(cmd)
 			if err != nil {
 				return err
 			}
-			if err := a.RequireProject(); err != nil {
+			if err := domainScope(a); err != nil {
 				return err
 			}
-			items, err := a.Client.ListDomains(cmd.Context(), a.Project)
+			items, err := a.Client.ListDomains(cmd.Context(), a.Team, a.Project)
 			if err != nil {
 				return err
 			}
-			return a.Out.Print(items, []string{"DOMAIN", "STATUS"}, func(v any) []string {
-				x := v.(api.Domain)
-				return []string{x.Domain, x.Status}
-			})
+			cols, row := domainRows()
+			return a.Out.Print(items, cols, row)
 		},
 	}
 }
 
 func newDomainsShowCmd() *cobra.Command {
 	return &cobra.Command{
-		Use:   "show <domain>",
-		Short: "Show a domain in the current project",
-		Args:  cobra.ExactArgs(1),
+		Use: "show <domain>", Short: "Show a domain", Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			a, err := appFromCmd(cmd)
 			if err != nil {
 				return err
 			}
-			if err := a.RequireProject(); err != nil {
+			if err := domainScope(a); err != nil {
 				return err
 			}
-			d, err := a.Client.GetDomain(cmd.Context(), a.Project, args[0])
+			d, err := a.Client.GetDomain(cmd.Context(), a.Team, a.Project, args[0])
 			if err != nil {
 				return err
 			}
-			return a.Out.Print(*d, []string{"DOMAIN", "STATUS"}, func(v any) []string {
-				x := v.(api.Domain)
-				return []string{x.Domain, x.Status}
-			})
+			cols, row := domainRows()
+			return a.Out.Print(*d, cols, row)
 		},
 	}
 }

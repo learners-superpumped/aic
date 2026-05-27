@@ -88,29 +88,37 @@ func (c *Client) DeleteProject(ctx context.Context, teamID, id string) error {
 	return c.do(ctx, http.MethodDelete, teamProjectsPath(teamID)+"/"+url.PathEscape(id), nil, nil)
 }
 
-// --- Domains ---
+// --- Domains (scoped to a team's project) ---
 
-func (c *Client) SearchDomains(ctx context.Context, pid, query string) ([]DomainSearchResult, error) {
+func teamDomainsPath(teamID, projectID string) string {
+	return "/v1/teams/" + url.PathEscape(teamID) + "/projects/" + url.PathEscape(projectID) + "/domains"
+}
+
+func (c *Client) SearchDomains(ctx context.Context, teamID, projectID, query string) ([]DomainSearchResult, error) {
 	var out []DomainSearchResult
-	path := fmt.Sprintf("/v1/projects/%s/domains/search?q=%s", url.PathEscape(pid), url.QueryEscape(query))
-	return out, c.do(ctx, http.MethodGet, path, nil, &out)
+	return out, c.do(ctx, http.MethodGet, teamDomainsPath(teamID, projectID)+"/search?q="+url.QueryEscape(query), nil, &out)
 }
 
-func (c *Client) BuyDomain(ctx context.Context, pid, domain string) (*Domain, error) {
+func (c *Client) BuyDomain(ctx context.Context, teamID, projectID, domain string, years int, autoRenew bool) (*Domain, error) {
 	var d Domain
-	return &d, c.do(ctx, http.MethodPost, fmt.Sprintf("/v1/projects/%s/domains", url.PathEscape(pid)),
-		map[string]string{"domain": domain}, &d)
+	return &d, c.do(ctx, http.MethodPost, teamDomainsPath(teamID, projectID),
+		map[string]any{"name": domain, "years": years, "auto_renew": autoRenew}, &d)
 }
 
-func (c *Client) ListDomains(ctx context.Context, pid string) ([]Domain, error) {
+func (c *Client) RenewDomain(ctx context.Context, teamID, projectID, domain string, years int) (*Domain, error) {
+	var d Domain
+	return &d, c.do(ctx, http.MethodPost, teamDomainsPath(teamID, projectID)+"/"+url.PathEscape(domain)+"/renew",
+		map[string]any{"years": years}, &d)
+}
+
+func (c *Client) ListDomains(ctx context.Context, teamID, projectID string) ([]Domain, error) {
 	var out []Domain
-	return out, c.do(ctx, http.MethodGet, fmt.Sprintf("/v1/projects/%s/domains", url.PathEscape(pid)), nil, &out)
+	return out, c.do(ctx, http.MethodGet, teamDomainsPath(teamID, projectID), nil, &out)
 }
 
-func (c *Client) GetDomain(ctx context.Context, pid, domain string) (*Domain, error) {
+func (c *Client) GetDomain(ctx context.Context, teamID, projectID, domain string) (*Domain, error) {
 	var d Domain
-	path := fmt.Sprintf("/v1/projects/%s/domains/%s", url.PathEscape(pid), url.PathEscape(domain))
-	return &d, c.do(ctx, http.MethodGet, path, nil, &d)
+	return &d, c.do(ctx, http.MethodGet, teamDomainsPath(teamID, projectID)+"/"+url.PathEscape(domain), nil, &d)
 }
 
 // --- Inboxes ---

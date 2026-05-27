@@ -17,17 +17,20 @@ type Project struct {
 	CreatedAt time.Time `json:"created_at" yaml:"created_at"`
 }
 
-// Domain is a purchased domain within a project.
+// Domain is a domain in a project.
 type Domain struct {
-	Domain string `json:"domain" yaml:"domain"`
-	Status string `json:"status" yaml:"status"`
+	Name         string    `json:"name" yaml:"name"`
+	Status       string    `json:"status" yaml:"status"`
+	AutoRenew    bool      `json:"auto_renew" yaml:"auto_renew"`
+	RegisteredAt time.Time `json:"registered_at" yaml:"registered_at"`
+	ExpiresAt    time.Time `json:"expires_at" yaml:"expires_at"`
 }
 
 // DomainSearchResult is one availability/pricing row.
 type DomainSearchResult struct {
 	Domain    string  `json:"domain" yaml:"domain"`
 	Available bool    `json:"available" yaml:"available"`
-	Price     float64 `json:"price" yaml:"price"`
+	PriceUSD  float64 `json:"price_usd" yaml:"price_usd"`
 	Currency  string  `json:"currency" yaml:"currency"`
 }
 
