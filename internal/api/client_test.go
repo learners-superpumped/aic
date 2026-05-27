@@ -47,6 +47,31 @@ func TestDoStructuredError(t *testing.T) {
 	}
 }
 
+// The backend's 402 insufficient-credit body carries extra structured fields
+// (balance/required/shortfall/topup_hint) alongside the standard {code,message}.
+// The client must still surface the human-readable message, not fall back to the
+// opaque "request failed with status 402".
+func TestDoRichInsufficientCreditErrorSurfacesMessage(t *testing.T) {
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusPaymentRequired)
+		w.Write([]byte(`{"code":"insufficient_credit","message":"insufficient credit: balance $5.00, need $12.00 (short $7.00) — run ` + "`aic billing topup`" + `","balance":5000000000,"required":12000000000,"shortfall":7000000000,"topup_hint":"run ` + "`aic billing topup --amount <usd>`" + `"}`))
+	}))
+	defer srv.Close()
+
+	c := New(srv.URL, "tok")
+	err := c.do(context.Background(), http.MethodPost, "/v1/x", nil, nil)
+	apiErr, ok := err.(*Error)
+	if !ok {
+		t.Fatalf("want *Error, got %T: %v", err, err)
+	}
+	if apiErr.Status != 402 || apiErr.Code != "insufficient_credit" {
+		t.Fatalf("unexpected error: %+v", apiErr)
+	}
+	if !strings.Contains(apiErr.Error(), "insufficient credit") || !strings.Contains(apiErr.Error(), "$7.00") {
+		t.Fatalf("message not surfaced (got opaque fallback?): %q", apiErr.Error())
+	}
+}
+
 func TestListProjects(t *testing.T) {
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.URL.Path != "/v1/teams/team_1/projects" || r.Method != http.MethodGet {
