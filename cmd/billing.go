@@ -113,8 +113,7 @@ func newBillingTopupCmd() *cobra.Command {
 				return err
 			}
 			if res.Status == "requires_action" {
-				fmt.Println("Your card needs re-authentication. Run `aic billing add-card` again.")
-				return nil
+				return fmt.Errorf("card requires re-authentication: run `aic billing add-card` again")
 			}
 			fmt.Println("Payment accepted — your balance will update shortly. Check `aic billing balance`.")
 			return nil
@@ -179,6 +178,9 @@ func parseDollarsToCents(s string) (int64, error) {
 	s = strings.TrimSpace(strings.TrimPrefix(s, "$"))
 	if s == "" {
 		return 0, fmt.Errorf("amount is required")
+	}
+	if strings.HasPrefix(s, "-") {
+		return 0, fmt.Errorf("amount must be positive")
 	}
 	parts := strings.SplitN(s, ".", 2)
 	dollars, err := strconv.ParseInt(parts[0], 10, 64)

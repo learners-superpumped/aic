@@ -60,3 +60,24 @@ func TestBillingBalanceRequiresTeam(t *testing.T) {
 		t.Fatal("expected RequireTeam error when no team is selected")
 	}
 }
+
+func TestParseDollarsToCents(t *testing.T) {
+	ok := map[string]int64{
+		"50":    5000,
+		"49.99": 4999,
+		"$50":   5000,
+		" 50 ":  5000,
+		"0.05":  5,
+	}
+	for in, want := range ok {
+		got, err := parseDollarsToCents(in)
+		if err != nil || got != want {
+			t.Errorf("parseDollarsToCents(%q) = %d, %v; want %d, nil", in, got, err, want)
+		}
+	}
+	for _, in := range []string{"", "0", "-5", "-0.50", "49.999", "abc", "5.x"} {
+		if _, err := parseDollarsToCents(in); err == nil {
+			t.Errorf("parseDollarsToCents(%q) expected error, got nil", in)
+		}
+	}
+}
