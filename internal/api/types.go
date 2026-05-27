@@ -58,9 +58,25 @@ type Card struct {
 	Default  bool   `json:"default" yaml:"default"`
 }
 
-// BillingStatus reports whether a payment method exists.
-type BillingStatus struct {
-	HasPaymentMethod bool `json:"has_payment_method" yaml:"has_payment_method"`
+// CreditBalance is a team's wallet balance.
+type CreditBalance struct {
+	BalanceNano int64   `json:"balance_nano" yaml:"balance_nano"`
+	BalanceUSD  float64 `json:"balance_usd" yaml:"balance_usd"`
+}
+
+// LedgerEntry is one credit ledger row.
+type LedgerEntry struct {
+	ID         string    `json:"id" yaml:"id"`
+	AmountNano int64     `json:"amount_nano" yaml:"amount_nano"`
+	Type       string    `json:"type" yaml:"type"`
+	Reference  string    `json:"reference" yaml:"reference"`
+	CreatedAt  time.Time `json:"created_at" yaml:"created_at"`
+}
+
+// TopupResult is the response to a top-up request.
+type TopupResult struct {
+	Status          string `json:"status" yaml:"status"`
+	PaymentIntentID string `json:"payment_intent_id" yaml:"payment_intent_id"`
 }
 
 // Tokens is an auth token set.

@@ -16,28 +16,47 @@ func TestBillingCmdHasSubcommands(t *testing.T) {
 	for _, c := range newBillingCmd().Commands() {
 		names[c.Name()] = true
 	}
-	for _, want := range []string{"add-card", "cards", "status"} {
+	for _, want := range []string{"add-card", "cards", "topup", "balance", "history"} {
 		if !names[want] {
 			t.Errorf("missing billing subcommand %q", want)
 		}
 	}
+	if names["status"] {
+		t.Error("status subcommand should have been removed")
+	}
 }
 
-func TestBillingCardsList(t *testing.T) {
+func TestBillingBalanceHitsTeamScopedPath(t *testing.T) {
+	var gotPath string
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.Write([]byte(`[{"card_id":"c1","brand":"visa","last4":"4242","exp_month":12,"exp_year":2030,"default":true}]`))
+		gotPath = r.URL.Path
+		_, _ = w.Write([]byte(`{"balance_nano":50000000000,"balance_usd":50}`))
 	}))
 	defer srv.Close()
 
 	var buf bytes.Buffer
 	r, _ := app.NewRenderer("json", &buf)
-	a := &app.App{Client: api.New(srv.URL, "tok"), Out: r}
-	cards := findSub(newBillingCmd(), "cards")
-	cards.SetContext(ctxWithApp(t, a))
-	if err := cards.RunE(cards, nil); err != nil {
+	a := &app.App{Client: api.New(srv.URL, "tok"), Out: r, Team: "team_123"}
+	bal := findSub(newBillingCmd(), "balance")
+	bal.SetContext(ctxWithApp(t, a))
+	if err := bal.RunE(bal, nil); err != nil {
 		t.Fatal(err)
 	}
-	if !strings.Contains(buf.String(), "4242") {
-		t.Fatalf("expected last4 in output: %s", buf.String())
+	if gotPath != "/v1/teams/team_123/billing/balance" {
+		t.Fatalf("path = %q, want team-scoped", gotPath)
+	}
+	if !strings.Contains(buf.String(), "50") {
+		t.Fatalf("expected balance in output: %s", buf.String())
+	}
+}
+
+func TestBillingBalanceRequiresTeam(t *testing.T) {
+	var buf bytes.Buffer
+	r, _ := app.NewRenderer("json", &buf)
+	a := &app.App{Client: api.New("http://unused", "tok"), Out: r} // no Team
+	bal := findSub(newBillingCmd(), "balance")
+	bal.SetContext(ctxWithApp(t, a))
+	if err := bal.RunE(bal, nil); err == nil {
+		t.Fatal("expected RequireTeam error when no team is selected")
 	}
 }

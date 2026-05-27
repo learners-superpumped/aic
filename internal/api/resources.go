@@ -7,26 +7,41 @@ import (
 	"net/url"
 )
 
-// --- Billing ---
+// --- Billing (scoped to a team) ---
 
-func (c *Client) StartCardSession(ctx context.Context) (*Session, error) {
-	var s Session
-	return &s, c.do(ctx, http.MethodPost, "/v1/billing/card-sessions", nil, &s)
+func teamBillingPath(teamID string) string {
+	return "/v1/teams/" + url.PathEscape(teamID) + "/billing"
 }
 
-func (c *Client) PollCardSession(ctx context.Context, id string) (*Session, error) {
+func (c *Client) StartCardSession(ctx context.Context, teamID string) (*Session, error) {
 	var s Session
-	return &s, c.do(ctx, http.MethodGet, "/v1/billing/card-sessions/"+url.PathEscape(id), nil, &s)
+	return &s, c.do(ctx, http.MethodPost, teamBillingPath(teamID)+"/card-sessions", nil, &s)
 }
 
-func (c *Client) ListCards(ctx context.Context) ([]Card, error) {
+func (c *Client) PollCardSession(ctx context.Context, teamID, id string) (*Session, error) {
+	var s Session
+	return &s, c.do(ctx, http.MethodGet, teamBillingPath(teamID)+"/card-sessions/"+url.PathEscape(id), nil, &s)
+}
+
+func (c *Client) ListCards(ctx context.Context, teamID string) ([]Card, error) {
 	var out []Card
-	return out, c.do(ctx, http.MethodGet, "/v1/billing/cards", nil, &out)
+	return out, c.do(ctx, http.MethodGet, teamBillingPath(teamID)+"/cards", nil, &out)
 }
 
-func (c *Client) BillingStatus(ctx context.Context) (*BillingStatus, error) {
-	var s BillingStatus
-	return &s, c.do(ctx, http.MethodGet, "/v1/billing/status", nil, &s)
+func (c *Client) Balance(ctx context.Context, teamID string) (*CreditBalance, error) {
+	var b CreditBalance
+	return &b, c.do(ctx, http.MethodGet, teamBillingPath(teamID)+"/balance", nil, &b)
+}
+
+func (c *Client) History(ctx context.Context, teamID string) ([]LedgerEntry, error) {
+	var out []LedgerEntry
+	return out, c.do(ctx, http.MethodGet, teamBillingPath(teamID)+"/history", nil, &out)
+}
+
+func (c *Client) Topup(ctx context.Context, teamID string, amountCents int64) (*TopupResult, error) {
+	var res TopupResult
+	return &res, c.do(ctx, http.MethodPost, teamBillingPath(teamID)+"/topup",
+		map[string]int64{"amount_cents": amountCents}, &res)
 }
 
 // --- Teams ---
