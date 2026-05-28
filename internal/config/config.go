@@ -28,6 +28,41 @@ type Profile struct {
 
 const timeFormat = time.RFC3339
 
+const (
+	DefaultAPIEndpoint   = "https://api.runaic.com"
+	DefaultIssuer        = "https://auth.runaic.com"
+	DefaultClientID      = "374799393221642896"
+	DefaultAudienceScope = "urn:zitadel:iam:org:project:id:374799392852413072:aud"
+)
+
+func applyDefaults(p *Profile) {
+	if p.APIEndpoint == "" {
+		p.APIEndpoint = DefaultAPIEndpoint
+	}
+	if p.Issuer == "" {
+		p.Issuer = DefaultIssuer
+	}
+	if p.ClientID == "" {
+		p.ClientID = DefaultClientID
+	}
+	if p.AudienceScope == "" {
+		p.AudienceScope = DefaultAudienceScope
+	}
+}
+
+// LoadOrDefault returns the named profile with hosted-service defaults
+// applied for any empty endpoint/OIDC fields. A missing credentials file or
+// missing profile section yields a fresh defaulted Profile (no error), so
+// first-run commands like `aic login` work without prior `aic configure`.
+func LoadOrDefault(name string) *Profile {
+	p, err := Load(name)
+	if err != nil {
+		p = &Profile{Name: name}
+	}
+	applyDefaults(p)
+	return p
+}
+
 func dir() (string, error) {
 	if d := os.Getenv("AIC_CONFIG_DIR"); d != "" {
 		return d, nil

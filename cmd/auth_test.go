@@ -18,15 +18,6 @@ func TestNewAuthCmdsRegistersAll(t *testing.T) {
 	}
 }
 
-func TestLoginRequiresIssuerConfigured(t *testing.T) {
-	dir := t.TempDir()
-	t.Setenv("AIC_CONFIG_DIR", dir)
-	root := NewRootCmd()
-	root.SetArgs([]string{"login", "--profile", "default"})
-	if err := root.Execute(); err == nil {
-		t.Fatal("expected error when issuer/client_id not configured")
-	}
-}
 
 func TestLogoutRemovesProfile(t *testing.T) {
 	dir := t.TempDir()

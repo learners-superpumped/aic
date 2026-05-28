@@ -49,13 +49,7 @@ func newLoginCmd() *cobra.Command {
 		Short: "Authenticate via your browser and store credentials",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			profileName, _ := cmd.Flags().GetString("profile")
-			prof, loadErr := config.Load(profileName)
-			if prof == nil || prof.Issuer == "" || prof.ClientID == "" {
-				if loadErr != nil {
-					return fmt.Errorf("could not read configuration: %w (run `aic configure --issuer <url> --client-id <id>` if not yet configured)", loadErr)
-				}
-				return fmt.Errorf("OIDC issuer/client not configured: run `aic configure --issuer <url> --client-id <id>`")
-			}
+			prof := config.LoadOrDefault(profileName)
 
 			oc, err := auth.Discover(cmd.Context(), prof.Issuer, prof.ClientID, prof.AudienceScope)
 			if err != nil {
@@ -86,11 +80,7 @@ func newLoginCmd() *cobra.Command {
 			// auto-creates teams; on first login the CLI explicitly creates one.
 			// Auth already succeeded and credentials are saved, so a failure here
 			// is demoted to a warning rather than failing the login.
-			endpoint := prof.APIEndpoint
-			if endpoint == "" {
-				endpoint = defaultEndpoint
-			}
-			client := api.New(endpoint, ts.AccessToken)
+			client := api.New(prof.APIEndpoint, ts.AccessToken)
 			teamID, created, berr := ensureDefaultTeam(cmd.Context(), client, prof.Team)
 			if berr != nil {
 				fmt.Fprintf(os.Stderr, "warning: could not set up your team (run `aic teams create <name>`): %v\n", berr)
@@ -163,7 +153,7 @@ func newConfigureCmd() *cobra.Command {
 	var endpoint, output, issuer, clientID, audienceScope string
 	cmd := &cobra.Command{
 		Use:   "configure",
-		Short: "Set CLI configuration (API endpoint, output format)",
+		Short: "Override the hosted-service defaults (only needed for dev/staging or self-hosted)",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			profileName, _ := cmd.Flags().GetString("profile")
 			prof, _ := config.Load(profileName)

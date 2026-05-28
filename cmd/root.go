@@ -12,8 +12,6 @@ import (
 	"github.com/spf13/cobra"
 )
 
-const defaultEndpoint = "https://api.aic.example.com"
-
 // commandsSkippingApp lists commands that must NOT trigger credential/project
 // resolution (they run before credentials exist).
 var commandsSkippingApp = map[string]bool{
@@ -101,14 +99,8 @@ func NewRootCmd() *cobra.Command {
 		teamFlag, _ := cmd.Flags().GetString("team")
 		outFlag, _ := cmd.Flags().GetString("output")
 
-		prof, err := config.Load(profileName)
-		if err != nil {
-			return err
-		}
+		prof := config.LoadOrDefault(profileName)
 		endpoint := prof.APIEndpoint
-		if endpoint == "" {
-			endpoint = defaultEndpoint
-		}
 		output := outFlag
 		if !cmd.Flags().Changed("output") && prof.Output != "" {
 			output = prof.Output
@@ -126,7 +118,7 @@ func NewRootCmd() *cobra.Command {
 		}
 
 		var refreshFn func(context.Context) (*api.Tokens, error)
-		if prof.Issuer != "" && prof.ClientID != "" && prof.RefreshToken != "" {
+		if prof.RefreshToken != "" {
 			refreshFn = func(ctx context.Context) (*api.Tokens, error) {
 				oc, err := auth.Discover(ctx, prof.Issuer, prof.ClientID, prof.AudienceScope)
 				if err != nil {

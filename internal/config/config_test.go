@@ -95,6 +95,42 @@ func TestSaveAndLoadAudienceScope(t *testing.T) {
 	}
 }
 
+func TestLoadOrDefaultFillsEmptyProfile(t *testing.T) {
+	dir := t.TempDir()
+	t.Setenv("AIC_CONFIG_DIR", dir)
+	p := LoadOrDefault("default")
+	if p.APIEndpoint != DefaultAPIEndpoint {
+		t.Fatalf("APIEndpoint: %q", p.APIEndpoint)
+	}
+	if p.Issuer != DefaultIssuer {
+		t.Fatalf("Issuer: %q", p.Issuer)
+	}
+	if p.ClientID != DefaultClientID {
+		t.Fatalf("ClientID: %q", p.ClientID)
+	}
+	if p.AudienceScope != DefaultAudienceScope {
+		t.Fatalf("AudienceScope: %q", p.AudienceScope)
+	}
+}
+
+func TestLoadOrDefaultPreservesOverrides(t *testing.T) {
+	dir := t.TempDir()
+	t.Setenv("AIC_CONFIG_DIR", dir)
+	if err := Save(&Profile{Name: "default", APIEndpoint: "https://staging.example.com", Issuer: "https://auth.staging.example.com"}); err != nil {
+		t.Fatal(err)
+	}
+	p := LoadOrDefault("default")
+	if p.APIEndpoint != "https://staging.example.com" {
+		t.Fatalf("APIEndpoint override lost: %q", p.APIEndpoint)
+	}
+	if p.Issuer != "https://auth.staging.example.com" {
+		t.Fatalf("Issuer override lost: %q", p.Issuer)
+	}
+	if p.ClientID != DefaultClientID {
+		t.Fatalf("ClientID default not applied: %q", p.ClientID)
+	}
+}
+
 func TestProfileTeamRoundTrip(t *testing.T) {
 	dir := t.TempDir()
 	t.Setenv("AIC_CONFIG_DIR", dir)
