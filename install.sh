@@ -60,7 +60,16 @@ main() {
   curl -fsSL "$CHECKSUMS_URL" -o "$TMP/checksums.txt"
 
   echo "Verifying checksum"
-  (cd "$TMP" && grep " $ARCHIVE\$" checksums.txt | shasum -a 256 -c -)
+  if command -v sha256sum >/dev/null 2>&1; then
+    SHA_CMD="sha256sum --check -"
+  elif command -v shasum >/dev/null 2>&1; then
+    SHA_CMD="shasum -a 256 -c -"
+  else
+    echo "neither sha256sum nor shasum is installed; cannot verify download" >&2
+    exit 1
+  fi
+  # shellcheck disable=SC2086
+  (cd "$TMP" && grep " $ARCHIVE\$" checksums.txt | $SHA_CMD)
 
   tar -C "$TMP" -xzf "$TMP/$ARCHIVE"
 
