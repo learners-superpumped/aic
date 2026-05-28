@@ -10,7 +10,17 @@ import (
 
 func newDomainsCmd() *cobra.Command {
 	cmd := &cobra.Command{Use: "domains", Aliases: []string{"domain"}, Short: "Search, buy, and renew domains"}
-	cmd.AddCommand(newDomainsSearchCmd(), newDomainsBuyCmd(), newDomainsRenewCmd(), newDomainsListCmd(), newDomainsShowCmd(), newDomainsContactCmd())
+	cmd.AddCommand(
+		newDomainsSearchCmd(),
+		newDomainsBuyCmd(),
+		newDomainsConnectCmd(),
+		newDomainsVerifyCmd(),
+		newDomainsDisconnectCmd(),
+		newDomainsRenewCmd(),
+		newDomainsListCmd(),
+		newDomainsShowCmd(),
+		newDomainsContactCmd(),
+	)
 	return cmd
 }
 
@@ -22,13 +32,13 @@ func domainScope(a *app.App) error {
 }
 
 func domainRows() ([]string, func(any) []string) {
-	return []string{"NAME", "STATUS", "AUTO-RENEW", "EXPIRES"}, func(v any) []string {
+	return []string{"NAME", "SOURCE", "STATUS", "AUTO-RENEW", "EXPIRES"}, func(v any) []string {
 		d := v.(api.Domain)
 		exp := ""
 		if !d.ExpiresAt.IsZero() {
 			exp = d.ExpiresAt.Format("2006-01-02")
 		}
-		return []string{d.Name, d.Status, fmt.Sprintf("%t", d.AutoRenew), exp}
+		return []string{d.Name, d.Source, d.Status, fmt.Sprintf("%t", d.AutoRenew), exp}
 	}
 }
 
@@ -144,7 +154,24 @@ func newDomainsShowCmd() *cobra.Command {
 				return err
 			}
 			cols, row := domainRows()
-			return a.Out.Print(*d, cols, row)
+			if err := a.Out.Print(*d, cols, row); err != nil {
+				return err
+			}
+			if d.Source == "connected" {
+				if len(d.Nameservers) > 0 {
+					fmt.Fprintln(cmd.OutOrStdout(), "Nameservers:")
+					for _, ns := range d.Nameservers {
+						fmt.Fprintf(cmd.OutOrStdout(), "  %s\n", ns)
+					}
+				}
+				if !d.LastVerifyAt.IsZero() {
+					fmt.Fprintf(cmd.OutOrStdout(), "Last verify: %s\n", d.LastVerifyAt.Format("2006-01-02 15:04:05 UTC"))
+				}
+				if !d.VerifiedAt.IsZero() {
+					fmt.Fprintf(cmd.OutOrStdout(), "Verified at: %s\n", d.VerifiedAt.Format("2006-01-02 15:04:05 UTC"))
+				}
+			}
+			return nil
 		},
 	}
 }
