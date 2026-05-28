@@ -34,7 +34,10 @@ resolve_version() {
     VERSION=$(curl -sSL "https://api.github.com/repos/$REPO/releases/latest" \
       | grep '"tag_name"' | head -1 | sed -E 's/.*"tag_name": *"([^"]+)".*/\1/')
     if [ -z "$VERSION" ]; then
-      echo "failed to resolve latest version" >&2; exit 1
+      echo "failed to resolve latest version" >&2
+      echo "no stable release found at https://github.com/$REPO/releases/latest" >&2
+      echo "pin a version explicitly, e.g.: AIC_VERSION=v0.1.0 curl ... | sh" >&2
+      exit 1
     fi
   fi
 }
@@ -60,6 +63,13 @@ main() {
   (cd "$TMP" && grep " $ARCHIVE\$" checksums.txt | shasum -a 256 -c -)
 
   tar -C "$TMP" -xzf "$TMP/$ARCHIVE"
+
+  if [ ! -d "$INSTALL_DIR" ]; then
+    if mkdir -p "$INSTALL_DIR" 2>/dev/null; then :; else
+      echo "Creating $INSTALL_DIR (requires sudo)"
+      sudo mkdir -p "$INSTALL_DIR"
+    fi
+  fi
 
   if [ ! -w "$INSTALL_DIR" ]; then
     echo "Installing to $INSTALL_DIR (requires sudo)"
