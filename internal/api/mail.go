@@ -3,6 +3,7 @@ package api
 import (
 	"context"
 	"fmt"
+	"net/url"
 	"time"
 )
 
@@ -63,7 +64,8 @@ type SendMessageRequest struct {
 }
 
 func mailBasePath(teamID, projectID string) string {
-	return fmt.Sprintf("/v1/teams/%s/projects/%s/mail", teamID, projectID)
+	return fmt.Sprintf("/v1/teams/%s/projects/%s/mail",
+		url.PathEscape(teamID), url.PathEscape(projectID))
 }
 
 func (c *Client) EnableMailDomain(ctx context.Context, teamID, projectID, name string) (*EnableMailDomainResponse, error) {
@@ -73,12 +75,12 @@ func (c *Client) EnableMailDomain(ctx context.Context, teamID, projectID, name s
 
 func (c *Client) ShowMailDomain(ctx context.Context, teamID, projectID, name string) (*EnableMailDomainResponse, error) {
 	var out EnableMailDomainResponse
-	return &out, c.do(ctx, "GET", mailBasePath(teamID, projectID)+"/domains/"+name, nil, &out)
+	return &out, c.do(ctx, "GET", mailBasePath(teamID, projectID)+"/domains/"+url.PathEscape(name), nil, &out)
 }
 
 func (c *Client) VerifyMailDomain(ctx context.Context, teamID, projectID, name string) (*EnableMailDomainResponse, error) {
 	var out EnableMailDomainResponse
-	return &out, c.do(ctx, "POST", mailBasePath(teamID, projectID)+"/domains/"+name+"/verify", nil, &out)
+	return &out, c.do(ctx, "POST", mailBasePath(teamID, projectID)+"/domains/"+url.PathEscape(name)+"/verify", nil, &out)
 }
 
 func (c *Client) ListMailDomains(ctx context.Context, teamID, projectID string) ([]MailIdentity, error) {
@@ -87,27 +89,27 @@ func (c *Client) ListMailDomains(ctx context.Context, teamID, projectID string) 
 }
 
 func (c *Client) DisableMailDomain(ctx context.Context, teamID, projectID, name string) error {
-	return c.do(ctx, "DELETE", mailBasePath(teamID, projectID)+"/domains/"+name, nil, nil)
+	return c.do(ctx, "DELETE", mailBasePath(teamID, projectID)+"/domains/"+url.PathEscape(name), nil, nil)
 }
 
 func (c *Client) CreateMailInbox(ctx context.Context, teamID, projectID, domain, localPart, displayName string) (*MailInbox, error) {
 	var out MailInbox
 	body := map[string]string{"local_part": localPart, "display_name": displayName}
-	return &out, c.do(ctx, "POST", mailBasePath(teamID, projectID)+"/domains/"+domain+"/inboxes", body, &out)
+	return &out, c.do(ctx, "POST", mailBasePath(teamID, projectID)+"/domains/"+url.PathEscape(domain)+"/inboxes", body, &out)
 }
 
 func (c *Client) ListMailInboxes(ctx context.Context, teamID, projectID, domain string) ([]MailInbox, error) {
 	var out []MailInbox
-	return out, c.do(ctx, "GET", mailBasePath(teamID, projectID)+"/domains/"+domain+"/inboxes", nil, &out)
+	return out, c.do(ctx, "GET", mailBasePath(teamID, projectID)+"/domains/"+url.PathEscape(domain)+"/inboxes", nil, &out)
 }
 
 func (c *Client) ShowMailInbox(ctx context.Context, teamID, projectID, domain, local string) (*MailInbox, error) {
 	var out MailInbox
-	return &out, c.do(ctx, "GET", mailBasePath(teamID, projectID)+"/domains/"+domain+"/inboxes/"+local, nil, &out)
+	return &out, c.do(ctx, "GET", mailBasePath(teamID, projectID)+"/domains/"+url.PathEscape(domain)+"/inboxes/"+url.PathEscape(local), nil, &out)
 }
 
 func (c *Client) DeleteMailInbox(ctx context.Context, teamID, projectID, domain, local string) error {
-	return c.do(ctx, "DELETE", mailBasePath(teamID, projectID)+"/domains/"+domain+"/inboxes/"+local, nil, nil)
+	return c.do(ctx, "DELETE", mailBasePath(teamID, projectID)+"/domains/"+url.PathEscape(domain)+"/inboxes/"+url.PathEscape(local), nil, nil)
 }
 
 func (c *Client) SendMail(ctx context.Context, teamID, projectID string, in SendMessageRequest) (*SendMessageResponse, error) {
