@@ -91,29 +91,6 @@ func TestListProjects(t *testing.T) {
 	}
 }
 
-func TestCreateInboxPostsAddress(t *testing.T) {
-	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if r.URL.Path != "/v1/projects/p1/inboxes" || r.Method != http.MethodPost {
-			t.Errorf("unexpected request: %s %s", r.Method, r.URL.Path)
-		}
-		var in map[string]string
-		json.NewDecoder(r.Body).Decode(&in)
-		if in["address"] != "a@x.com" {
-			t.Errorf("address not sent: %v", in)
-		}
-		w.Write([]byte(`{"address":"a@x.com","status":"active"}`))
-	}))
-	defer srv.Close()
-
-	c := New(srv.URL, "tok")
-	got, err := c.CreateInbox(context.Background(), "p1", "a@x.com")
-	if err != nil {
-		t.Fatal(err)
-	}
-	if got.Address != "a@x.com" || got.Status != "active" {
-		t.Fatalf("unexpected: %+v", got)
-	}
-}
 
 func TestRefreshOn401ThenRetry(t *testing.T) {
 	xCalls := 0

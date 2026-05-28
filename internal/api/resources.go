@@ -2,7 +2,6 @@ package api
 
 import (
 	"context"
-	"fmt"
 	"net/http"
 	"net/url"
 )
@@ -173,48 +172,3 @@ func (c *Client) DisconnectDomain(ctx context.Context, teamID, projectID, name s
 	return c.do(ctx, http.MethodDelete, teamDomainsPath(teamID, projectID)+"/"+url.PathEscape(name), nil, nil)
 }
 
-// --- Inboxes ---
-
-func (c *Client) CreateInbox(ctx context.Context, pid, address string) (*Inbox, error) {
-	var in Inbox
-	return &in, c.do(ctx, http.MethodPost, fmt.Sprintf("/v1/projects/%s/inboxes", url.PathEscape(pid)),
-		map[string]string{"address": address}, &in)
-}
-
-func (c *Client) ListInboxes(ctx context.Context, pid string) ([]Inbox, error) {
-	var out []Inbox
-	return out, c.do(ctx, http.MethodGet, fmt.Sprintf("/v1/projects/%s/inboxes", url.PathEscape(pid)), nil, &out)
-}
-
-func (c *Client) GetInbox(ctx context.Context, pid, address string) (*Inbox, error) {
-	var in Inbox
-	path := fmt.Sprintf("/v1/projects/%s/inboxes/%s", url.PathEscape(pid), url.PathEscape(address))
-	return &in, c.do(ctx, http.MethodGet, path, nil, &in)
-}
-
-func (c *Client) DeleteInbox(ctx context.Context, pid, address string) error {
-	path := fmt.Sprintf("/v1/projects/%s/inboxes/%s", url.PathEscape(pid), url.PathEscape(address))
-	return c.do(ctx, http.MethodDelete, path, nil, nil)
-}
-
-// --- Messages ---
-
-func (c *Client) SendMessage(ctx context.Context, pid, address, to, subject, body string) (*Message, error) {
-	var m Message
-	path := fmt.Sprintf("/v1/projects/%s/inboxes/%s/messages", url.PathEscape(pid), url.PathEscape(address))
-	return &m, c.do(ctx, http.MethodPost, path,
-		map[string]string{"to": to, "subject": subject, "body": body}, &m)
-}
-
-func (c *Client) ListMessages(ctx context.Context, pid, address string) ([]Message, error) {
-	var out []Message
-	path := fmt.Sprintf("/v1/projects/%s/inboxes/%s/messages", url.PathEscape(pid), url.PathEscape(address))
-	return out, c.do(ctx, http.MethodGet, path, nil, &out)
-}
-
-func (c *Client) GetMessage(ctx context.Context, pid, address, id string) (*Message, error) {
-	var m Message
-	path := fmt.Sprintf("/v1/projects/%s/inboxes/%s/messages/%s",
-		url.PathEscape(pid), url.PathEscape(address), url.PathEscape(id))
-	return &m, c.do(ctx, http.MethodGet, path, nil, &m)
-}

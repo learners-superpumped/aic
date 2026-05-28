@@ -167,8 +167,6 @@ func NewRootCmd() *cobra.Command {
 	root.AddCommand(newTeamsCmd())
 	root.AddCommand(newProjectsCmd())
 	root.AddCommand(newDomainsCmd())
-	root.AddCommand(newInboxesCmd())
-	root.AddCommand(newMessagesCmd())
 	root.AddCommand(newMailCmd())
 	root.AddCommand(newBillingCmd())
 

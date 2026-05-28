@@ -90,23 +90,6 @@ type DomainSearchResult struct {
 	Currency  string  `json:"currency" yaml:"currency"`
 }
 
-// Inbox is an email inbox on an owned domain.
-type Inbox struct {
-	Address string `json:"address" yaml:"address"`
-	Status  string `json:"status" yaml:"status"`
-}
-
-// Message is an email message summary or detail.
-type Message struct {
-	MessageID  string    `json:"message_id" yaml:"message_id"`
-	From       string    `json:"from" yaml:"from"`
-	To         string    `json:"to" yaml:"to"`
-	Subject    string    `json:"subject" yaml:"subject"`
-	Snippet    string    `json:"snippet" yaml:"snippet"`
-	Body       string    `json:"body,omitempty" yaml:"body,omitempty"`
-	ReceivedAt time.Time `json:"received_at" yaml:"received_at"`
-}
-
 // Card is a registered payment method.
 type Card struct {
 	CardID   string `json:"card_id" yaml:"card_id"`
