@@ -20,11 +20,11 @@ func newDomainsContactCmd() *cobra.Command {
 	return cmd
 }
 
-// contactFlags binds CLI flags into a DomainContact. Used by create and update.
-// Empty values mean "no value provided"; update sends them as-is (no merge —
+// contactFlags binds CLI flags into a DomainContactInput. Used by create and
+// update. Empty values mean "no value provided"; update sends them as-is —
 // PATCH on the API rewrites the editable fields as a unit, so the user supplies
-// the full intended contact).
-func contactFlags(cmd *cobra.Command, c *api.DomainContact) {
+// the full intended contact.
+func contactFlags(cmd *cobra.Command, c *api.DomainContactInput) {
 	cmd.Flags().StringVar(&c.FirstName, "first-name", "", "registrant first name")
 	cmd.Flags().StringVar(&c.LastName, "last-name", "", "registrant last name")
 	cmd.Flags().StringVar(&c.Organization, "organization", "", "company name (presence => ContactType=Company)")
@@ -50,7 +50,7 @@ func contactRows() ([]string, func(any) []string) {
 }
 
 func newDomainsContactCreateCmd() *cobra.Command {
-	var c api.DomainContact
+	var c api.DomainContactInput
 	var isDefault bool
 	cmd := &cobra.Command{
 		Use: "create --name=<name> [flags]", Short: "Create a WHOIS contact profile",
@@ -121,7 +121,7 @@ func newDomainsContactShowCmd() *cobra.Command {
 }
 
 func newDomainsContactUpdateCmd() *cobra.Command {
-	var c api.DomainContact
+	var c api.DomainContactInput
 	cmd := &cobra.Command{
 		Use: "update <name>", Short: "Update a WHOIS contact profile (provide full set of fields)", Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {

@@ -114,7 +114,7 @@ func teamDomainContactsPath(teamID string) string {
 	return "/v1/teams/" + url.PathEscape(teamID) + "/domain-contacts"
 }
 
-func (c *Client) CreateDomainContact(ctx context.Context, teamID string, in DomainContact) (*DomainContact, error) {
+func (c *Client) CreateDomainContact(ctx context.Context, teamID string, in DomainContactInput) (*DomainContact, error) {
 	var out DomainContact
 	return &out, c.do(ctx, http.MethodPost, teamDomainContactsPath(teamID), in, &out)
 }
@@ -129,7 +129,7 @@ func (c *Client) GetDomainContact(ctx context.Context, teamID, name string) (*Do
 	return &out, c.do(ctx, http.MethodGet, teamDomainContactsPath(teamID)+"/"+url.PathEscape(name), nil, &out)
 }
 
-func (c *Client) UpdateDomainContact(ctx context.Context, teamID, name string, in DomainContact) (*DomainContact, error) {
+func (c *Client) UpdateDomainContact(ctx context.Context, teamID, name string, in DomainContactInput) (*DomainContact, error) {
 	var out DomainContact
 	return &out, c.do(ctx, http.MethodPatch, teamDomainContactsPath(teamID)+"/"+url.PathEscape(name), in, &out)
 }

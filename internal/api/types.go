@@ -26,6 +26,25 @@ type Domain struct {
 	ExpiresAt    time.Time `json:"expires_at" yaml:"expires_at"`
 }
 
+// DomainContactInput is the create/update request payload — writable fields only.
+// (Response timestamps are not in the input shape; the server's strict decoder
+// rejects them.)
+type DomainContactInput struct {
+	Name         string `json:"name"`
+	IsDefault    bool   `json:"is_default"`
+	FirstName    string `json:"first_name"`
+	LastName     string `json:"last_name"`
+	Organization string `json:"organization,omitempty"`
+	Email        string `json:"email"`
+	Phone        string `json:"phone"`
+	AddressLine1 string `json:"address_line1"`
+	AddressLine2 string `json:"address_line2,omitempty"`
+	City         string `json:"city"`
+	State        string `json:"state,omitempty"`
+	Zip          string `json:"zip"`
+	Country      string `json:"country"`
+}
+
 // DomainContact is a per-team WHOIS contact profile.
 type DomainContact struct {
 	Name         string    `json:"name" yaml:"name"`
