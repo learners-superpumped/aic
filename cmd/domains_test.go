@@ -7,8 +7,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/learners-superpumped/aicompany-platform/cli/internal/api"
-	"github.com/learners-superpumped/aicompany-platform/cli/internal/app"
+	"github.com/learners-superpumped/aic/internal/api"
+	"github.com/learners-superpumped/aic/internal/app"
 )
 
 func TestDomainsBuyHitsTeamProjectPath(t *testing.T) {

@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/learners-superpumped/aicompany-platform/cli/cmd"
+	"github.com/learners-superpumped/aic/cmd"
 )
 
 func main() {

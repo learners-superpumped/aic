@@ -3,7 +3,7 @@ package cmd
 import (
 	"testing"
 
-	"github.com/learners-superpumped/aicompany-platform/cli/internal/app"
+	"github.com/learners-superpumped/aic/internal/app"
 )
 
 func TestResolveProjectFlagWins(t *testing.T) {

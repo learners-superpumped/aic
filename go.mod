@@ -1,4 +1,4 @@
-module github.com/learners-superpumped/aicompany-platform/cli
+module github.com/learners-superpumped/aic
 
 go 1.26.3
 
