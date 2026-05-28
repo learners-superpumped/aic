@@ -25,7 +25,7 @@ func newDomainsConnectCmd() *cobra.Command {
 			}
 			fmt.Fprintf(cmd.OutOrStdout(), "Connected %s (status=%s)\n", res.Domain.Name, res.Domain.Status)
 			fmt.Fprintln(cmd.OutOrStdout(), "Set these 4 NS records at your registrar:")
-			for _, ns := range res.Nameservers {
+			for _, ns := range res.Domain.Nameservers {
 				fmt.Fprintf(cmd.OutOrStdout(), "  %s\n", ns)
 			}
 			fmt.Fprintln(cmd.OutOrStdout(), "We will detect the change automatically.")

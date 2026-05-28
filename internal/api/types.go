@@ -33,8 +33,7 @@ type Domain struct {
 
 // ConnectDomainResponse is returned by POST .../domains/connect.
 type ConnectDomainResponse struct {
-	Domain      Domain   `json:"domain" yaml:"domain"`
-	Nameservers []string `json:"nameservers" yaml:"nameservers"`
+	Domain Domain `json:"domain" yaml:"domain"`
 }
 
 // VerifyDomainResponse is returned by POST .../domains/{name}/verify.
