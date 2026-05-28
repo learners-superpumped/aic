@@ -51,6 +51,7 @@ func TestBuildAppOK(t *testing.T) {
 }
 
 func TestRootCommandVersion(t *testing.T) {
+	defer SetVersion(Version)
 	SetVersion("9.9.9-test")
 	cmd := NewRootCmd()
 	if cmd.Version != "9.9.9-test" {
