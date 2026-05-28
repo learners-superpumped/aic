@@ -1,0 +1,29 @@
+{
+  "name": "@runaic/aic",
+  "version": "0.0.0",
+  "description": "Run AI Company CLI — npm wrapper around the official aic Go binary",
+  "bin": {
+    "aic": "bin/aic.js"
+  },
+  "scripts": {
+    "postinstall": "node install.js"
+  },
+  "files": [
+    "install.js",
+    "bin/",
+    "README.md"
+  ],
+  "engines": {
+    "node": ">=18"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/learners-superpumped/aic.git"
+  },
+  "license": "MIT",
+  "os": ["darwin", "linux"],
+  "cpu": ["x64", "arm64"],
+  "dependencies": {
+    "tar": "^7.4.3"
+  }
+}
