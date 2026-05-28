@@ -20,10 +20,29 @@ type Project struct {
 // Domain is a domain in a project.
 type Domain struct {
 	Name         string    `json:"name" yaml:"name"`
+	Source       string    `json:"source,omitempty" yaml:"source,omitempty"`
 	Status       string    `json:"status" yaml:"status"`
 	AutoRenew    bool      `json:"auto_renew" yaml:"auto_renew"`
-	RegisteredAt time.Time `json:"registered_at" yaml:"registered_at"`
-	ExpiresAt    time.Time `json:"expires_at" yaml:"expires_at"`
+	RegisteredAt time.Time `json:"registered_at,omitempty" yaml:"registered_at,omitempty"`
+	ExpiresAt    time.Time `json:"expires_at,omitempty" yaml:"expires_at,omitempty"`
+	VerifiedAt   time.Time `json:"verified_at,omitempty" yaml:"verified_at,omitempty"`
+	LastVerifyAt time.Time `json:"last_verify_at,omitempty" yaml:"last_verify_at,omitempty"`
+	HostedZoneID string    `json:"hosted_zone_id,omitempty" yaml:"hosted_zone_id,omitempty"`
+	Nameservers  []string  `json:"nameservers,omitempty" yaml:"nameservers,omitempty"`
+}
+
+// ConnectDomainResponse is returned by POST .../domains/connect.
+type ConnectDomainResponse struct {
+	Domain      Domain   `json:"domain" yaml:"domain"`
+	Nameservers []string `json:"nameservers" yaml:"nameservers"`
+}
+
+// VerifyDomainResponse is returned by POST .../domains/{name}/verify.
+type VerifyDomainResponse struct {
+	Domain    Domain    `json:"domain" yaml:"domain"`
+	Observed  []string  `json:"observed" yaml:"observed"`
+	Expected  []string  `json:"expected" yaml:"expected"`
+	CheckedAt time.Time `json:"checked_at" yaml:"checked_at"`
 }
 
 // DomainContactInput is the create/update request payload — writable fields only.

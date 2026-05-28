@@ -158,6 +158,21 @@ func (c *Client) GetDomain(ctx context.Context, teamID, projectID, domain string
 	return &d, c.do(ctx, http.MethodGet, teamDomainsPath(teamID, projectID)+"/"+url.PathEscape(domain), nil, &d)
 }
 
+func (c *Client) ConnectDomain(ctx context.Context, teamID, projectID, name string) (*ConnectDomainResponse, error) {
+	var out ConnectDomainResponse
+	body := map[string]any{"name": name}
+	return &out, c.do(ctx, http.MethodPost, teamDomainsPath(teamID, projectID)+"/connect", body, &out)
+}
+
+func (c *Client) VerifyDomain(ctx context.Context, teamID, projectID, name string) (*VerifyDomainResponse, error) {
+	var out VerifyDomainResponse
+	return &out, c.do(ctx, http.MethodPost, teamDomainsPath(teamID, projectID)+"/"+url.PathEscape(name)+"/verify", nil, &out)
+}
+
+func (c *Client) DisconnectDomain(ctx context.Context, teamID, projectID, name string) error {
+	return c.do(ctx, http.MethodDelete, teamDomainsPath(teamID, projectID)+"/"+url.PathEscape(name), nil, nil)
+}
+
 // --- Inboxes ---
 
 func (c *Client) CreateInbox(ctx context.Context, pid, address string) (*Inbox, error) {
