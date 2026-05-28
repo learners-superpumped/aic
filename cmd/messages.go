@@ -11,7 +11,7 @@ import (
 func newMessagesCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "messages",
-		Aliases: []string{"msg", "mail"},
+		Aliases: []string{"msg"},
 		Short:   "Send and read inbox messages",
 	}
 	cmd.AddCommand(
