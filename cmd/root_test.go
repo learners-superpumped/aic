@@ -49,3 +49,11 @@ func TestBuildAppOK(t *testing.T) {
 		t.Fatalf("project: %q", a.Project)
 	}
 }
+
+func TestRootCommandVersion(t *testing.T) {
+	SetVersion("9.9.9-test")
+	cmd := NewRootCmd()
+	if cmd.Version != "9.9.9-test" {
+		t.Fatalf("expected version 9.9.9-test, got %q", cmd.Version)
+	}
+}

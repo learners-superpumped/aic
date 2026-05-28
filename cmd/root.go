@@ -12,8 +12,14 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// commandsSkippingApp lists commands that must NOT trigger credential/project
-// resolution (they run before credentials exist).
+// Version is the CLI version, injected at build time via -ldflags
+// "-X github.com/learners-superpumped/aic/cmd.Version=...". Defaults to "dev"
+// for local builds.
+var Version = "dev"
+
+// SetVersion overrides Version (used in tests and by main before Execute).
+func SetVersion(v string) { Version = v }
+
 var commandsSkippingApp = map[string]bool{
 	"login":     true,
 	"logout":    true,
@@ -81,6 +87,7 @@ func NewRootCmd() *cobra.Command {
 	root := &cobra.Command{
 		Use:           "aic",
 		Short:         "aic provisions projects, domains, and email inboxes on our service",
+		Version:       Version,
 		SilenceUsage:  true,
 		SilenceErrors: true,
 	}
