@@ -26,6 +26,25 @@ type Domain struct {
 	ExpiresAt    time.Time `json:"expires_at" yaml:"expires_at"`
 }
 
+// DomainContact is a per-team WHOIS contact profile.
+type DomainContact struct {
+	Name         string    `json:"name" yaml:"name"`
+	IsDefault    bool      `json:"is_default" yaml:"is_default"`
+	FirstName    string    `json:"first_name" yaml:"first_name"`
+	LastName     string    `json:"last_name" yaml:"last_name"`
+	Organization string    `json:"organization,omitempty" yaml:"organization,omitempty"`
+	Email        string    `json:"email" yaml:"email"`
+	Phone        string    `json:"phone" yaml:"phone"`
+	AddressLine1 string    `json:"address_line1" yaml:"address_line1"`
+	AddressLine2 string    `json:"address_line2,omitempty" yaml:"address_line2,omitempty"`
+	City         string    `json:"city" yaml:"city"`
+	State        string    `json:"state,omitempty" yaml:"state,omitempty"`
+	Zip          string    `json:"zip" yaml:"zip"`
+	Country      string    `json:"country" yaml:"country"`
+	CreatedAt    time.Time `json:"created_at" yaml:"created_at"`
+	UpdatedAt    time.Time `json:"updated_at" yaml:"updated_at"`
+}
+
 // DomainSearchResult is one availability/pricing row.
 type DomainSearchResult struct {
 	Domain    string  `json:"domain" yaml:"domain"`

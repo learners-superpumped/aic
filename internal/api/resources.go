@@ -99,10 +99,47 @@ func (c *Client) SearchDomains(ctx context.Context, teamID, projectID, query str
 	return out, c.do(ctx, http.MethodGet, teamDomainsPath(teamID, projectID)+"/search?q="+url.QueryEscape(query), nil, &out)
 }
 
-func (c *Client) BuyDomain(ctx context.Context, teamID, projectID, domain string, years int, autoRenew bool) (*Domain, error) {
+func (c *Client) BuyDomain(ctx context.Context, teamID, projectID, domain string, years int, autoRenew bool, contactName string) (*Domain, error) {
 	var d Domain
-	return &d, c.do(ctx, http.MethodPost, teamDomainsPath(teamID, projectID),
-		map[string]any{"name": domain, "years": years, "auto_renew": autoRenew}, &d)
+	body := map[string]any{"name": domain, "years": years, "auto_renew": autoRenew}
+	if contactName != "" {
+		body["contact_name"] = contactName
+	}
+	return &d, c.do(ctx, http.MethodPost, teamDomainsPath(teamID, projectID), body, &d)
+}
+
+// --- Domain Contacts (per-team profiles for WHOIS) ---
+
+func teamDomainContactsPath(teamID string) string {
+	return "/v1/teams/" + url.PathEscape(teamID) + "/domain-contacts"
+}
+
+func (c *Client) CreateDomainContact(ctx context.Context, teamID string, in DomainContact) (*DomainContact, error) {
+	var out DomainContact
+	return &out, c.do(ctx, http.MethodPost, teamDomainContactsPath(teamID), in, &out)
+}
+
+func (c *Client) ListDomainContacts(ctx context.Context, teamID string) ([]DomainContact, error) {
+	var out []DomainContact
+	return out, c.do(ctx, http.MethodGet, teamDomainContactsPath(teamID), nil, &out)
+}
+
+func (c *Client) GetDomainContact(ctx context.Context, teamID, name string) (*DomainContact, error) {
+	var out DomainContact
+	return &out, c.do(ctx, http.MethodGet, teamDomainContactsPath(teamID)+"/"+url.PathEscape(name), nil, &out)
+}
+
+func (c *Client) UpdateDomainContact(ctx context.Context, teamID, name string, in DomainContact) (*DomainContact, error) {
+	var out DomainContact
+	return &out, c.do(ctx, http.MethodPatch, teamDomainContactsPath(teamID)+"/"+url.PathEscape(name), in, &out)
+}
+
+func (c *Client) DeleteDomainContact(ctx context.Context, teamID, name string) error {
+	return c.do(ctx, http.MethodDelete, teamDomainContactsPath(teamID)+"/"+url.PathEscape(name), nil, nil)
+}
+
+func (c *Client) SetDefaultDomainContact(ctx context.Context, teamID, name string) error {
+	return c.do(ctx, http.MethodPost, teamDomainContactsPath(teamID)+"/"+url.PathEscape(name)+"/set-default", nil, nil)
 }
 
 func (c *Client) RenewDomain(ctx context.Context, teamID, projectID, domain string, years int) (*Domain, error) {

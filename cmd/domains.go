@@ -10,7 +10,7 @@ import (
 
 func newDomainsCmd() *cobra.Command {
 	cmd := &cobra.Command{Use: "domains", Aliases: []string{"domain"}, Short: "Search, buy, and renew domains"}
-	cmd.AddCommand(newDomainsSearchCmd(), newDomainsBuyCmd(), newDomainsRenewCmd(), newDomainsListCmd(), newDomainsShowCmd())
+	cmd.AddCommand(newDomainsSearchCmd(), newDomainsBuyCmd(), newDomainsRenewCmd(), newDomainsListCmd(), newDomainsShowCmd(), newDomainsContactCmd())
 	return cmd
 }
 
@@ -58,6 +58,7 @@ func newDomainsSearchCmd() *cobra.Command {
 func newDomainsBuyCmd() *cobra.Command {
 	var years int
 	var autoRenew bool
+	var contactName string
 	cmd := &cobra.Command{
 		Use: "buy <domain>", Short: "Buy a domain (charges team credits)", Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -68,7 +69,7 @@ func newDomainsBuyCmd() *cobra.Command {
 			if err := domainScope(a); err != nil {
 				return err
 			}
-			d, err := a.Client.BuyDomain(cmd.Context(), a.Team, a.Project, args[0], years, autoRenew)
+			d, err := a.Client.BuyDomain(cmd.Context(), a.Team, a.Project, args[0], years, autoRenew, contactName)
 			if err != nil {
 				return err
 			}
@@ -78,6 +79,7 @@ func newDomainsBuyCmd() *cobra.Command {
 	}
 	cmd.Flags().IntVar(&years, "years", 1, "registration years (1-10)")
 	cmd.Flags().BoolVar(&autoRenew, "auto-renew", false, "store an auto-renew preference (automatic renewal ships in a later release; use `aic domains renew` meanwhile)")
+	cmd.Flags().StringVar(&contactName, "contact", "", "WHOIS contact profile to use (defaults to the team's default; manage with `aic domains contact`)")
 	return cmd
 }
 
