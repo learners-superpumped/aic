@@ -19,6 +19,8 @@ func newTeamsCmd() *cobra.Command {
 		newTeamsCreateCmd(),
 		newTeamsSwitchCmd(),
 		newTeamsShowCmd(),
+		newTeamsInviteCmd(),
+		newTeamsInvitesCmd(),
 	)
 	return cmd
 }
