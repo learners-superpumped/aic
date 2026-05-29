@@ -75,10 +75,8 @@ func newProjectsCreateCmd() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			return a.Out.Print(*p, []string{"ID", "NAME"}, func(v any) []string {
-				x := v.(api.Project)
-				return []string{x.ID, x.Name}
-			})
+			cols, row := projectRows()
+			return a.Out.Print(*p, cols, row)
 		},
 	}
 }
@@ -123,10 +121,8 @@ func newProjectsShowCmd() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			return a.Out.Print(*p, []string{"ID", "NAME"}, func(v any) []string {
-				x := v.(api.Project)
-				return []string{x.ID, x.Name}
-			})
+			cols, row := projectRows()
+			return a.Out.Print(*p, cols, row)
 		},
 	}
 }
