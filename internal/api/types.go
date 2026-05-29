@@ -157,4 +157,6 @@ type Member struct {
 	UserSub  string `json:"user_sub"`
 	Role     string `json:"role"`
 	JoinedAt string `json:"joined_at,omitempty"`
+	Email    string `json:"email,omitempty"`
+	Name     string `json:"name,omitempty"`
 }

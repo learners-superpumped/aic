@@ -28,9 +28,9 @@ func newMembersListCmd() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			return a.Out.Print(items, []string{"USER_SUB", "ROLE", "JOINED"}, func(v any) []string {
+			return a.Out.Print(items, []string{"USER_SUB", "EMAIL", "NAME", "ROLE", "JOINED"}, func(v any) []string {
 				m := v.(api.Member)
-				return []string{m.UserSub, m.Role, m.JoinedAt}
+				return []string{m.UserSub, m.Email, m.Name, m.Role, m.JoinedAt}
 			})
 		},
 	}

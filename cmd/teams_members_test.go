@@ -20,7 +20,7 @@ func TestMembersListCmd_Renders(t *testing.T) {
 		if r.Method != http.MethodGet || r.URL.Path != "/v1/teams/team_1/members" {
 			t.Errorf("unexpected %s %s", r.Method, r.URL.Path)
 		}
-		w.Write([]byte(`[` + makeMemberJSON("sub_abc", "owner", "2026-01-01") + `]`))
+		w.Write([]byte(`[{"user_sub":"sub_abc","role":"owner","joined_at":"2026-01-01","email":"alice@example.com","name":"Alice"}]`))
 	}))
 	defer srv.Close()
 
@@ -35,7 +35,7 @@ func TestMembersListCmd_Renders(t *testing.T) {
 		t.Fatalf("members list: %v", err)
 	}
 	out := buf.String()
-	for _, want := range []string{"USER_SUB", "ROLE", "JOINED", "sub_abc", "owner", "2026-01-01"} {
+	for _, want := range []string{"USER_SUB", "EMAIL", "NAME", "ROLE", "JOINED", "sub_abc", "alice@example.com", "Alice", "owner", "2026-01-01"} {
 		if !strings.Contains(out, want) {
 			t.Errorf("missing %q in output: %s", want, out)
 		}
