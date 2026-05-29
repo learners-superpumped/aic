@@ -172,3 +172,62 @@ func (c *Client) DisconnectDomain(ctx context.Context, teamID, projectID, name s
 	return c.do(ctx, http.MethodDelete, teamDomainsPath(teamID, projectID)+"/"+url.PathEscape(name), nil, nil)
 }
 
+// --- Team invites ---
+
+func teamInvitesPath(teamID string) string {
+	return "/v1/teams/" + url.PathEscape(teamID) + "/invites"
+}
+
+func (c *Client) CreateInvite(ctx context.Context, teamID, email, role string) (*Invite, error) {
+	var inv Invite
+	body := map[string]string{"email": email, "role": role}
+	return &inv, c.do(ctx, http.MethodPost, teamInvitesPath(teamID), body, &inv)
+}
+
+func (c *Client) ListInvites(ctx context.Context, teamID string) ([]Invite, error) {
+	var out []Invite
+	return out, c.do(ctx, http.MethodGet, teamInvitesPath(teamID), nil, &out)
+}
+
+func (c *Client) RevokeInvite(ctx context.Context, teamID, id string) error {
+	return c.do(ctx, http.MethodDelete, teamInvitesPath(teamID)+"/"+url.PathEscape(id), nil, nil)
+}
+
+func (c *Client) ResendInvite(ctx context.Context, teamID, id string) (*Invite, error) {
+	var inv Invite
+	return &inv, c.do(ctx, http.MethodPost, teamInvitesPath(teamID)+"/"+url.PathEscape(id)+"/resend", nil, &inv)
+}
+
+// --- Invite acceptance (token-based, team unknown until preview/accept) ---
+
+func (c *Client) PreviewInvite(ctx context.Context, token string) (*InvitePreview, error) {
+	var p InvitePreview
+	return &p, c.do(ctx, http.MethodGet, "/v1/invites/"+url.PathEscape(token), nil, &p)
+}
+
+func (c *Client) AcceptInvite(ctx context.Context, token string) (*Team, error) {
+	var t Team
+	return &t, c.do(ctx, http.MethodPost, "/v1/invites/"+url.PathEscape(token)+"/accept", nil, &t)
+}
+
+// --- Team members ---
+
+func teamMembersPath(teamID string) string {
+	return "/v1/teams/" + url.PathEscape(teamID) + "/members"
+}
+
+func (c *Client) ListMembers(ctx context.Context, teamID string) ([]Member, error) {
+	var out []Member
+	return out, c.do(ctx, http.MethodGet, teamMembersPath(teamID), nil, &out)
+}
+
+func (c *Client) RemoveMember(ctx context.Context, teamID, userSub string) error {
+	return c.do(ctx, http.MethodDelete, teamMembersPath(teamID)+"/"+url.PathEscape(userSub), nil, nil)
+}
+
+func (c *Client) SetMemberRole(ctx context.Context, teamID, userSub, role string) (*Member, error) {
+	var m Member
+	return &m, c.do(ctx, http.MethodPatch, teamMembersPath(teamID)+"/"+url.PathEscape(userSub),
+		map[string]string{"role": role}, &m)
+}
+

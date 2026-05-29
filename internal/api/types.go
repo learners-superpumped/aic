@@ -136,3 +136,25 @@ type Session struct {
 	Status     string `json:"status"` // pending|completed|expired|denied
 	*Tokens    `json:",inline"`
 }
+
+type Invite struct {
+	ID        string    `json:"id"`
+	Email     string    `json:"email"`
+	Role      string    `json:"role"`
+	InvitedBy string    `json:"invited_by"`
+	Status    string    `json:"status"`
+	CreatedAt time.Time `json:"created_at"`
+	ExpiresAt time.Time `json:"expires_at"`
+}
+
+type InvitePreview struct {
+	TeamName       string `json:"team_name"`
+	Role           string `json:"role"`
+	InvitedByEmail string `json:"invited_by_email"`
+}
+
+type Member struct {
+	UserSub  string `json:"user_sub"`
+	Role     string `json:"role"`
+	JoinedAt string `json:"joined_at,omitempty"`
+}

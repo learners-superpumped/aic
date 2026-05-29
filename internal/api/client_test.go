@@ -213,3 +213,147 @@ func TestListProjectsScopedToTeam(t *testing.T) {
 		t.Fatalf("path: want /v1/teams/team_1/projects, got %s", gotPath)
 	}
 }
+
+func TestCreateInviteSendsPostBody(t *testing.T) {
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodPost || r.URL.Path != "/v1/teams/team_1/invites" {
+			t.Errorf("want POST /v1/teams/team_1/invites, got %s %s", r.Method, r.URL.Path)
+		}
+		var in map[string]string
+		json.NewDecoder(r.Body).Decode(&in)
+		if in["email"] != "bob@example.com" || in["role"] != "member" {
+			t.Errorf("unexpected body: %v", in)
+		}
+		w.WriteHeader(http.StatusCreated)
+		w.Write([]byte(`{"id":"inv_1","email":"bob@example.com","role":"member","status":"pending"}`))
+	}))
+	defer srv.Close()
+
+	inv, err := New(srv.URL, "tok").CreateInvite(context.Background(), "team_1", "bob@example.com", "member")
+	if err != nil || inv.ID != "inv_1" || inv.Status != "pending" {
+		t.Fatalf("create invite: %+v err=%v", inv, err)
+	}
+}
+
+func TestListInvitesHitsTeamPath(t *testing.T) {
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodGet || r.URL.Path != "/v1/teams/team_1/invites" {
+			t.Errorf("want GET /v1/teams/team_1/invites, got %s %s", r.Method, r.URL.Path)
+		}
+		w.Write([]byte(`[{"id":"inv_1","email":"bob@example.com","role":"member","status":"pending"}]`))
+	}))
+	defer srv.Close()
+
+	invites, err := New(srv.URL, "tok").ListInvites(context.Background(), "team_1")
+	if err != nil || len(invites) != 1 || invites[0].ID != "inv_1" {
+		t.Fatalf("list invites: %+v err=%v", invites, err)
+	}
+}
+
+func TestRevokeInviteSendsDelete(t *testing.T) {
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodDelete || r.URL.Path != "/v1/teams/team_1/invites/inv_1" {
+			t.Errorf("want DELETE /v1/teams/team_1/invites/inv_1, got %s %s", r.Method, r.URL.Path)
+		}
+		w.WriteHeader(http.StatusNoContent)
+	}))
+	defer srv.Close()
+
+	if err := New(srv.URL, "tok").RevokeInvite(context.Background(), "team_1", "inv_1"); err != nil {
+		t.Fatalf("revoke invite: %v", err)
+	}
+}
+
+func TestResendInvitePostsToInvitePath(t *testing.T) {
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodPost || r.URL.Path != "/v1/teams/team_1/invites/inv_1/resend" {
+			t.Errorf("want POST /v1/teams/team_1/invites/inv_1/resend, got %s %s", r.Method, r.URL.Path)
+		}
+		w.Write([]byte(`{"id":"inv_1","email":"bob@example.com","role":"member","status":"pending"}`))
+	}))
+	defer srv.Close()
+
+	inv, err := New(srv.URL, "tok").ResendInvite(context.Background(), "team_1", "inv_1")
+	if err != nil || inv.ID != "inv_1" {
+		t.Fatalf("resend invite: %+v err=%v", inv, err)
+	}
+}
+
+func TestPreviewInviteGetsTokenPath(t *testing.T) {
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodGet || r.URL.Path != "/v1/invites/tok_abc" {
+			t.Errorf("want GET /v1/invites/tok_abc, got %s %s", r.Method, r.URL.Path)
+		}
+		w.Write([]byte(`{"team_name":"acme","role":"member","invited_by_email":"alice@example.com"}`))
+	}))
+	defer srv.Close()
+
+	p, err := New(srv.URL, "tok").PreviewInvite(context.Background(), "tok_abc")
+	if err != nil || p.TeamName != "acme" || p.InvitedByEmail != "alice@example.com" {
+		t.Fatalf("preview invite: %+v err=%v", p, err)
+	}
+}
+
+func TestAcceptInvitePostsToTokenAccept(t *testing.T) {
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodPost || r.URL.Path != "/v1/invites/tok_abc/accept" {
+			t.Errorf("want POST /v1/invites/tok_abc/accept, got %s %s", r.Method, r.URL.Path)
+		}
+		w.Write([]byte(`{"id":"team_1","name":"acme","role":"member"}`))
+	}))
+	defer srv.Close()
+
+	team, err := New(srv.URL, "tok").AcceptInvite(context.Background(), "tok_abc")
+	if err != nil || team.ID != "team_1" || team.Role != "member" {
+		t.Fatalf("accept invite: %+v err=%v", team, err)
+	}
+}
+
+func TestListMembersHitsTeamMembersPath(t *testing.T) {
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodGet || r.URL.Path != "/v1/teams/team_1/members" {
+			t.Errorf("want GET /v1/teams/team_1/members, got %s %s", r.Method, r.URL.Path)
+		}
+		w.Write([]byte(`[{"user_sub":"sub_1","role":"owner"},{"user_sub":"sub_2","role":"member"}]`))
+	}))
+	defer srv.Close()
+
+	members, err := New(srv.URL, "tok").ListMembers(context.Background(), "team_1")
+	if err != nil || len(members) != 2 || members[0].UserSub != "sub_1" {
+		t.Fatalf("list members: %+v err=%v", members, err)
+	}
+}
+
+func TestRemoveMemberDeletesUserSubPath(t *testing.T) {
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodDelete || r.URL.Path != "/v1/teams/team_1/members/sub_1" {
+			t.Errorf("want DELETE /v1/teams/team_1/members/sub_1, got %s %s", r.Method, r.URL.Path)
+		}
+		w.WriteHeader(http.StatusNoContent)
+	}))
+	defer srv.Close()
+
+	if err := New(srv.URL, "tok").RemoveMember(context.Background(), "team_1", "sub_1"); err != nil {
+		t.Fatalf("remove member: %v", err)
+	}
+}
+
+func TestSetMemberRolePatchesWithBody(t *testing.T) {
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodPatch || r.URL.Path != "/v1/teams/team_1/members/sub_1" {
+			t.Errorf("want PATCH /v1/teams/team_1/members/sub_1, got %s %s", r.Method, r.URL.Path)
+		}
+		var in map[string]string
+		json.NewDecoder(r.Body).Decode(&in)
+		if in["role"] != "admin" {
+			t.Errorf("unexpected body: %v", in)
+		}
+		w.Write([]byte(`{"user_sub":"sub_1","role":"admin"}`))
+	}))
+	defer srv.Close()
+
+	m, err := New(srv.URL, "tok").SetMemberRole(context.Background(), "team_1", "sub_1", "admin")
+	if err != nil || m.UserSub != "sub_1" || m.Role != "admin" {
+		t.Fatalf("set member role: %+v err=%v", m, err)
+	}
+}
