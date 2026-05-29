@@ -23,6 +23,11 @@ func newTeamsCmd() *cobra.Command {
 	return cmd
 }
 
+func teamRow(v any) []string {
+	t := v.(api.Team)
+	return []string{t.ID, t.Name, t.Role}
+}
+
 func newTeamsListCmd() *cobra.Command {
 	return &cobra.Command{
 		Use:     "list",
@@ -37,10 +42,7 @@ func newTeamsListCmd() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			return a.Out.Print(items, []string{"ID", "NAME", "ROLE"}, func(v any) []string {
-				t := v.(api.Team)
-				return []string{t.ID, t.Name, t.Role}
-			})
+			return a.Out.Print(items, []string{"ID", "NAME", "ROLE"}, teamRow)
 		},
 	}
 }
@@ -59,10 +61,7 @@ func newTeamsCreateCmd() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			return a.Out.Print(*t, []string{"ID", "NAME", "ROLE"}, func(v any) []string {
-				x := v.(api.Team)
-				return []string{x.ID, x.Name, x.Role}
-			})
+			return a.Out.Print(*t, []string{"ID", "NAME", "ROLE"}, teamRow)
 		},
 	}
 }
@@ -112,10 +111,7 @@ func newTeamsShowCmd() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			return a.Out.Print(*t, []string{"ID", "NAME", "ROLE"}, func(v any) []string {
-				x := v.(api.Team)
-				return []string{x.ID, x.Name, x.Role}
-			})
+			return a.Out.Print(*t, []string{"ID", "NAME", "ROLE"}, teamRow)
 		},
 	}
 }
