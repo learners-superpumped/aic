@@ -19,6 +19,11 @@ func newMailInboxesCmd() *cobra.Command {
 	return cmd
 }
 
+func inboxRow(v any) []string {
+	x := v.(api.MailInbox)
+	return []string{x.Address, x.DisplayName, x.CreatedAt}
+}
+
 func splitInboxAddress(addr string) (local, domain string, err error) {
 	i := strings.LastIndexByte(addr, '@')
 	if i <= 0 || i == len(addr)-1 {
@@ -49,10 +54,7 @@ func newMailInboxesCreateCmd() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			return a.Out.Print(*in, []string{"ADDRESS", "DISPLAY"}, func(v any) []string {
-				x := v.(api.MailInbox)
-				return []string{x.Address, x.DisplayName}
-			})
+			return a.Out.Print(*in, []string{"ADDRESS", "DISPLAY", "CREATED"}, inboxRow)
 		},
 	}
 	cmd.Flags().StringVar(&display, "display-name", "", "display name shown in the From header")
@@ -80,10 +82,7 @@ func newMailInboxesListCmd() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			return a.Out.Print(items, []string{"ADDRESS", "DISPLAY"}, func(v any) []string {
-				x := v.(api.MailInbox)
-				return []string{x.Address, x.DisplayName}
-			})
+			return a.Out.Print(items, []string{"ADDRESS", "DISPLAY", "CREATED"}, inboxRow)
 		},
 	}
 	cmd.Flags().StringVar(&domain, "domain", "", "domain to list inboxes for (required)")
@@ -111,10 +110,7 @@ func newMailInboxesShowCmd() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			return a.Out.Print(*in, []string{"ADDRESS", "DISPLAY", "CREATED"}, func(v any) []string {
-				x := v.(api.MailInbox)
-				return []string{x.Address, x.DisplayName, x.CreatedAt}
-			})
+			return a.Out.Print(*in, []string{"ADDRESS", "DISPLAY", "CREATED"}, inboxRow)
 		},
 	}
 }

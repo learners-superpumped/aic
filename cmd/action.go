@@ -10,7 +10,8 @@ import (
 // (delete, set-default, ...). In json/yaml it carries the affected resource's
 // minimal identity plus a status verb; table mode prints a human line instead.
 type actionResult struct {
-	Name   string `json:"name" yaml:"name"`
+	ID     string `json:"id,omitempty" yaml:"id,omitempty"`
+	Name   string `json:"name,omitempty" yaml:"name,omitempty"`
 	Type   string `json:"type,omitempty" yaml:"type,omitempty"`
 	Status string `json:"status" yaml:"status"`
 }

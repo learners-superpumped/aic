@@ -90,7 +90,7 @@ func newTeamsSwitchCmd() *cobra.Command {
 			if err := config.Save(prof); err != nil {
 				return err
 			}
-			return printAction(a, actionResult{Name: args[0], Status: "default"},
+			return printAction(a, actionResult{ID: args[0], Status: "default"},
 				fmt.Sprintf("Default team set to %s.", args[0]))
 		},
 	}

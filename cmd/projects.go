@@ -24,6 +24,15 @@ func newProjectsCmd() *cobra.Command {
 	return cmd
 }
 
+func projectRow(v any) []string {
+	p := v.(api.Project)
+	created := ""
+	if !p.CreatedAt.IsZero() {
+		created = p.CreatedAt.Format("2006-01-02")
+	}
+	return []string{p.ID, p.Name, created}
+}
+
 func newProjectsListCmd() *cobra.Command {
 	return &cobra.Command{
 		Use:     "list",
@@ -41,10 +50,7 @@ func newProjectsListCmd() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			return a.Out.Print(items, []string{"ID", "NAME", "CREATED"}, func(v any) []string {
-				p := v.(api.Project)
-				return []string{p.ID, p.Name, p.CreatedAt.Format("2006-01-02")}
-			})
+			return a.Out.Print(items, []string{"ID", "NAME", "CREATED"}, projectRow)
 		},
 	}
 }
@@ -91,7 +97,7 @@ func newProjectsDeleteCmd() *cobra.Command {
 			if err := a.Client.DeleteProject(cmd.Context(), a.Team, args[0]); err != nil {
 				return err
 			}
-			return printAction(a, actionResult{Name: args[0], Status: "deleted"},
+			return printAction(a, actionResult{ID: args[0], Status: "deleted"},
 				fmt.Sprintf("Project %s deleted.", args[0]))
 		},
 	}
@@ -141,7 +147,7 @@ func newProjectsUseCmd() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			return printAction(a, actionResult{Name: args[0], Status: "default"},
+			return printAction(a, actionResult{ID: args[0], Status: "default"},
 				fmt.Sprintf("Default project set to %s.", args[0]))
 		},
 	}
