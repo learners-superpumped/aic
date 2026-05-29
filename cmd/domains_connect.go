@@ -23,6 +23,9 @@ func newDomainsConnectCmd() *cobra.Command {
 			if err != nil {
 				return err
 			}
+			if a.Out.Format() != "table" {
+				return a.Out.Print(*res, nil, nil)
+			}
 			fmt.Fprintf(cmd.OutOrStdout(), "Connected %s (status=%s)\n", res.Domain.Name, res.Domain.Status)
 			fmt.Fprintln(cmd.OutOrStdout(), "Set these 4 NS records at your registrar:")
 			for _, ns := range res.Domain.Nameservers {
@@ -51,6 +54,9 @@ func newDomainsVerifyCmd() *cobra.Command {
 			res, err := a.Client.VerifyDomain(cmd.Context(), a.Team, a.Project, args[0])
 			if err != nil {
 				return err
+			}
+			if a.Out.Format() != "table" {
+				return a.Out.Print(*res, nil, nil)
 			}
 			fmt.Fprintf(cmd.OutOrStdout(), "Status: %s (checked at %s)\n", res.Domain.Status, res.CheckedAt.Format("2006-01-02 15:04:05 UTC"))
 			if res.Domain.Status != "verified" {

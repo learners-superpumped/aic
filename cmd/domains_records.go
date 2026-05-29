@@ -67,8 +67,8 @@ func newRecordsAddCmd() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			fmt.Fprintf(cmd.OutOrStdout(), "Added %s %s (source=%s)\n", out.Name, out.Type, out.Source)
-			return nil
+			hdr, row := recordRows()
+			return a.Out.Print(*out, hdr, row)
 		},
 	}
 	recordFlags(cmd, &rtype, &name, &values, &ttl)
@@ -94,8 +94,8 @@ func newRecordsSetCmd() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			fmt.Fprintf(cmd.OutOrStdout(), "Set %s %s (source=%s)\n", out.Name, out.Type, out.Source)
-			return nil
+			hdr, row := recordRows()
+			return a.Out.Print(*out, hdr, row)
 		},
 	}
 	recordFlags(cmd, &rtype, &name, &values, &ttl)

@@ -20,6 +20,11 @@ type Renderer struct {
 	w      io.Writer
 }
 
+// Format reports the renderer's output format ("table", "json", or "yaml").
+// Commands that print a human-readable summary in table mode but a full
+// structured object in json/yaml mode branch on this.
+func (r *Renderer) Format() string { return r.format }
+
 // New returns a Renderer for "table", "json", or "yaml".
 func New(format string, w io.Writer) (*Renderer, error) {
 	switch format {
