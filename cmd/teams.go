@@ -108,7 +108,14 @@ func newTeamsShowCmd() *cobra.Command {
 			if err := a.RequireTeam(); err != nil {
 				return err
 			}
-			return printAction(a, actionResult{Name: a.Team, Status: "current"}, a.Team)
+			t, err := a.Client.GetTeam(cmd.Context(), a.Team)
+			if err != nil {
+				return err
+			}
+			return a.Out.Print(*t, []string{"ID", "NAME", "ROLE"}, func(v any) []string {
+				x := v.(api.Team)
+				return []string{x.ID, x.Name, x.Role}
+			})
 		},
 	}
 }
