@@ -20,6 +20,7 @@ func newDomainsCmd() *cobra.Command {
 		newDomainsListCmd(),
 		newDomainsShowCmd(),
 		newDomainsContactCmd(),
+		newDomainsRecordsCmd(),
 	)
 	return cmd
 }
