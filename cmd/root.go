@@ -169,6 +169,7 @@ func NewRootCmd() *cobra.Command {
 	root.AddCommand(newDomainsCmd())
 	root.AddCommand(newMailCmd())
 	root.AddCommand(newBillingCmd())
+	root.AddCommand(newInvitesCmd())
 
 	return root
 }
