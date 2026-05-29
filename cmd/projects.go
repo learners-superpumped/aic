@@ -24,13 +24,15 @@ func newProjectsCmd() *cobra.Command {
 	return cmd
 }
 
-func projectRow(v any) []string {
-	p := v.(api.Project)
-	created := ""
-	if !p.CreatedAt.IsZero() {
-		created = p.CreatedAt.Format("2006-01-02")
+func projectRows() ([]string, func(any) []string) {
+	return []string{"ID", "NAME", "CREATED"}, func(v any) []string {
+		p := v.(api.Project)
+		created := ""
+		if !p.CreatedAt.IsZero() {
+			created = p.CreatedAt.Format("2006-01-02")
+		}
+		return []string{p.ID, p.Name, created}
 	}
-	return []string{p.ID, p.Name, created}
 }
 
 func newProjectsListCmd() *cobra.Command {
@@ -50,7 +52,8 @@ func newProjectsListCmd() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			return a.Out.Print(items, []string{"ID", "NAME", "CREATED"}, projectRow)
+			cols, row := projectRows()
+			return a.Out.Print(items, cols, row)
 		},
 	}
 }

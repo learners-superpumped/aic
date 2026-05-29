@@ -23,9 +23,11 @@ func newTeamsCmd() *cobra.Command {
 	return cmd
 }
 
-func teamRow(v any) []string {
-	t := v.(api.Team)
-	return []string{t.ID, t.Name, t.Role}
+func teamRows() ([]string, func(any) []string) {
+	return []string{"ID", "NAME", "ROLE"}, func(v any) []string {
+		t := v.(api.Team)
+		return []string{t.ID, t.Name, t.Role}
+	}
 }
 
 func newTeamsListCmd() *cobra.Command {
@@ -42,7 +44,8 @@ func newTeamsListCmd() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			return a.Out.Print(items, []string{"ID", "NAME", "ROLE"}, teamRow)
+			cols, row := teamRows()
+			return a.Out.Print(items, cols, row)
 		},
 	}
 }
@@ -61,7 +64,8 @@ func newTeamsCreateCmd() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			return a.Out.Print(*t, []string{"ID", "NAME", "ROLE"}, teamRow)
+			cols, row := teamRows()
+			return a.Out.Print(*t, cols, row)
 		},
 	}
 }
@@ -111,7 +115,8 @@ func newTeamsShowCmd() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			return a.Out.Print(*t, []string{"ID", "NAME", "ROLE"}, teamRow)
+			cols, row := teamRows()
+			return a.Out.Print(*t, cols, row)
 		},
 	}
 }
