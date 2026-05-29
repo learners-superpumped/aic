@@ -61,8 +61,7 @@ func newBillingAddCardCmd() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			fmt.Println("Card registered successfully.")
-			return nil
+			return printAction(a, actionResult{Status: "registered"}, "Card registered successfully.")
 		},
 	}
 }

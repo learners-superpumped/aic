@@ -1,8 +1,6 @@
 package cmd
 
 import (
-	"fmt"
-
 	"github.com/learners-superpumped/aic/internal/api"
 	"github.com/learners-superpumped/aic/internal/config"
 	"github.com/spf13/cobra"
@@ -84,7 +82,8 @@ func newTeamsSwitchCmd() *cobra.Command {
 				return err
 			}
 			// Validate the team exists and the caller can see it.
-			if _, err := a.Client.GetTeam(cmd.Context(), args[0]); err != nil {
+			t, err := a.Client.GetTeam(cmd.Context(), args[0])
+			if err != nil {
 				return err
 			}
 			profileName, _ := cmd.Flags().GetString("profile")
@@ -96,8 +95,8 @@ func newTeamsSwitchCmd() *cobra.Command {
 			if err := config.Save(prof); err != nil {
 				return err
 			}
-			return printAction(a, actionResult{ID: args[0], Status: "default"},
-				fmt.Sprintf("Default team set to %s.", args[0]))
+			cols, row := teamRows()
+			return a.Out.Print(*t, cols, row)
 		},
 	}
 }
