@@ -11,7 +11,7 @@ type DNSRecord struct {
 	Type   string   `json:"type"`
 	Values []string `json:"values"`
 	TTL    int32    `json:"ttl"`
-	Source string   `json:"source"`
+	Source string   `json:"source,omitempty"` // response-only; omitted from add/set bodies (server rejects unknown fields)
 }
 
 type dnsRecordsResponse struct {
