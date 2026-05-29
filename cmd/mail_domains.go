@@ -43,12 +43,16 @@ func newMailDomainsEnableCmd() *cobra.Command {
 }
 
 func printDomainResponse(a *app.App, out *api.EnableMailDomainResponse) error {
-	fmt.Printf("Domain:        %s\nStatus:        %s\nMAIL FROM:     %s\nAuto-applied:  %v\n",
+	if a.Out.Format() != "table" {
+		return a.Out.Print(*out, nil, nil)
+	}
+	w := a.Out.Writer()
+	fmt.Fprintf(w, "Domain:        %s\nStatus:        %s\nMAIL FROM:     %s\nAuto-applied:  %v\n",
 		out.Identity.Name, out.Identity.Status, out.Identity.MailFromDomain, out.AutoApplied)
 	if !out.AutoApplied {
-		fmt.Println("\nAdd these DNS records at your provider:")
+		fmt.Fprintln(w, "\nAdd these DNS records at your provider:")
 	} else {
-		fmt.Println("\nWe applied these records to your Route 53 hosted zone:")
+		fmt.Fprintln(w, "\nWe applied these records to your Route 53 hosted zone:")
 	}
 	return a.Out.Print(out.Records, []string{"NAME", "TYPE", "VALUE", "TTL"}, func(v any) []string {
 		r := v.(api.MailDNSRecord)
@@ -141,8 +145,8 @@ func newMailDomainsDisableCmd() *cobra.Command {
 			if err := a.Client.DisableMailDomain(cmd.Context(), a.Team, a.Project, args[0]); err != nil {
 				return err
 			}
-			fmt.Printf("Mail disabled for %s\n", args[0])
-			return nil
+			return printAction(a, actionResult{Name: args[0], Status: "disabled"},
+				fmt.Sprintf("Mail disabled for %s", args[0]))
 		},
 	}
 }

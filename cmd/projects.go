@@ -91,8 +91,8 @@ func newProjectsDeleteCmd() *cobra.Command {
 			if err := a.Client.DeleteProject(cmd.Context(), a.Team, args[0]); err != nil {
 				return err
 			}
-			fmt.Printf("Project %s deleted.\n", args[0])
-			return nil
+			return printAction(a, actionResult{Name: args[0], Status: "deleted"},
+				fmt.Sprintf("Project %s deleted.", args[0]))
 		},
 	}
 }
@@ -137,8 +137,12 @@ func newProjectsUseCmd() *cobra.Command {
 			if err := config.Save(prof); err != nil {
 				return err
 			}
-			fmt.Printf("Default project set to %s.\n", args[0])
-			return nil
+			a, err := appFromCmd(cmd)
+			if err != nil {
+				return err
+			}
+			return printAction(a, actionResult{Name: args[0], Status: "default"},
+				fmt.Sprintf("Default project set to %s.", args[0]))
 		},
 	}
 }

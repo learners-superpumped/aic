@@ -140,8 +140,8 @@ func newMailInboxesDeleteCmd() *cobra.Command {
 			if err := a.Client.DeleteMailInbox(cmd.Context(), a.Team, a.Project, domain, local); err != nil {
 				return err
 			}
-			fmt.Printf("Inbox %s deleted.\n", args[0])
-			return nil
+			return printAction(a, actionResult{Name: args[0], Status: "deleted"},
+				fmt.Sprintf("Inbox %s deleted.", args[0]))
 		},
 	}
 }

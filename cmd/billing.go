@@ -115,8 +115,10 @@ func newBillingTopupCmd() *cobra.Command {
 			if res.Status == "requires_action" {
 				return fmt.Errorf("card requires re-authentication: run `aic billing add-card` again")
 			}
-			fmt.Println("Payment accepted — your balance will update shortly. Check `aic billing balance`.")
-			return nil
+			return a.Out.Print(*res, []string{"STATUS", "PAYMENT_INTENT"}, func(v any) []string {
+				x := v.(api.TopupResult)
+				return []string{x.Status, x.PaymentIntentID}
+			})
 		},
 	}
 	cmd.Flags().StringVar(&amount, "amount", "", "amount in USD to add, e.g. 50 or 49.99 (required)")

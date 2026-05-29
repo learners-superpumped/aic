@@ -90,8 +90,8 @@ func newTeamsSwitchCmd() *cobra.Command {
 			if err := config.Save(prof); err != nil {
 				return err
 			}
-			fmt.Printf("Default team set to %s.\n", args[0])
-			return nil
+			return printAction(a, actionResult{Name: args[0], Status: "default"},
+				fmt.Sprintf("Default team set to %s.", args[0]))
 		},
 	}
 }
@@ -108,8 +108,7 @@ func newTeamsShowCmd() *cobra.Command {
 			if err := a.RequireTeam(); err != nil {
 				return err
 			}
-			fmt.Println(a.Team)
-			return nil
+			return printAction(a, actionResult{Name: a.Team, Status: "current"}, a.Team)
 		},
 	}
 }
