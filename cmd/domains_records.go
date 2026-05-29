@@ -114,11 +114,12 @@ func newRecordsDeleteCmd() *cobra.Command {
 			if err := domainScope(a); err != nil {
 				return err
 			}
-			if err := a.Client.DeleteDNSRecord(cmd.Context(), a.Team, a.Project, args[0], recordName(name, args[0]), rtype); err != nil {
+			rn := recordName(name, args[0])
+			if err := a.Client.DeleteDNSRecord(cmd.Context(), a.Team, a.Project, args[0], rn, rtype); err != nil {
 				return err
 			}
-			fmt.Fprintf(cmd.OutOrStdout(), "Deleted %s %s\n", recordName(name, args[0]), rtype)
-			return nil
+			return printAction(a, actionResult{Name: rn, Type: rtype, Status: "deleted"},
+				fmt.Sprintf("Deleted %s %s", rn, rtype))
 		},
 	}
 	cmd.Flags().StringVar(&rtype, "type", "", "record type (A, CNAME, MX, TXT, ...)")

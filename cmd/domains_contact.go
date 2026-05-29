@@ -158,8 +158,8 @@ func newDomainsContactDeleteCmd() *cobra.Command {
 			if err := a.Client.DeleteDomainContact(cmd.Context(), a.Team, args[0]); err != nil {
 				return err
 			}
-			fmt.Println("Deleted.")
-			return nil
+			return printAction(a, actionResult{Name: args[0], Status: "deleted"},
+				fmt.Sprintf("Deleted %s", args[0]))
 		},
 	}
 }
@@ -178,8 +178,8 @@ func newDomainsContactSetDefaultCmd() *cobra.Command {
 			if err := a.Client.SetDefaultDomainContact(cmd.Context(), a.Team, args[0]); err != nil {
 				return err
 			}
-			fmt.Printf("%s is now the default.\n", args[0])
-			return nil
+			return printAction(a, actionResult{Name: args[0], Status: "default"},
+				fmt.Sprintf("%s is now the default.", args[0]))
 		},
 	}
 }

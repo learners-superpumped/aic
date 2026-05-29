@@ -90,8 +90,8 @@ func newDomainsDisconnectCmd() *cobra.Command {
 			if err := a.Client.DisconnectDomain(cmd.Context(), a.Team, a.Project, args[0]); err != nil {
 				return err
 			}
-			fmt.Fprintf(cmd.OutOrStdout(), "Disconnected %s\n", args[0])
-			return nil
+			return printAction(a, actionResult{Name: args[0], Status: "disconnected"},
+				fmt.Sprintf("Disconnected %s", args[0]))
 		},
 	}
 }
