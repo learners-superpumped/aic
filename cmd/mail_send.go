@@ -66,9 +66,9 @@ func newMailSendCmd() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			return a.Out.Print(*res, []string{"MESSAGE_ID", "FROM", "SENT_AT"}, func(v any) []string {
+			return a.Out.Print(*res, []string{"ID", "FROM", "SENT_AT"}, func(v any) []string {
 				x := v.(api.SendMessageResponse)
-				return []string{x.SESMessageID, x.From, x.SentAt.Format("2006-01-02 15:04:05")}
+				return []string{x.ID, x.From, x.SentAt.Format("2006-01-02 15:04:05")}
 			})
 		},
 	}

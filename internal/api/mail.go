@@ -39,10 +39,10 @@ type MailInbox struct {
 }
 
 type SendMessageResponse struct {
-	SESMessageID string    `json:"ses_message_id"`
-	From         string    `json:"from"`
-	To           []string  `json:"to"`
-	SentAt       time.Time `json:"sent_at"`
+	ID     string    `json:"id"`
+	From   string    `json:"from"`
+	To     []string  `json:"to"`
+	SentAt time.Time `json:"sent_at"`
 }
 
 type MailAttachment struct {
@@ -118,16 +118,15 @@ func (c *Client) SendMail(ctx context.Context, teamID, projectID string, in Send
 }
 
 type MailMessage struct {
-	ID           string `json:"id"`
-	InboxID      string `json:"inbox_id"`
-	Direction    string `json:"direction"`
-	From         string `json:"from"`
-	Subject      string `json:"subject"`
-	Snippet      string `json:"snippet"`
-	Status       string `json:"status"`
-	SESMessageID string `json:"ses_message_id,omitempty"`
-	SentAt       string `json:"sent_at,omitempty"`
-	CreatedAt    string `json:"created_at"`
+	ID        string `json:"id"`
+	InboxID   string `json:"inbox_id"`
+	Direction string `json:"direction"`
+	From      string `json:"from"`
+	Subject   string `json:"subject"`
+	Snippet   string `json:"snippet"`
+	Status    string `json:"status"`
+	SentAt    string `json:"sent_at,omitempty"`
+	CreatedAt string `json:"created_at"`
 }
 
 type MailRecipient struct {
