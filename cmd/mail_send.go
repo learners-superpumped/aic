@@ -3,6 +3,7 @@ package cmd
 import (
 	"encoding/base64"
 	"fmt"
+	"mime"
 	"os"
 	"path/filepath"
 
@@ -53,8 +54,9 @@ func newMailSendCmd() *cobra.Command {
 					return err
 				}
 				atts = append(atts, api.MailAttachment{
-					Filename:   filepath.Base(path),
-					DataBase64: base64.StdEncoding.EncodeToString(data),
+					Filename:    filepath.Base(path),
+					ContentType: mime.TypeByExtension(filepath.Ext(path)),
+					DataBase64:  base64.StdEncoding.EncodeToString(data),
 				})
 			}
 			res, err := a.Client.SendMail(cmd.Context(), a.Team, a.Project, api.SendMessageRequest{

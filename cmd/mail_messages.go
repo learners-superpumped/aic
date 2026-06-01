@@ -73,10 +73,31 @@ func newMailMessagesShowCmd() *cobra.Command {
 				}
 				fmt.Fprintf(cmd.OutOrStdout(), "wrote %d bytes to %s\n", len(raw), rawOut)
 			}
-			return a.Out.Print(d.MailMessage, []string{"ID", "DIRECTION", "FROM", "SUBJECT", "STATUS", "SENT_AT"}, func(v any) []string {
+			// json/yaml: emit the full detail (recipients, attachments, raw_base64).
+			if a.Out.Format() != "table" {
+				return a.Out.Print(*d, nil, nil)
+			}
+			// table: envelope row, then recipients + attachments sections.
+			if err := a.Out.Print(d.MailMessage, []string{"ID", "DIRECTION", "FROM", "SUBJECT", "STATUS", "SENT_AT"}, func(v any) []string {
 				x := v.(api.MailMessage)
 				return []string{x.ID, x.Direction, x.From, x.Subject, x.Status, x.SentAt}
-			})
+			}); err != nil {
+				return err
+			}
+			w := a.Out.Writer()
+			if len(d.Recipients) > 0 {
+				fmt.Fprintln(w, "\nRecipients:")
+				for _, r := range d.Recipients {
+					fmt.Fprintf(w, "  %-3s %s (%s)\n", r.Kind, r.Address, r.Status)
+				}
+			}
+			if len(d.Attachments) > 0 {
+				fmt.Fprintln(w, "\nAttachments:")
+				for _, at := range d.Attachments {
+					fmt.Fprintf(w, "  %s  %s  %d bytes\n", at.Filename, at.ContentType, at.SizeBytes)
+				}
+			}
+			return nil
 		},
 	}
 	cmd.Flags().StringVar(&rawOut, "raw-out", "", "write the raw .eml to this path")
