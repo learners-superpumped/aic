@@ -52,15 +52,18 @@ type MailAttachment struct {
 }
 
 type SendMessageRequest struct {
-	From        string           `json:"from"`
-	To          []string         `json:"to"`
-	CC          []string         `json:"cc,omitempty"`
-	BCC         []string         `json:"bcc,omitempty"`
-	ReplyTo     []string         `json:"reply_to,omitempty"`
-	Subject     string           `json:"subject"`
-	Text        string           `json:"text,omitempty"`
-	HTML        string           `json:"html,omitempty"`
-	Attachments []MailAttachment `json:"attachments,omitempty"`
+	From    string   `json:"from"`
+	To      []string `json:"to"`
+	CC      []string `json:"cc,omitempty"`
+	BCC     []string `json:"bcc,omitempty"`
+	ReplyTo []string `json:"reply_to,omitempty"`
+	// ReplyToMessageID, when set, asks the server to build the In-Reply-To /
+	// References threading headers from that stored message.
+	ReplyToMessageID string           `json:"reply_to_message_id,omitempty"`
+	Subject          string           `json:"subject"`
+	Text             string           `json:"text,omitempty"`
+	HTML             string           `json:"html,omitempty"`
+	Attachments      []MailAttachment `json:"attachments,omitempty"`
 }
 
 func mailBasePath(teamID, projectID string) string {

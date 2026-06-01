@@ -14,6 +14,7 @@ import (
 func newMailSendCmd() *cobra.Command {
 	var (
 		from, subject, text, textFile, html, htmlFile string
+		replyToMessageID                              string
 		to, cc, bcc, replyTo, attach                  []string
 	)
 	cmd := &cobra.Command{
@@ -61,7 +62,8 @@ func newMailSendCmd() *cobra.Command {
 			}
 			res, err := a.Client.SendMail(cmd.Context(), a.Team, a.Project, api.SendMessageRequest{
 				From: from, To: to, CC: cc, BCC: bcc, ReplyTo: replyTo,
-				Subject: subject, Text: text, HTML: html, Attachments: atts,
+				ReplyToMessageID: replyToMessageID,
+				Subject:          subject, Text: text, HTML: html, Attachments: atts,
 			})
 			if err != nil {
 				return err
@@ -77,6 +79,7 @@ func newMailSendCmd() *cobra.Command {
 	cmd.Flags().StringSliceVar(&cc, "cc", nil, "CC recipient (repeatable)")
 	cmd.Flags().StringSliceVar(&bcc, "bcc", nil, "BCC recipient (repeatable)")
 	cmd.Flags().StringSliceVar(&replyTo, "reply-to", nil, "Reply-To address (repeatable)")
+	cmd.Flags().StringVar(&replyToMessageID, "in-reply-to", "", "reply to a stored message id (server sets In-Reply-To/References)")
 	cmd.Flags().StringVar(&subject, "subject", "", "subject line")
 	cmd.Flags().StringVar(&text, "text", "", "plain-text body")
 	cmd.Flags().StringVar(&textFile, "text-file", "", "read plain-text body from file")
