@@ -116,3 +116,59 @@ func (c *Client) SendMail(ctx context.Context, teamID, projectID string, in Send
 	var out SendMessageResponse
 	return &out, c.do(ctx, "POST", mailBasePath(teamID, projectID)+"/send", in, &out)
 }
+
+type MailMessage struct {
+	ID           string `json:"id"`
+	InboxID      string `json:"inbox_id"`
+	Direction    string `json:"direction"`
+	From         string `json:"from"`
+	Subject      string `json:"subject"`
+	Snippet      string `json:"snippet"`
+	Status       string `json:"status"`
+	SESMessageID string `json:"ses_message_id,omitempty"`
+	SentAt       string `json:"sent_at,omitempty"`
+	CreatedAt    string `json:"created_at"`
+}
+
+type MailRecipient struct {
+	Kind    string `json:"kind"`
+	Address string `json:"address"`
+	Status  string `json:"status"`
+}
+
+type MailAttachmentMeta struct {
+	Filename    string `json:"filename"`
+	ContentType string `json:"content_type"`
+	SizeBytes   int64  `json:"size_bytes"`
+}
+
+type MailMessageDetail struct {
+	MailMessage
+	Recipients  []MailRecipient      `json:"recipients"`
+	Attachments []MailAttachmentMeta `json:"attachments"`
+	RawBase64   string               `json:"raw_base64"`
+}
+
+func (c *Client) ListMailMessages(ctx context.Context, teamID, projectID, direction, inbox string, limit int) ([]MailMessage, error) {
+	q := url.Values{}
+	if direction != "" {
+		q.Set("direction", direction)
+	}
+	if inbox != "" {
+		q.Set("inbox", inbox)
+	}
+	if limit > 0 {
+		q.Set("limit", fmt.Sprintf("%d", limit))
+	}
+	path := mailBasePath(teamID, projectID) + "/messages"
+	if enc := q.Encode(); enc != "" {
+		path += "?" + enc
+	}
+	var out []MailMessage
+	return out, c.do(ctx, "GET", path, nil, &out)
+}
+
+func (c *Client) ShowMailMessage(ctx context.Context, teamID, projectID, id string) (*MailMessageDetail, error) {
+	var out MailMessageDetail
+	return &out, c.do(ctx, "GET", mailBasePath(teamID, projectID)+"/messages/"+url.PathEscape(id), nil, &out)
+}

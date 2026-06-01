@@ -7,6 +7,6 @@ func newMailCmd() *cobra.Command {
 		Use:   "mail",
 		Short: "Manage outbound mail (SES identities, inboxes, send)",
 	}
-	cmd.AddCommand(newMailDomainsCmd(), newMailInboxesCmd(), newMailSendCmd())
+	cmd.AddCommand(newMailDomainsCmd(), newMailInboxesCmd(), newMailSendCmd(), newMailMessagesCmd())
 	return cmd
 }
