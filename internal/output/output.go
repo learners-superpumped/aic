@@ -49,8 +49,18 @@ func (r *Renderer) Print(v any, headers []string, rowFn RowFunc) error {
 		enc.SetIndent("", "  ")
 		return enc.Encode(v)
 	case "yaml":
+		// Encode via JSON so YAML honors the same `json` tags and struct
+		// embedding as JSON output — one source of truth, no per-DTO yaml tags.
+		b, err := json.Marshal(v)
+		if err != nil {
+			return err
+		}
+		var generic any
+		if err := json.Unmarshal(b, &generic); err != nil {
+			return err
+		}
 		enc := yaml.NewEncoder(r.w)
-		if err := enc.Encode(v); err != nil {
+		if err := enc.Encode(generic); err != nil {
 			_ = enc.Close()
 			return err
 		}

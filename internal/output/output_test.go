@@ -66,6 +66,31 @@ func TestYAML(t *testing.T) {
 	}
 }
 
+// TestYAMLHonorsJSONTags locks in the DRY behavior: YAML output honors `json`
+// tags and flattens embedded structs (encoded via JSON), so DTOs need no
+// `yaml` tags and YAML matches JSON exactly.
+func TestYAMLHonorsJSONTags(t *testing.T) {
+	type inner struct {
+		MailFrom string `json:"mail_from"`
+	}
+	type outer struct {
+		inner
+		ReplyTo string `json:"reply_to"`
+	}
+	var buf bytes.Buffer
+	r, _ := New("yaml", &buf)
+	if err := r.Print(outer{inner{"a@b.com"}, "c@d.com"}, nil, nil); err != nil {
+		t.Fatal(err)
+	}
+	out := buf.String()
+	if !strings.Contains(out, "mail_from: a@b.com") || !strings.Contains(out, "reply_to: c@d.com") {
+		t.Fatalf("yaml did not honor json tags:\n%s", out)
+	}
+	if strings.Contains(out, "inner:") {
+		t.Fatalf("embedded struct not flattened:\n%s", out)
+	}
+}
+
 func TestInvalidFormat(t *testing.T) {
 	if _, err := New("xml", &bytes.Buffer{}); err == nil {
 		t.Fatal("expected error for unknown format")
