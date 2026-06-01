@@ -68,7 +68,7 @@ func newMailMessagesShowCmd() *cobra.Command {
 				if err != nil {
 					return err
 				}
-				if err := os.WriteFile(rawOut, raw, 0o644); err != nil {
+				if err := os.WriteFile(rawOut, raw, 0o600); err != nil {
 					return err
 				}
 				fmt.Fprintf(cmd.OutOrStdout(), "wrote %d bytes to %s\n", len(raw), rawOut)
