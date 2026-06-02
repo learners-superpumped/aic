@@ -158,3 +158,52 @@ func (c *Client) doRaw(ctx context.Context, method, path string) ([]byte, http.H
 	}
 	return data, hdr, nil
 }
+
+// doOnceBytes performs a single request with a raw byte body and an explicit
+// Content-Type, returning the response status, headers, and body.
+func (c *Client) doOnceBytes(ctx context.Context, method, path string, body []byte, contentType string) (int, http.Header, []byte, error) {
+	req, err := http.NewRequestWithContext(ctx, method, c.baseURL+path, bytes.NewReader(body))
+	if err != nil {
+		return 0, nil, nil, err
+	}
+	if c.token != "" {
+		req.Header.Set("Authorization", "Bearer "+c.token)
+	}
+	if contentType != "" {
+		req.Header.Set("Content-Type", contentType)
+	}
+	resp, err := c.http.Do(req)
+	if err != nil {
+		return 0, nil, nil, err
+	}
+	defer resp.Body.Close()
+	data, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return resp.StatusCode, resp.Header, nil, err
+	}
+	return resp.StatusCode, resp.Header, data, nil
+}
+
+// doBytes sends a raw byte body with one transparent 401 refresh-and-retry — the
+// binary-upload sibling of do.
+func (c *Client) doBytes(ctx context.Context, method, path string, body []byte, contentType string, out any) error {
+	status, _, data, err := c.doOnceBytes(ctx, method, path, body, contentType)
+	if err != nil {
+		return err
+	}
+	if status == http.StatusUnauthorized && c.refreshFn != nil {
+		if rerr := c.refresh(ctx); rerr == nil {
+			status, _, data, err = c.doOnceBytes(ctx, method, path, body, contentType)
+			if err != nil {
+				return err
+			}
+		}
+	}
+	if status >= 400 {
+		return apiError(status, data)
+	}
+	if out != nil && len(data) > 0 {
+		return json.Unmarshal(data, out)
+	}
+	return nil
+}
