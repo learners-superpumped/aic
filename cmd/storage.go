@@ -5,10 +5,30 @@ import (
 	"mime"
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
 
+	"github.com/learners-superpumped/aic/internal/api"
 	"github.com/spf13/cobra"
 )
+
+func bucketRows() ([]string, func(any) []string) {
+	return []string{"NAME", "CREATED"}, func(v any) []string {
+		b := v.(api.BucketDTO)
+		return []string{b.Name, b.CreatedAt}
+	}
+}
+
+func objectRows() ([]string, func(any) []string) {
+	return []string{"KEY", "SIZE", "CONTENT-TYPE", "UPDATED"}, func(v any) []string {
+		o := v.(api.ObjectDTO)
+		return []string{o.Key, strconv.FormatInt(o.SizeBytes, 10), o.ContentType, o.UpdatedAt}
+	}
+}
+
+type presignResult struct {
+	URL string `json:"url"`
+}
 
 func newStorageCmd() *cobra.Command {
 	cmd := &cobra.Command{Use: "storage", Short: "Manage AIC storage buckets and objects"}
@@ -30,11 +50,12 @@ func newStorageBucketsCmd() *cobra.Command {
 				if err := a.RequireProject(); err != nil {
 					return err
 				}
-				if err := a.Client.CreateBucket(cmd.Context(), a.Team, a.Project, args[0]); err != nil {
+				b, err := a.Client.CreateBucket(cmd.Context(), a.Team, a.Project, args[0])
+				if err != nil {
 					return err
 				}
-				fmt.Fprintf(cmd.OutOrStdout(), "created bucket %s\n", args[0])
-				return nil
+				cols, row := bucketRows()
+				return a.Out.Print(b, cols, row)
 			},
 		},
 		&cobra.Command{
@@ -51,10 +72,8 @@ func newStorageBucketsCmd() *cobra.Command {
 				if err != nil {
 					return err
 				}
-				for _, b := range bs {
-					fmt.Fprintln(cmd.OutOrStdout(), b.Name)
-				}
-				return nil
+				cols, row := bucketRows()
+				return a.Out.Print(bs, cols, row)
 			},
 		},
 		&cobra.Command{
@@ -150,10 +169,8 @@ func newStorageLsCmd() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			for _, o := range objs {
-				fmt.Fprintf(cmd.OutOrStdout(), "%-40s %d\n", o.Key, o.SizeBytes)
-			}
-			return nil
+			cols, row := objectRows()
+			return a.Out.Print(objs, cols, row)
 		},
 	}
 }
@@ -228,8 +245,12 @@ func newStoragePresignCmd() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			fmt.Fprintln(cmd.OutOrStdout(), signed)
-			return nil
+			if a.Out.Format() == "table" {
+				fmt.Fprintln(cmd.OutOrStdout(), signed)
+				return nil
+			}
+			return a.Out.Print(presignResult{URL: signed},
+				[]string{"URL"}, func(v any) []string { return []string{v.(presignResult).URL} })
 		},
 	}
 	cmd.Flags().BoolVar(&upload, "upload", false, "create an upload link instead of download")

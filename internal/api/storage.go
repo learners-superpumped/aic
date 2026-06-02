@@ -38,8 +38,9 @@ func escapeKey(key string) string {
 	return strings.Join(parts, "/")
 }
 
-func (c *Client) CreateBucket(ctx context.Context, team, project, name string) error {
-	return c.do(ctx, "POST", storageBasePath(team, project)+"/buckets", map[string]string{"name": name}, nil)
+func (c *Client) CreateBucket(ctx context.Context, team, project, name string) (BucketDTO, error) {
+	var out BucketDTO
+	return out, c.do(ctx, "POST", storageBasePath(team, project)+"/buckets", map[string]string{"name": name}, &out)
 }
 
 func (c *Client) ListBuckets(ctx context.Context, team, project string) ([]BucketDTO, error) {
