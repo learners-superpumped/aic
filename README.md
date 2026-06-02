@@ -43,7 +43,8 @@ aic projects list --team <team-id>
 aic domains search example.com --team <team-id>
 ```
 
-See `aic --help` and `aic <command> --help` for the full command reference.
+See `aic --help` and `aic <command> --help` for the full command reference, or
+browse the docs at [docs.runaic.com](https://docs.runaic.com).
 
 ## Source
 

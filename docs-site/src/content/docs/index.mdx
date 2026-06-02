@@ -1,0 +1,35 @@
+---
+title: aic CLI
+description: The official command-line interface for AIC — provision projects, domains, and email inboxes.
+template: splash
+hero:
+  tagline: Provision projects, domains, and email inboxes on AIC — from a single static binary built for humans and AI agents.
+  actions:
+    - text: Install aic
+      link: /guides/installation/
+      icon: right-arrow
+    - text: Command reference
+      link: /reference/aic/
+      icon: open-book
+      variant: minimal
+---
+
+import { Card, CardGrid } from '@astrojs/starlight/components';
+
+<CardGrid stagger>
+	<Card title="Install in seconds" icon="rocket">
+		One static Go binary. Install via `curl | sh`, `npm`, or download from
+		releases. See the [installation guide](/guides/installation/).
+	</Card>
+	<Card title="Sign in with your browser" icon="approve-check">
+		`aic login` opens an OIDC browser flow. No API keys to copy around.
+	</Card>
+	<Card title="Full command reference" icon="open-book">
+		Every command, flag, and example — generated directly from the CLI source,
+		always in sync. Browse the [reference](/reference/aic/).
+	</Card>
+	<Card title="Built for agents too" icon="seti:powershell">
+		`--output json|yaml` on every command makes `aic` scriptable for both
+		humans and AI agents.
+	</Card>
+</CardGrid>
