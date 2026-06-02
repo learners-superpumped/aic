@@ -13,7 +13,33 @@ import (
 
 func newMailMessagesCmd() *cobra.Command {
 	cmd := &cobra.Command{Use: "messages", Short: "List and read stored mail messages"}
-	cmd.AddCommand(newMailMessagesListCmd(), newMailMessagesShowCmd(), newMailMessagesAttachmentCmd())
+	cmd.AddCommand(newMailMessagesListCmd(), newMailMessagesShowCmd(), newMailMessagesAttachmentCmd(), newMailMessagesThreadCmd())
+	return cmd
+}
+
+func newMailMessagesThreadCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "thread <message-id>",
+		Short: "Show every message in a message's conversation (oldest first)",
+		Args:  cobra.ExactArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			a, err := appFromCmd(cmd)
+			if err != nil {
+				return err
+			}
+			if err := a.RequireProject(); err != nil {
+				return err
+			}
+			list, err := a.Client.MessageThread(cmd.Context(), a.Team, a.Project, args[0])
+			if err != nil {
+				return err
+			}
+			return a.Out.Print(list, []string{"ID", "DIRECTION", "FROM", "SUBJECT", "STATUS", "CREATED"}, func(v any) []string {
+				x := v.(api.MailMessage)
+				return []string{x.ID, x.Direction, x.From, x.Subject, x.Status, x.CreatedAt}
+			})
+		},
+	}
 	return cmd
 }
 

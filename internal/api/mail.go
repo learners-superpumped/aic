@@ -122,15 +122,18 @@ func (c *Client) SendMail(ctx context.Context, teamID, projectID string, in Send
 }
 
 type MailMessage struct {
-	ID        string `json:"id"`
-	InboxID   string `json:"inbox_id"`
-	Direction string `json:"direction"`
-	From      string `json:"from"`
-	Subject   string `json:"subject"`
-	Snippet   string `json:"snippet"`
-	Status    string `json:"status"`
-	SentAt    string `json:"sent_at,omitempty"`
-	CreatedAt string `json:"created_at"`
+	ID              string `json:"id"`
+	InboxID         string `json:"inbox_id"`
+	Direction       string `json:"direction"`
+	From            string `json:"from"`
+	Subject         string `json:"subject"`
+	Snippet         string `json:"snippet"`
+	Status          string `json:"status"`
+	ThreadID        string `json:"thread_id"`
+	ParentMessageID string `json:"parent_message_id,omitempty"`
+	InReplyTo       string `json:"in_reply_to,omitempty"`
+	SentAt          string `json:"sent_at,omitempty"`
+	CreatedAt       string `json:"created_at"`
 }
 
 type MailRecipient struct {
@@ -177,6 +180,13 @@ func (c *Client) ListMailMessages(ctx context.Context, teamID, projectID, direct
 func (c *Client) ShowMailMessage(ctx context.Context, teamID, projectID, id string) (*MailMessageDetail, error) {
 	var out MailMessageDetail
 	return &out, c.do(ctx, "GET", mailBasePath(teamID, projectID)+"/messages/"+url.PathEscape(id), nil, &out)
+}
+
+// MessageThread returns every message in the given message's conversation,
+// oldest-first.
+func (c *Client) MessageThread(ctx context.Context, teamID, projectID, id string) ([]MailMessage, error) {
+	var out []MailMessage
+	return out, c.do(ctx, "GET", mailBasePath(teamID, projectID)+"/messages/"+url.PathEscape(id)+"/thread", nil, &out)
 }
 
 // GetMailAttachment downloads an attachment's raw bytes and the server-suggested
