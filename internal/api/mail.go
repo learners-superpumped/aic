@@ -3,6 +3,7 @@ package api
 import (
 	"context"
 	"fmt"
+	"mime"
 	"net/url"
 	"time"
 )
@@ -139,6 +140,7 @@ type MailRecipient struct {
 }
 
 type MailAttachmentMeta struct {
+	ID          string `json:"id"`
 	Filename    string `json:"filename"`
 	ContentType string `json:"content_type"`
 	SizeBytes   int64  `json:"size_bytes"`
@@ -175,4 +177,19 @@ func (c *Client) ListMailMessages(ctx context.Context, teamID, projectID, direct
 func (c *Client) ShowMailMessage(ctx context.Context, teamID, projectID, id string) (*MailMessageDetail, error) {
 	var out MailMessageDetail
 	return &out, c.do(ctx, "GET", mailBasePath(teamID, projectID)+"/messages/"+url.PathEscape(id), nil, &out)
+}
+
+// GetMailAttachment downloads an attachment's raw bytes and the server-suggested
+// filename (from Content-Disposition).
+func (c *Client) GetMailAttachment(ctx context.Context, teamID, projectID, messageID, attachmentID string) ([]byte, string, error) {
+	path := mailBasePath(teamID, projectID) + "/messages/" + url.PathEscape(messageID) + "/attachments/" + url.PathEscape(attachmentID)
+	data, hdr, err := c.doRaw(ctx, "GET", path)
+	if err != nil {
+		return nil, "", err
+	}
+	filename := ""
+	if _, params, perr := mime.ParseMediaType(hdr.Get("Content-Disposition")); perr == nil {
+		filename = params["filename"]
+	}
+	return data, filename, nil
 }

@@ -54,20 +54,20 @@ func (c *Client) WithRefresh(refreshFn func(context.Context) (*Tokens, error), o
 	return c
 }
 
-// doOnce performs a single HTTP request and returns its status, body, and any
-// transport-level error.
-func (c *Client) doOnce(ctx context.Context, method, path string, body any) (int, []byte, error) {
+// doOnce performs a single HTTP request and returns its status, response
+// headers, body, and any transport-level error.
+func (c *Client) doOnce(ctx context.Context, method, path string, body any) (int, http.Header, []byte, error) {
 	var reader io.Reader
 	if body != nil {
 		b, err := json.Marshal(body)
 		if err != nil {
-			return 0, nil, err
+			return 0, nil, nil, err
 		}
 		reader = bytes.NewReader(b)
 	}
 	req, err := http.NewRequestWithContext(ctx, method, c.baseURL+path, reader)
 	if err != nil {
-		return 0, nil, err
+		return 0, nil, nil, err
 	}
 	if c.token != "" {
 		req.Header.Set("Authorization", "Bearer "+c.token)
@@ -77,14 +77,47 @@ func (c *Client) doOnce(ctx context.Context, method, path string, body any) (int
 	}
 	resp, err := c.http.Do(req)
 	if err != nil {
-		return 0, nil, err
+		return 0, nil, nil, err
 	}
 	defer resp.Body.Close()
 	data, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return resp.StatusCode, nil, err
+		return resp.StatusCode, resp.Header, nil, err
 	}
-	return resp.StatusCode, data, nil
+	return resp.StatusCode, resp.Header, data, nil
+}
+
+// doRequest sends a request with one transparent 401 refresh-and-retry, shared
+// by do (JSON) and doRaw (binary).
+func (c *Client) doRequest(ctx context.Context, method, path string, body any) (int, http.Header, []byte, error) {
+	status, hdr, data, err := c.doOnce(ctx, method, path, body)
+	if err != nil {
+		return 0, nil, nil, err
+	}
+	if status == http.StatusUnauthorized && c.refreshFn != nil {
+		if rerr := c.refresh(ctx); rerr == nil {
+			status, hdr, data, err = c.doOnce(ctx, method, path, body)
+			if err != nil {
+				return 0, nil, nil, err
+			}
+		}
+	}
+	return status, hdr, data, nil
+}
+
+// apiError builds an *Error from a >=400 response body, adding a login hint on 401.
+func apiError(status int, data []byte) error {
+	apiErr := &Error{Status: status}
+	_ = json.Unmarshal(data, apiErr)
+	if status == http.StatusUnauthorized {
+		const hint = "your session has expired — run `aic login`"
+		if apiErr.Message == "" {
+			apiErr.Message = hint
+		} else {
+			apiErr.Message = apiErr.Message + " (" + hint + ")"
+		}
+	}
+	return apiErr
 }
 
 func (c *Client) refresh(ctx context.Context) error {
@@ -100,34 +133,28 @@ func (c *Client) refresh(ctx context.Context) error {
 }
 
 func (c *Client) do(ctx context.Context, method, path string, body, out any) error {
-	status, data, err := c.doOnce(ctx, method, path, body)
+	status, _, data, err := c.doRequest(ctx, method, path, body)
 	if err != nil {
 		return err
 	}
-	// On a 401, attempt a one-time transparent refresh and retry.
-	if status == http.StatusUnauthorized && c.refreshFn != nil {
-		if rerr := c.refresh(ctx); rerr == nil {
-			status, data, err = c.doOnce(ctx, method, path, body)
-			if err != nil {
-				return err
-			}
-		}
-	}
 	if status >= 400 {
-		apiErr := &Error{Status: status}
-		_ = json.Unmarshal(data, apiErr)
-		if status == http.StatusUnauthorized {
-			const hint = "your session has expired — run `aic login`"
-			if apiErr.Message == "" {
-				apiErr.Message = hint
-			} else {
-				apiErr.Message = apiErr.Message + " (" + hint + ")"
-			}
-		}
-		return apiErr
+		return apiError(status, data)
 	}
 	if out != nil && len(data) > 0 {
 		return json.Unmarshal(data, out)
 	}
 	return nil
+}
+
+// doRaw performs a GET and returns the raw response bytes and headers without
+// JSON-decoding — for binary endpoints like attachment download.
+func (c *Client) doRaw(ctx context.Context, method, path string) ([]byte, http.Header, error) {
+	status, hdr, data, err := c.doRequest(ctx, method, path, nil)
+	if err != nil {
+		return nil, nil, err
+	}
+	if status >= 400 {
+		return nil, nil, apiError(status, data)
+	}
+	return data, hdr, nil
 }

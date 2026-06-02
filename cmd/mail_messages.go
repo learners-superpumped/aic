@@ -11,7 +11,7 @@ import (
 
 func newMailMessagesCmd() *cobra.Command {
 	cmd := &cobra.Command{Use: "messages", Short: "List and read stored mail messages"}
-	cmd.AddCommand(newMailMessagesListCmd(), newMailMessagesShowCmd())
+	cmd.AddCommand(newMailMessagesListCmd(), newMailMessagesShowCmd(), newMailMessagesAttachmentCmd())
 	return cmd
 }
 
@@ -98,12 +98,52 @@ func newMailMessagesShowCmd() *cobra.Command {
 			if len(d.Attachments) > 0 {
 				fmt.Fprintln(w, "\nAttachments:")
 				for _, at := range d.Attachments {
-					fmt.Fprintf(w, "  %s  %s  %d bytes\n", at.Filename, at.ContentType, at.SizeBytes)
+					fmt.Fprintf(w, "  %s  %s  %s  %d bytes\n", at.ID, at.Filename, at.ContentType, at.SizeBytes)
 				}
 			}
 			return nil
 		},
 	}
 	cmd.Flags().StringVar(&rawOut, "raw-out", "", "write the raw .eml to this path")
+	return cmd
+}
+
+func newMailMessagesAttachmentCmd() *cobra.Command {
+	var out string
+	cmd := &cobra.Command{
+		Use:   "attachment <message-id> <attachment-id>",
+		Short: "Download a message attachment (id from `messages show`)",
+		Args:  cobra.ExactArgs(2),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			a, err := appFromCmd(cmd)
+			if err != nil {
+				return err
+			}
+			if err := a.RequireProject(); err != nil {
+				return err
+			}
+			data, filename, err := a.Client.GetMailAttachment(cmd.Context(), a.Team, a.Project, args[0], args[1])
+			if err != nil {
+				return err
+			}
+			if out == "-" { // stream to stdout
+				_, err := cmd.OutOrStdout().Write(data)
+				return err
+			}
+			dest := out
+			if dest == "" { // default to the server-suggested filename
+				dest = filename
+			}
+			if dest == "" {
+				return fmt.Errorf("no filename in response; pass --out <path>")
+			}
+			if err := os.WriteFile(dest, data, 0o600); err != nil {
+				return err
+			}
+			fmt.Fprintf(cmd.OutOrStdout(), "wrote %d bytes to %s\n", len(data), dest)
+			return nil
+		},
+	}
+	cmd.Flags().StringVar(&out, "out", "", "write to this path (default: attachment filename; '-' for stdout)")
 	return cmd
 }

@@ -26,6 +26,7 @@ List and read stored mail messages
 ### SEE ALSO
 
 * [aic mail](/reference/mail/mail/)	 - Manage outbound mail (SES identities, inboxes, send)
+* [aic mail messages attachment](/reference/mail/messages/attachment/)	 - Download a message attachment (id from `messages show`)
 * [aic mail messages list](/reference/mail/messages/list/)	 - List stored messages (newest first)
 * [aic mail messages show](/reference/mail/messages/show/)	 - Show a message's metadata and body; optionally write its raw .eml to a file
 
