@@ -4,6 +4,8 @@ import (
 	"encoding/base64"
 	"fmt"
 	"os"
+	"path/filepath"
+	"strings"
 
 	"github.com/learners-superpumped/aic/internal/api"
 	"github.com/spf13/cobra"
@@ -132,10 +134,11 @@ func newMailMessagesAttachmentCmd() *cobra.Command {
 			}
 			dest := out
 			if dest == "" { // default to the server-suggested filename
-				dest = filename
-			}
-			if dest == "" {
-				return fmt.Errorf("no filename in response; pass --out <path>")
+				base, err := safeAttachmentName(filename)
+				if err != nil {
+					return err
+				}
+				dest = base
 			}
 			if err := os.WriteFile(dest, data, 0o600); err != nil {
 				return err
@@ -146,4 +149,17 @@ func newMailMessagesAttachmentCmd() *cobra.Command {
 	}
 	cmd.Flags().StringVar(&out, "out", "", "write to this path (default: attachment filename; '-' for stdout)")
 	return cmd
+}
+
+// safeAttachmentName reduces a server-suggested attachment filename to a safe
+// basename. The name ultimately comes from the (untrusted) email sender, so a
+// crafted value like "../../x" must not let the download escape the cwd. Returns
+// an error directing the user to pass --out when the name can't be made safe.
+func safeAttachmentName(filename string) (string, error) {
+	base := filepath.Base(filename)
+	if base == "." || base == ".." || base == string(filepath.Separator) ||
+		base == "" || strings.ContainsAny(base, `/\`) {
+		return "", fmt.Errorf("server-suggested filename %q is unsafe; pass --out <path>", filename)
+	}
+	return base, nil
 }
