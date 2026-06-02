@@ -5,9 +5,6 @@ dist/
 # Vercel CLI
 .vercel/
 
-# generated CLI reference (produced by `npm run docs:gen` from the Go source)
-src/content/docs/reference/*.md
-
 # dependencies
 node_modules/
 
