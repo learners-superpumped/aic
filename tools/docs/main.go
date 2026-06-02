@@ -1,10 +1,13 @@
 // Command docs generates the aic CLI command reference as Starlight-flavored
-// Markdown, one page per command, with YAML frontmatter the docs site consumes.
+// Markdown. Pages are laid out in a directory tree that mirrors the command
+// tree, so Starlight's `autogenerate` sidebar renders one collapsible group per
+// command group (billing, domains, domains/records, ...).
 //
 //	go run ./tools/docs [outDir]   # default: ./reference-out
 package main
 
 import (
+	"bytes"
 	"fmt"
 	"log"
 	"os"
@@ -21,95 +24,135 @@ func main() {
 	if len(os.Args) > 1 {
 		outDir = os.Args[1]
 	}
-	if err := os.MkdirAll(outDir, 0755); err != nil {
+	if err := os.RemoveAll(outDir); err != nil {
 		log.Fatal(err)
 	}
-	if err := cleanMarkdown(outDir); err != nil {
+	if err := os.MkdirAll(outDir, 0755); err != nil {
 		log.Fatal(err)
 	}
 
 	root := cmd.NewRootCmd()
-	root.DisableAutoGenTag = true
 	root.PersistentPreRunE = nil
 
-	// Cobra "SEE ALSO" links reference sibling pages by filename
-	// (e.g. aic_teams.md). Map them to Starlight reference routes.
+	// Map each command's cobra "SEE ALSO" filename (underscored path + .md) to
+	// its final Starlight route, so cross-links land on the right nested page.
+	links := map[string]string{}
+	walk(root, func(c *cobra.Command) {
+		links[linkKey(c)] = slugFor(c)
+	})
 	linkHandler := func(name string) string {
-		return "/reference/" + strings.ToLower(strings.TrimSuffix(name, filepath.Ext(name))) + "/"
-	}
-	filePrepender := func(string) string { return "" }
-
-	if err := doc.GenMarkdownTreeCustom(root, outDir, filePrepender, linkHandler); err != nil {
-		log.Fatal(err)
+		if s, ok := links[name]; ok {
+			return s
+		}
+		return "/reference/" + strings.ToLower(strings.TrimSuffix(name, ".md")) + "/"
 	}
 
-	if err := addFrontmatter(root, outDir); err != nil {
-		log.Fatal(err)
-	}
+	var count int
+	walk(root, func(c *cobra.Command) {
+		c.DisableAutoGenTag = true
+		if err := writePage(c, outDir, linkHandler); err != nil {
+			log.Fatal(err)
+		}
+		count++
+	})
 
-	fmt.Printf("CLI reference generated in %s\n", outDir)
+	fmt.Printf("CLI reference generated in %s (%d pages)\n", outDir, count)
 }
 
-// cleanMarkdown removes previously generated pages so renamed/removed commands
-// don't leave stale files behind, while preserving .gitkeep.
-func cleanMarkdown(dir string) error {
-	matches, err := filepath.Glob(filepath.Join(dir, "*.md"))
-	if err != nil {
+// writePage renders one command page with Starlight frontmatter into the
+// directory that mirrors its position in the command tree.
+func writePage(c *cobra.Command, outDir string, linkHandler func(string) string) error {
+	var body bytes.Buffer
+	if err := doc.GenMarkdownCustom(c, &body, linkHandler); err != nil {
 		return err
 	}
-	for _, m := range matches {
-		if err := os.Remove(m); err != nil {
-			return err
-		}
+
+	var page strings.Builder
+	page.WriteString("---\n")
+	fmt.Fprintf(&page, "title: %s\n", yamlQuote(c.CommandPath()))
+	if c.Short != "" {
+		fmt.Fprintf(&page, "description: %s\n", yamlQuote(c.Short))
 	}
-	return nil
-}
+	page.WriteString("sidebar:\n")
+	fmt.Fprintf(&page, "  label: %s\n", yamlQuote(sidebarLabel(c)))
+	if isOverview(c) {
+		// Float a group's own page to the top of its group.
+		page.WriteString("  order: 0\n")
+	}
+	page.WriteString("---\n\n")
+	page.WriteString(stripLeadingHeading(body.String()))
 
-// addFrontmatter rewrites each generated page: it injects a Starlight YAML
-// frontmatter block (title = command path, description = Short) and strips the
-// leading "## <command path>" heading that Starlight already renders as the H1.
-func addFrontmatter(root *cobra.Command, dir string) error {
-	shorts := map[string]string{}
-	collectShorts(root, shorts)
-
-	matches, err := filepath.Glob(filepath.Join(dir, "*.md"))
-	if err != nil {
+	file := filepath.Join(outDir, filepath.FromSlash(relPath(c)))
+	if err := os.MkdirAll(filepath.Dir(file), 0755); err != nil {
 		return err
 	}
-	for _, path := range matches {
-		raw, err := os.ReadFile(path)
-		if err != nil {
-			return err
-		}
-		title := strings.ReplaceAll(strings.TrimSuffix(filepath.Base(path), ".md"), "_", " ")
-		body := stripLeadingHeading(string(raw))
-
-		var fm strings.Builder
-		fm.WriteString("---\n")
-		fmt.Fprintf(&fm, "title: %s\n", yamlQuote(title))
-		if s := shorts[title]; s != "" {
-			fmt.Fprintf(&fm, "description: %s\n", yamlQuote(s))
-		}
-		fm.WriteString("---\n\n")
-		fm.WriteString(body)
-
-		if err := os.WriteFile(path, []byte(fm.String()), 0644); err != nil {
-			return err
-		}
-	}
-	return nil
+	return os.WriteFile(file, []byte(page.String()), 0644)
 }
 
-// collectShorts maps every command's full path ("aic teams list") to its Short.
-func collectShorts(c *cobra.Command, out map[string]string) {
-	out[c.CommandPath()] = c.Short
+// pathParts returns the command path below the root, e.g. ["domains","records"].
+func pathParts(c *cobra.Command) []string {
+	parts := strings.Fields(c.CommandPath())
+	return parts[1:]
+}
+
+func isOverview(c *cobra.Command) bool {
+	return c.HasParent() && len(visibleSubcmds(c)) > 0
+}
+
+// relPath is the page's location relative to the reference root.
+//   - root:           aic.md
+//   - group (billing): billing/billing.md      (folder = group, file = overview)
+//   - leaf (add-card): billing/add-card.md
+func relPath(c *cobra.Command) string {
+	parts := pathParts(c)
+	if len(parts) == 0 {
+		return "aic.md"
+	}
+	last := parts[len(parts)-1]
+	if len(visibleSubcmds(c)) > 0 {
+		return filepath.ToSlash(filepath.Join(append(parts, last+".md")...))
+	}
+	return filepath.ToSlash(filepath.Join(parts...)) + ".md"
+}
+
+func slugFor(c *cobra.Command) string {
+	return "/reference/" + strings.TrimSuffix(relPath(c), ".md") + "/"
+}
+
+func sidebarLabel(c *cobra.Command) string {
+	if !c.HasParent() {
+		return c.Name()
+	}
+	if isOverview(c) {
+		return "Overview"
+	}
+	return c.Name()
+}
+
+func linkKey(c *cobra.Command) string {
+	return strings.ReplaceAll(c.CommandPath(), " ", "_") + ".md"
+}
+
+// walk visits a command and all visible descendants.
+func walk(c *cobra.Command, fn func(*cobra.Command)) {
+	fn(c)
+	for _, sub := range visibleSubcmds(c) {
+		walk(sub, fn)
+	}
+}
+
+func visibleSubcmds(c *cobra.Command) []*cobra.Command {
+	var out []*cobra.Command
 	for _, sub := range c.Commands() {
-		collectShorts(sub, out)
+		if !sub.Hidden && sub.Name() != "help" && sub.Name() != "completion" {
+			out = append(out, sub)
+		}
 	}
+	return out
 }
 
 // stripLeadingHeading drops the leading "## ..." line (and the blank line after
-// it) that cobra/doc emits as the page heading.
+// it) that cobra/doc emits; Starlight renders the frontmatter title as the H1.
 func stripLeadingHeading(content string) string {
 	line, rest, found := strings.Cut(content, "\n")
 	if found && strings.HasPrefix(line, "## ") {
