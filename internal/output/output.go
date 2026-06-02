@@ -6,8 +6,9 @@ import (
 	"fmt"
 	"io"
 	"reflect"
-	"text/tabwriter"
+	"strings"
 
+	"golang.org/x/text/width"
 	"gopkg.in/yaml.v3"
 )
 
@@ -70,29 +71,61 @@ func (r *Renderer) Print(v any, headers []string, rowFn RowFunc) error {
 	}
 }
 
+// tableGap is the number of spaces between columns.
+const tableGap = 2
+
 func (r *Renderer) printTable(v any, headers []string, rowFn RowFunc) error {
-	tw := tabwriter.NewWriter(r.w, 0, 2, 2, ' ', 0)
+	var rows [][]string
 	if len(headers) > 0 {
-		fmt.Fprintln(tw, join(headers))
+		rows = append(rows, headers)
 	}
 	rv := reflect.ValueOf(v)
 	if rv.Kind() == reflect.Slice {
 		for i := 0; i < rv.Len(); i++ {
-			fmt.Fprintln(tw, join(rowFn(rv.Index(i).Interface())))
+			rows = append(rows, rowFn(rv.Index(i).Interface()))
 		}
 	} else if rowFn != nil {
-		fmt.Fprintln(tw, join(rowFn(v)))
+		rows = append(rows, rowFn(v))
 	}
-	return tw.Flush()
+
+	// Column widths measured by on-screen cell width, so CJK (double-width) text
+	// doesn't push later columns out of alignment the way text/tabwriter does.
+	var widths []int
+	for _, row := range rows {
+		for i, cell := range row {
+			if w := displayWidth(cell); i >= len(widths) {
+				widths = append(widths, w)
+			} else if w > widths[i] {
+				widths[i] = w
+			}
+		}
+	}
+
+	var b strings.Builder
+	for _, row := range rows {
+		for i, cell := range row {
+			b.WriteString(cell)
+			if i < len(row)-1 { // pad every column but the last (no trailing space)
+				b.WriteString(strings.Repeat(" ", widths[i]-displayWidth(cell)+tableGap))
+			}
+		}
+		b.WriteByte('\n')
+	}
+	_, err := io.WriteString(r.w, b.String())
+	return err
 }
 
-func join(cols []string) string {
-	out := ""
-	for i, c := range cols {
-		if i > 0 {
-			out += "\t"
+// displayWidth returns the number of terminal cells s occupies, counting East
+// Asian Wide and Fullwidth runes as 2.
+func displayWidth(s string) int {
+	w := 0
+	for _, run := range s {
+		switch width.LookupRune(run).Kind() {
+		case width.EastAsianWide, width.EastAsianFullwidth:
+			w += 2
+		default:
+			w++
 		}
-		out += c
 	}
-	return out
+	return w
 }
