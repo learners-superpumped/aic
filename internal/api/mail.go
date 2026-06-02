@@ -146,6 +146,8 @@ type MailAttachmentMeta struct {
 
 type MailMessageDetail struct {
 	MailMessage
+	TextBody    string               `json:"text_body"`
+	HTMLBody    string               `json:"html_body,omitempty"`
 	Recipients  []MailRecipient      `json:"recipients"`
 	Attachments []MailAttachmentMeta `json:"attachments"`
 	RawBase64   string               `json:"raw_base64"`

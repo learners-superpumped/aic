@@ -1,11 +1,11 @@
 ---
 title: "aic mail messages show"
-description: "Show a message's metadata; optionally write its raw .eml to a file"
+description: "Show a message's metadata and body; optionally write its raw .eml to a file"
 sidebar:
   label: "show"
 ---
 
-Show a message's metadata; optionally write its raw .eml to a file
+Show a message's metadata and body; optionally write its raw .eml to a file
 
 ```
 aic mail messages show <message-id> [flags]

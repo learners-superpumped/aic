@@ -49,7 +49,7 @@ func newMailMessagesShowCmd() *cobra.Command {
 	var rawOut string
 	cmd := &cobra.Command{
 		Use:   "show <message-id>",
-		Short: "Show a message's metadata; optionally write its raw .eml to a file",
+		Short: "Show a message's metadata and body; optionally write its raw .eml to a file",
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			a, err := appFromCmd(cmd)
@@ -85,6 +85,10 @@ func newMailMessagesShowCmd() *cobra.Command {
 				return err
 			}
 			w := a.Out.Writer()
+			if d.TextBody != "" {
+				fmt.Fprintln(w, "\nBody:")
+				fmt.Fprintln(w, d.TextBody)
+			}
 			if len(d.Recipients) > 0 {
 				fmt.Fprintln(w, "\nRecipients:")
 				for _, r := range d.Recipients {
