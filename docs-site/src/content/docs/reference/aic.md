@@ -1,6 +1,8 @@
 ---
 title: "aic"
 description: "aic provisions projects, domains, and email inboxes on our service"
+sidebar:
+  label: "aic"
 ---
 
 aic provisions projects, domains, and email inboxes on our service
@@ -17,14 +19,14 @@ aic provisions projects, domains, and email inboxes on our service
 
 ### SEE ALSO
 
-* [aic billing](/reference/aic_billing/)	 - Manage credits and payment methods
-* [aic configure](/reference/aic_configure/)	 - Override the hosted-service defaults (only needed for dev/staging or self-hosted)
-* [aic domains](/reference/aic_domains/)	 - Search, buy, and renew domains
-* [aic invites](/reference/aic_invites/)	 - Accept or preview team invites
-* [aic login](/reference/aic_login/)	 - Authenticate via your browser and store credentials
-* [aic logout](/reference/aic_logout/)	 - Remove stored credentials for a profile
-* [aic mail](/reference/aic_mail/)	 - Manage outbound mail (SES identities, inboxes, send)
-* [aic projects](/reference/aic_projects/)	 - Manage projects
-* [aic teams](/reference/aic_teams/)	 - Manage teams
-* [aic whoami](/reference/aic_whoami/)	 - Show the currently authenticated identity
+* [aic billing](/reference/billing/billing/)	 - Manage credits and payment methods
+* [aic configure](/reference/configure/)	 - Override the hosted-service defaults (only needed for dev/staging or self-hosted)
+* [aic domains](/reference/domains/domains/)	 - Search, buy, and renew domains
+* [aic invites](/reference/invites/invites/)	 - Accept or preview team invites
+* [aic login](/reference/login/)	 - Authenticate via your browser and store credentials
+* [aic logout](/reference/logout/)	 - Remove stored credentials for a profile
+* [aic mail](/reference/mail/mail/)	 - Manage outbound mail (SES identities, inboxes, send)
+* [aic projects](/reference/projects/projects/)	 - Manage projects
+* [aic teams](/reference/teams/teams/)	 - Manage teams
+* [aic whoami](/reference/whoami/)	 - Show the currently authenticated identity
 
