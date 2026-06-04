@@ -27,6 +27,8 @@ aic provisions projects, domains, and email inboxes on our service
 * [aic logout](/reference/logout/)	 - Remove stored credentials for a profile
 * [aic mail](/reference/mail/mail/)	 - Manage outbound mail (SES identities, inboxes, send)
 * [aic projects](/reference/projects/projects/)	 - Manage projects
+* [aic storage](/reference/storage/storage/)	 - Manage AIC storage buckets and objects
 * [aic teams](/reference/teams/teams/)	 - Manage teams
+* [aic upgrade](/reference/upgrade/)	 - Upgrade aic to the latest version
 * [aic whoami](/reference/whoami/)	 - Show the currently authenticated identity
 
