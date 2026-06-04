@@ -160,3 +160,52 @@ type Member struct {
 	Email    string `json:"email,omitempty"`
 	Name     string `json:"name,omitempty"`
 }
+
+// AdTargeting is the audience-targeting parameters for an ad campaign.
+type AdTargeting struct {
+	Geo       []string `json:"geo,omitempty"`
+	AgeMin    int      `json:"ageMin,omitempty"`
+	AgeMax    int      `json:"ageMax,omitempty"`
+	Genders   []string `json:"genders,omitempty"`
+	Interests []string `json:"interests,omitempty"`
+}
+
+// AdCreative is the creative content for an ad campaign.
+type AdCreative struct {
+	StorageRef     string `json:"storageRef,omitempty"`
+	Headline       string `json:"headline,omitempty"`
+	Body           string `json:"body,omitempty"`
+	CTA            string `json:"cta,omitempty"`
+	DestinationURL string `json:"destinationUrl,omitempty"`
+}
+
+// AdLaunchRequest is the payload for launching an ad campaign.
+type AdLaunchRequest struct {
+	LaunchToken     string         `json:"launchToken"`
+	Objective       string         `json:"objective"`
+	BudgetType      string         `json:"budgetType"`
+	BudgetNano      int64          `json:"budgetNano"`
+	StartAt         time.Time      `json:"startAt"`
+	EndAt           *time.Time     `json:"endAt,omitempty"`
+	Targeting       AdTargeting    `json:"targeting,omitempty"`
+	Placements      []string       `json:"placements,omitempty"`
+	ProviderOptions map[string]any `json:"providerOptions,omitempty"`
+	Creative        AdCreative     `json:"creative"`
+}
+
+// AdCampaign is a launched ad campaign as returned by the API.
+type AdCampaign struct {
+	ID           string    `json:"id" yaml:"id"`
+	TeamID       string    `json:"team_id" yaml:"team_id"`
+	ProjectID    string    `json:"project_id" yaml:"project_id"`
+	Provider     string    `json:"provider" yaml:"provider"`
+	Objective    string    `json:"objective" yaml:"objective"`
+	BudgetType   string    `json:"budget_type" yaml:"budget_type"`
+	BudgetNano   int64     `json:"budget_nano" yaml:"budget_nano"`
+	Status       string    `json:"status" yaml:"status"`
+	StatusReason string    `json:"status_reason,omitempty" yaml:"status_reason,omitempty"`
+	LaunchToken  string    `json:"launch_token" yaml:"launch_token"`
+	ExternalID   string    `json:"external_id,omitempty" yaml:"external_id,omitempty"`
+	CreatedAt    time.Time `json:"created_at" yaml:"created_at"`
+	UpdatedAt    time.Time `json:"updated_at" yaml:"updated_at"`
+}
