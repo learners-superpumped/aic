@@ -30,10 +30,14 @@ func newSEOSitesCmd() *cobra.Command {
 				if err != nil {
 					return err
 				}
-				return a.Out.Print(site, []string{"DOMAIN", "DNS", "STATUS"}, func(v any) []string {
+				if err := a.Out.Print(site, []string{"DOMAIN", "DNS", "STATUS"}, func(v any) []string {
 					s := v.(api.SEOSiteDTO)
 					return []string{s.Domain, boolYN(s.DNSManaged), s.Status}
-				})
+				}); err != nil {
+					return err
+				}
+				printVerifyInstruction(cmd, site)
+				return nil
 			},
 		},
 		&cobra.Command{
@@ -88,10 +92,14 @@ func newSEOSitesCmd() *cobra.Command {
 				if err != nil {
 					return err
 				}
-				return a.Out.Print(site, []string{"DOMAIN", "DNS", "STATUS"}, func(v any) []string {
+				if err := a.Out.Print(site, []string{"DOMAIN", "DNS", "STATUS"}, func(v any) []string {
 					s := v.(api.SEOSiteDTO)
 					return []string{s.Domain, boolYN(s.DNSManaged), s.Status}
-				})
+				}); err != nil {
+					return err
+				}
+				printVerifyInstruction(cmd, site)
+				return nil
 			},
 		},
 		&cobra.Command{
@@ -185,6 +193,16 @@ func newSearchConsoleCmd() *cobra.Command {
 		},
 	})
 	return cmd
+}
+
+func printVerifyInstruction(cmd *cobra.Command, s api.SEOSiteDTO) {
+	if s.VerifyRecordValue == "" {
+		return
+	}
+	w := cmd.ErrOrStderr()
+	fmt.Fprintf(w, "\nAdd this DNS TXT record, then run: aic seo sites verify %s\n", s.Domain)
+	fmt.Fprintf(w, "  name:  %s\n", s.VerifyRecordName)
+	fmt.Fprintf(w, "  value: %s\n", s.VerifyRecordValue)
 }
 
 func boolYN(b bool) string {

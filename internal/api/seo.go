@@ -7,9 +7,11 @@ import (
 )
 
 type SEOSiteDTO struct {
-	Domain     string `json:"domain"`
-	DNSManaged bool   `json:"dns_managed"`
-	Status     string `json:"status"`
+	Domain            string `json:"domain"`
+	DNSManaged        bool   `json:"dns_managed"`
+	Status            string `json:"status"`
+	VerifyRecordName  string `json:"verify_record_name,omitempty"`
+	VerifyRecordValue string `json:"verify_record_value,omitempty"`
 }
 
 type SCMetricDTO struct {
