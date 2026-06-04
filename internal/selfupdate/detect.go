@@ -5,7 +5,6 @@ import (
 	"strings"
 )
 
-// Install describes how the running binary was installed.
 type Install int
 
 const (

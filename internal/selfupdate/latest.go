@@ -8,7 +8,6 @@ import (
 	"time"
 )
 
-// releasesLatestURL is overridable in tests.
 var releasesLatestURL = "https://api.github.com/repos/learners-superpumped/aic/releases/latest"
 
 // LatestVersion returns the latest published release tag (e.g. "v1.5.0").
