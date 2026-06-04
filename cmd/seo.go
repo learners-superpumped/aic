@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/learners-superpumped/aic/internal/api"
 	"github.com/spf13/cobra"
@@ -122,8 +123,9 @@ func newSEOSitesCmd() *cobra.Command {
 func newSearchConsoleCmd() *cobra.Command {
 	cmd := &cobra.Command{Use: "search-console", Short: "Query Search Console data"}
 	var start, end string
-	var dims []string
-	var limit int
+	var dims, filters []string
+	var searchType string
+	var limit, startRow int
 	queryCmd := &cobra.Command{
 		Use: "query <domain>", Short: "Search analytics", Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -134,8 +136,17 @@ func newSearchConsoleCmd() *cobra.Command {
 			if err := a.RequireProject(); err != nil {
 				return err
 			}
+			var fs []api.SCFilter
+			for _, raw := range filters {
+				f, perr := parseFilter(raw)
+				if perr != nil {
+					return perr
+				}
+				fs = append(fs, f)
+			}
 			rows, err := a.Client.SCQuery(cmd.Context(), a.Team, a.Project, args[0],
-				api.SCQuery{StartDate: start, EndDate: end, Dimensions: dims, Limit: limit})
+				api.SCQuery{StartDate: start, EndDate: end, Dimensions: dims, Filters: fs,
+					Type: searchType, StartRow: startRow, Limit: limit})
 			if err != nil {
 				return err
 			}
@@ -148,6 +159,9 @@ func newSearchConsoleCmd() *cobra.Command {
 	queryCmd.Flags().StringVar(&start, "start", "", "start date YYYY-MM-DD")
 	queryCmd.Flags().StringVar(&end, "end", "", "end date YYYY-MM-DD")
 	queryCmd.Flags().StringSliceVar(&dims, "dimensions", nil, "query|page|country|device")
+	queryCmd.Flags().StringArrayVar(&filters, "filter", nil, `dimension filter "<dim> <op> <expr>", e.g. "country equals usa" (repeatable)`)
+	queryCmd.Flags().StringVar(&searchType, "type", "", "web|image|video|news|discover|googleNews (default web)")
+	queryCmd.Flags().IntVar(&startRow, "start-row", 0, "pagination offset (0 = first page)")
 	queryCmd.Flags().IntVar(&limit, "limit", 0, "row limit")
 	cmd.AddCommand(queryCmd)
 
@@ -239,6 +253,14 @@ func printVerifyInstruction(cmd *cobra.Command, s api.SEOSiteDTO) {
 	fmt.Fprintf(w, "\nAdd this DNS TXT record, then run: aic seo sites verify %s\n", s.Domain)
 	fmt.Fprintf(w, "  name:  %s\n", s.VerifyRecordName)
 	fmt.Fprintf(w, "  value: %s\n", s.VerifyRecordValue)
+}
+
+func parseFilter(s string) (api.SCFilter, error) {
+	parts := strings.SplitN(strings.TrimSpace(s), " ", 3)
+	if len(parts) != 3 {
+		return api.SCFilter{}, fmt.Errorf("filter must be \"<dimension> <operator> <expression>\", got %q", s)
+	}
+	return api.SCFilter{Dimension: parts[0], Operator: parts[1], Expression: parts[2]}, nil
 }
 
 func boolYN(b bool) string {

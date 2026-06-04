@@ -70,11 +70,20 @@ func (c *Client) DeleteSEOSite(ctx context.Context, team, project, domain string
 	return c.do(ctx, "DELETE", seoBase(team, project)+"/sites/"+url.PathEscape(domain), nil, nil)
 }
 
+type SCFilter struct {
+	Dimension  string `json:"dimension"`
+	Operator   string `json:"operator"`
+	Expression string `json:"expression"`
+}
+
 type SCQuery struct {
-	StartDate  string   `json:"start_date,omitempty"`
-	EndDate    string   `json:"end_date,omitempty"`
-	Dimensions []string `json:"dimensions,omitempty"`
-	Limit      int      `json:"limit,omitempty"`
+	StartDate  string     `json:"start_date,omitempty"`
+	EndDate    string     `json:"end_date,omitempty"`
+	Dimensions []string   `json:"dimensions,omitempty"`
+	Filters    []SCFilter `json:"filters,omitempty"`
+	Type       string     `json:"type,omitempty"`
+	StartRow   int        `json:"start_row,omitempty"`
+	Limit      int        `json:"limit,omitempty"`
 }
 
 func (c *Client) SCQuery(ctx context.Context, team, project, domain string, q SCQuery) ([]SCMetricDTO, error) {
