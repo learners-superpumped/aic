@@ -25,6 +25,7 @@ var commandsSkippingApp = map[string]bool{
 	"logout":    true,
 	"configure": true,
 	"help":      true,
+	"upgrade":   true,
 }
 
 func resolveProject(flag, def string) string {
@@ -171,6 +172,7 @@ func NewRootCmd() *cobra.Command {
 	root.AddCommand(newStorageCmd())
 	root.AddCommand(newBillingCmd())
 	root.AddCommand(newInvitesCmd())
+	root.AddCommand(newUpgradeCmd())
 
 	return root
 }
