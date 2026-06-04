@@ -151,8 +151,9 @@ func newSearchConsoleCmd() *cobra.Command {
 	queryCmd.Flags().IntVar(&limit, "limit", 0, "row limit")
 	cmd.AddCommand(queryCmd)
 
-	cmd.AddCommand(&cobra.Command{
-		Use: "sitemaps <domain>", Short: "List sitemaps", Args: cobra.ExactArgs(1),
+	sitemaps := &cobra.Command{Use: "sitemaps", Short: "List, submit, or delete sitemaps"}
+	sitemaps.AddCommand(&cobra.Command{
+		Use: "list <domain>", Short: "List submitted sitemaps", Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			a, err := appFromCmd(cmd)
 			if err != nil {
@@ -171,6 +172,41 @@ func newSearchConsoleCmd() *cobra.Command {
 			})
 		},
 	})
+	sitemaps.AddCommand(&cobra.Command{
+		Use: "submit <domain> <sitemap-url>", Short: "Submit a sitemap", Args: cobra.ExactArgs(2),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			a, err := appFromCmd(cmd)
+			if err != nil {
+				return err
+			}
+			if err := a.RequireProject(); err != nil {
+				return err
+			}
+			if err := a.Client.SCSubmitSitemap(cmd.Context(), a.Team, a.Project, args[0], args[1]); err != nil {
+				return err
+			}
+			fmt.Fprintf(cmd.OutOrStdout(), "submitted %s\n", args[1])
+			return nil
+		},
+	})
+	sitemaps.AddCommand(&cobra.Command{
+		Use: "delete <domain> <sitemap-url>", Short: "Delete a submitted sitemap", Args: cobra.ExactArgs(2),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			a, err := appFromCmd(cmd)
+			if err != nil {
+				return err
+			}
+			if err := a.RequireProject(); err != nil {
+				return err
+			}
+			if err := a.Client.SCDeleteSitemap(cmd.Context(), a.Team, a.Project, args[0], args[1]); err != nil {
+				return err
+			}
+			fmt.Fprintf(cmd.OutOrStdout(), "deleted %s\n", args[1])
+			return nil
+		},
+	})
+	cmd.AddCommand(sitemaps)
 
 	cmd.AddCommand(&cobra.Command{
 		Use: "inspect <domain> <url>", Short: "Inspect a URL's index status", Args: cobra.ExactArgs(2),

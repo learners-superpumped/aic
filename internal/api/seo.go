@@ -87,6 +87,16 @@ func (c *Client) SCSitemaps(ctx context.Context, team, project, domain string) (
 	return out, c.do(ctx, "GET", seoBase(team, project)+"/sites/"+url.PathEscape(domain)+"/search-console/sitemaps", nil, &out)
 }
 
+func (c *Client) SCSubmitSitemap(ctx context.Context, team, project, domain, sitemapURL string) error {
+	return c.do(ctx, "POST", seoBase(team, project)+"/sites/"+url.PathEscape(domain)+"/search-console/sitemaps",
+		map[string]string{"url": sitemapURL}, nil)
+}
+
+func (c *Client) SCDeleteSitemap(ctx context.Context, team, project, domain, sitemapURL string) error {
+	path := seoBase(team, project) + "/sites/" + url.PathEscape(domain) + "/search-console/sitemaps?url=" + url.QueryEscape(sitemapURL)
+	return c.do(ctx, "DELETE", path, nil, nil)
+}
+
 func (c *Client) SCInspect(ctx context.Context, team, project, domain, target string) (SCInspectionDTO, error) {
 	var out SCInspectionDTO
 	return out, c.do(ctx, "POST", seoBase(team, project)+"/sites/"+url.PathEscape(domain)+"/search-console/inspect", map[string]string{"url": target}, &out)
