@@ -180,6 +180,36 @@ type AdCreative struct {
 	DestinationURL string `json:"destinationUrl,omitempty"`
 }
 
+// AdInsights is one window of campaign performance.
+type AdInsights struct {
+	DateStart   string  `json:"date_start" yaml:"date_start"`
+	DateStop    string  `json:"date_stop" yaml:"date_stop"`
+	SpendNano   int64   `json:"spend_nano" yaml:"spend_nano"`
+	Impressions int64   `json:"impressions" yaml:"impressions"`
+	Clicks      int64   `json:"clicks" yaml:"clicks"`
+	Reach       int64   `json:"reach" yaml:"reach"`
+	Frequency   float64 `json:"frequency" yaml:"frequency"`
+	CTR         float64 `json:"ctr" yaml:"ctr"`
+	CPCNano     int64   `json:"cpc_nano" yaml:"cpc_nano"`
+	CPMNano     int64   `json:"cpm_nano" yaml:"cpm_nano"`
+	Results     int64   `json:"results" yaml:"results"`
+	ResultType  string  `json:"result_type,omitempty" yaml:"result_type,omitempty"`
+}
+
+// AdInsightsSeries is the cumulative window plus an optional daily series.
+type AdInsightsSeries struct {
+	Cumulative AdInsights   `json:"cumulative" yaml:"cumulative"`
+	Daily      []AdInsights `json:"daily,omitempty" yaml:"daily,omitempty"`
+}
+
+// AdUpdateRequest carries in-place edits to a running campaign.
+type AdUpdateRequest struct {
+	BudgetNano *int64       `json:"budgetNano,omitempty"`
+	Targeting  *AdTargeting `json:"targeting,omitempty"`
+	Placements []string     `json:"placements,omitempty"`
+	EndAt      *time.Time   `json:"endAt,omitempty"`
+}
+
 // AdLaunchRequest is the payload for launching an ad campaign.
 type AdLaunchRequest struct {
 	LaunchToken     string         `json:"launchToken"`

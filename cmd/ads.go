@@ -68,6 +68,8 @@ func newAdsCmd() *cobra.Command {
 		newAdsLaunchCmd(),
 		newAdsListCmd(),
 		newAdsStatusCmd(),
+		newAdsInsightsCmd(),
+		newAdsUpdateCmd(),
 		newAdsPauseCmd(),
 		newAdsResumeCmd(),
 		newAdsDeleteCmd(),
@@ -256,6 +258,135 @@ func newAdsStatusCmd() *cobra.Command {
 			return a.Out.Print(c, cols, row)
 		},
 	}
+}
+
+func adInsightsRows() ([]string, func(any) []string) {
+	return []string{"WINDOW", "SPEND-NANO", "IMPRESSIONS", "CLICKS", "CTR%", "CPC-NANO", "REACH", "RESULTS", "RESULT-TYPE"},
+		func(v any) []string {
+			i := v.(api.AdInsights)
+			window := i.DateStart
+			if i.DateStop != "" && i.DateStop != i.DateStart {
+				window = i.DateStart + ".." + i.DateStop
+			}
+			return []string{
+				window,
+				strconv.FormatInt(i.SpendNano, 10),
+				strconv.FormatInt(i.Impressions, 10),
+				strconv.FormatInt(i.Clicks, 10),
+				strconv.FormatFloat(i.CTR, 'f', 2, 64),
+				strconv.FormatInt(i.CPCNano, 10),
+				strconv.FormatInt(i.Reach, 10),
+				strconv.FormatInt(i.Results, 10),
+				dashIfEmpty(i.ResultType),
+			}
+		}
+}
+
+func newAdsInsightsCmd() *cobra.Command {
+	var (
+		daily bool
+		since string
+		until string
+	)
+	cmd := &cobra.Command{
+		Use:   "insights <campaign-id>",
+		Short: "Show performance metrics for an ad campaign",
+		Args:  cobra.ExactArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			a, err := appFromCmd(cmd)
+			if err != nil {
+				return err
+			}
+			if err := a.RequireProject(); err != nil {
+				return err
+			}
+			s, err := a.Client.AdInsights(cmd.Context(), a.Team, a.Project, args[0], daily, since, until)
+			if err != nil {
+				return err
+			}
+			// json/yaml: the full series. table: the cumulative row, then daily rows.
+			if a.Out.Format() != "table" {
+				cols, row := adInsightsRows()
+				return a.Out.Print(s, cols, row)
+			}
+			rows := append([]api.AdInsights{s.Cumulative}, s.Daily...)
+			cols, row := adInsightsRows()
+			return a.Out.Print(rows, cols, row)
+		},
+	}
+	cmd.Flags().BoolVar(&daily, "daily", false, "include a per-day breakdown")
+	cmd.Flags().StringVar(&since, "since", "", "window start (YYYY-MM-DD); default lifetime")
+	cmd.Flags().StringVar(&until, "until", "", "window end (YYYY-MM-DD); default today")
+	return cmd
+}
+
+func newAdsUpdateCmd() *cobra.Command {
+	var (
+		budgetNano int64
+		geo        []string
+		age        string
+		genders    []string
+		interests  []string
+		placements []string
+		endAt      string
+	)
+	cmd := &cobra.Command{
+		Use:   "update <campaign-id>",
+		Short: "Edit a running ad campaign (budget, targeting, end date)",
+		Args:  cobra.ExactArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			a, err := appFromCmd(cmd)
+			if err != nil {
+				return err
+			}
+			if err := a.RequireProject(); err != nil {
+				return err
+			}
+			f := cmd.Flags()
+			var req api.AdUpdateRequest
+			if f.Changed("budget") {
+				req.BudgetNano = &budgetNano
+			}
+			if f.Changed("end") {
+				t, err := time.Parse(time.RFC3339, endAt)
+				if err != nil {
+					return fmt.Errorf("--end must be RFC3339: %w", err)
+				}
+				req.EndAt = &t
+			}
+			if f.Changed("geo") || f.Changed("age") || f.Changed("genders") || f.Changed("interests") {
+				tgt := &api.AdTargeting{Geo: geo, Genders: genders, Interests: interests}
+				if age != "" {
+					mn, mx, err := parseAgeRange(age)
+					if err != nil {
+						return fmt.Errorf("--age: %w", err)
+					}
+					tgt.AgeMin, tgt.AgeMax = mn, mx
+				}
+				req.Targeting = tgt
+			}
+			if f.Changed("placements") {
+				req.Placements = placements
+			}
+			if req.BudgetNano == nil && req.Targeting == nil && req.EndAt == nil && req.Placements == nil {
+				return fmt.Errorf("nothing to update: pass at least one of --budget/--geo/--age/--genders/--interests/--placements/--end")
+			}
+			c, err := a.Client.UpdateAd(cmd.Context(), a.Team, a.Project, args[0], req)
+			if err != nil {
+				return err
+			}
+			cols, row := adCampaignRows()
+			return a.Out.Print(c, cols, row)
+		},
+	}
+	cmd.Flags().Int64Var(&budgetNano, "budget", 0, "new budget in nano-dollars")
+	cmd.Flags().StringArrayVar(&geo, "geo", nil, "replace target country/region codes (repeatable)")
+	cmd.Flags().StringVar(&age, "age", "", "replace target age range, e.g. 25-44")
+	cmd.Flags().StringArrayVar(&genders, "genders", nil, "replace target genders: male|female (repeatable)")
+	cmd.Flags().StringArrayVar(&interests, "interests", nil, "replace Meta interest IDs (repeatable)")
+	cmd.Flags().StringArrayVar(&placements, "placements", nil, "replace placements (repeatable)")
+	cmd.Flags().StringVar(&endAt, "end", "", "new campaign end time (RFC3339)")
+	return cmd
 }
 
 func newAdsPauseCmd() *cobra.Command {
