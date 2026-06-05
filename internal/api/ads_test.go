@@ -80,19 +80,19 @@ func TestListAdsHitsCorrectPath(t *testing.T) {
 	var gotPath string
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		gotPath = r.URL.Path
-		w.Write([]byte(`[{"id":"cmp_1","status":"active"},{"id":"cmp_2","status":"paused"}]`))
+		w.Write([]byte(`{"data":[{"id":"cmp_1","status":"active"},{"id":"cmp_2","status":"paused"}],"has_more":false}`))
 	}))
 	defer srv.Close()
 
 	c := New(srv.URL, "tok")
-	got, err := c.ListAds(context.Background(), "team_1", "proj_1")
+	got, err := c.ListAds(context.Background(), "team_1", "proj_1", 0, "")
 	if err != nil {
 		t.Fatalf("ListAds: %v", err)
 	}
 	if gotPath != "/v1/teams/team_1/projects/proj_1/ads/campaigns" {
 		t.Errorf("path mismatch: %s", gotPath)
 	}
-	if len(got) != 2 || got[1].Status != "paused" {
+	if len(got.Data) != 2 || got.Data[1].Status != "paused" {
 		t.Errorf("list decode mismatch: %+v", got)
 	}
 }

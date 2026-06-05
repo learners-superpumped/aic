@@ -86,7 +86,7 @@ func TestAdsListHitsProjectPath(t *testing.T) {
 	var gotPath string
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		gotPath = r.URL.Path
-		w.Write([]byte(`[{"id":"cmp_1","status":"active"}]`))
+		w.Write([]byte(`{"data":[{"id":"cmp_1","status":"active"}],"has_more":false}`))
 	}))
 	defer srv.Close()
 

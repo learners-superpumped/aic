@@ -225,7 +225,9 @@ func newAdsLaunchCmd() *cobra.Command {
 }
 
 func newAdsListCmd() *cobra.Command {
-	return &cobra.Command{
+	var limit int
+	var cursor string
+	cmd := &cobra.Command{
 		Use:   "list",
 		Short: "List ad campaigns",
 		Args:  cobra.NoArgs,
@@ -237,14 +239,17 @@ func newAdsListCmd() *cobra.Command {
 			if err := a.RequireProject(); err != nil {
 				return err
 			}
-			cs, err := a.Client.ListAds(cmd.Context(), a.Team, a.Project)
+			page, err := a.Client.ListAds(cmd.Context(), a.Team, a.Project, limit, cursor)
 			if err != nil {
 				return err
 			}
 			cols, row := adCampaignRows()
-			return a.Out.Print(cs, cols, row)
+			return printPage(cmd, a.Out, page, cols, row)
 		},
 	}
+	cmd.Flags().IntVar(&limit, "limit", 0, "max rows per page (default 50, max 200)")
+	cmd.Flags().StringVar(&cursor, "cursor", "", "next-page cursor from a previous list")
+	return cmd
 }
 
 func newAdsStatusCmd() *cobra.Command {

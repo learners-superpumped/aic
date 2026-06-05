@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"net/url"
+	"strconv"
 )
 
 func adsBasePath(teamID, projectID string) string {
@@ -16,9 +17,20 @@ func (c *Client) LaunchAd(ctx context.Context, teamID, projectID string, req AdL
 	return out, c.do(ctx, "POST", adsBasePath(teamID, projectID)+"/campaigns", req, &out)
 }
 
-func (c *Client) ListAds(ctx context.Context, teamID, projectID string) ([]AdCampaign, error) {
-	var out []AdCampaign
-	return out, c.do(ctx, "GET", adsBasePath(teamID, projectID)+"/campaigns", nil, &out)
+func (c *Client) ListAds(ctx context.Context, teamID, projectID string, limit int, cursor string) (Page[AdCampaign], error) {
+	q := url.Values{}
+	if limit > 0 {
+		q.Set("limit", strconv.Itoa(limit))
+	}
+	if cursor != "" {
+		q.Set("cursor", cursor)
+	}
+	path := adsBasePath(teamID, projectID) + "/campaigns"
+	if e := q.Encode(); e != "" {
+		path += "?" + e
+	}
+	var out Page[AdCampaign]
+	return out, c.do(ctx, "GET", path, nil, &out)
 }
 
 func (c *Client) GetAd(ctx context.Context, teamID, projectID, campaignID string) (AdCampaign, error) {
