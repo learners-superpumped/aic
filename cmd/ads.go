@@ -22,7 +22,7 @@ func adCampaignRows() ([]string, func(any) []string) {
 				strconv.FormatInt(c.BudgetNano, 10),
 				strconv.FormatInt(c.SpentNano, 10),
 				strconv.FormatInt(c.ReservedNano, 10),
-				dashIfEmpty(c.ExternalID), dashIfEmpty(c.StatusReason),
+				dashIfEmpty(c.ExternalID), dashIfEmpty(truncate(c.StatusReason, 60)),
 				c.CreatedAt.Format(time.RFC3339),
 			}
 		}
@@ -33,6 +33,16 @@ func dashIfEmpty(s string) string {
 		return "-"
 	}
 	return s
+}
+
+// truncate caps a cell for table mode so a long status_reason doesn't blow out
+// the column. The full text stays available in json/yaml output.
+func truncate(s string, max int) string {
+	r := []rune(s)
+	if len(r) <= max {
+		return s
+	}
+	return string(r[:max-1]) + "…"
 }
 
 func parseAgeRange(s string) (min, max int, err error) {
