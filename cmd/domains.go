@@ -119,7 +119,9 @@ func newDomainsRenewCmd() *cobra.Command {
 }
 
 func newDomainsListCmd() *cobra.Command {
-	return &cobra.Command{
+	var limit int
+	var cursor string
+	cmd := &cobra.Command{
 		Use: "list", Aliases: []string{"ls"}, Short: "List domains in the current project",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			a, err := appFromCmd(cmd)
@@ -129,14 +131,17 @@ func newDomainsListCmd() *cobra.Command {
 			if err := domainScope(a); err != nil {
 				return err
 			}
-			items, err := a.Client.ListDomains(cmd.Context(), a.Team, a.Project)
+			page, err := a.Client.ListDomains(cmd.Context(), a.Team, a.Project, limit, cursor)
 			if err != nil {
 				return err
 			}
 			cols, row := domainRows()
-			return a.Out.Print(items, cols, row)
+			return printPage(cmd, a.Out, page, cols, row)
 		},
 	}
+	cmd.Flags().IntVar(&limit, "limit", 0, "max rows per page (default 50, max 200)")
+	cmd.Flags().StringVar(&cursor, "cursor", "", "next-page cursor from a previous list")
+	return cmd
 }
 
 func newDomainsShowCmd() *cobra.Command {

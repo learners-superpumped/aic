@@ -4,6 +4,7 @@ import (
 	"context"
 	"net/http"
 	"net/url"
+	"strconv"
 )
 
 // --- Billing (scoped to a team) ---
@@ -118,9 +119,20 @@ func (c *Client) CreateDomainContact(ctx context.Context, teamID string, in Doma
 	return &out, c.do(ctx, http.MethodPost, teamDomainContactsPath(teamID), in, &out)
 }
 
-func (c *Client) ListDomainContacts(ctx context.Context, teamID string) ([]DomainContact, error) {
-	var out []DomainContact
-	return out, c.do(ctx, http.MethodGet, teamDomainContactsPath(teamID), nil, &out)
+func (c *Client) ListDomainContacts(ctx context.Context, teamID string, limit int, cursor string) (Page[DomainContact], error) {
+	q := url.Values{}
+	if limit > 0 {
+		q.Set("limit", strconv.Itoa(limit))
+	}
+	if cursor != "" {
+		q.Set("cursor", cursor)
+	}
+	path := teamDomainContactsPath(teamID)
+	if e := q.Encode(); e != "" {
+		path += "?" + e
+	}
+	var out Page[DomainContact]
+	return out, c.do(ctx, http.MethodGet, path, nil, &out)
 }
 
 func (c *Client) GetDomainContact(ctx context.Context, teamID, name string) (*DomainContact, error) {
@@ -147,9 +159,20 @@ func (c *Client) RenewDomain(ctx context.Context, teamID, projectID, domain stri
 		map[string]any{"years": years}, &d)
 }
 
-func (c *Client) ListDomains(ctx context.Context, teamID, projectID string) ([]Domain, error) {
-	var out []Domain
-	return out, c.do(ctx, http.MethodGet, teamDomainsPath(teamID, projectID), nil, &out)
+func (c *Client) ListDomains(ctx context.Context, teamID, projectID string, limit int, cursor string) (Page[Domain], error) {
+	q := url.Values{}
+	if limit > 0 {
+		q.Set("limit", strconv.Itoa(limit))
+	}
+	if cursor != "" {
+		q.Set("cursor", cursor)
+	}
+	path := teamDomainsPath(teamID, projectID)
+	if e := q.Encode(); e != "" {
+		path += "?" + e
+	}
+	var out Page[Domain]
+	return out, c.do(ctx, http.MethodGet, path, nil, &out)
 }
 
 func (c *Client) GetDomain(ctx context.Context, teamID, projectID, domain string) (*Domain, error) {
