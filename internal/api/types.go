@@ -17,6 +17,20 @@ type Project struct {
 	CreatedAt time.Time `json:"created_at" yaml:"created_at"`
 }
 
+// AuthStatus is the account snapshot shown by `aic auth status`: who you are,
+// your current working context, your credit, and the teams you belong to.
+type AuthStatus struct {
+	UserID           string   `json:"user_id" yaml:"user_id"`
+	Email            string   `json:"email,omitempty" yaml:"email,omitempty"`
+	APIEndpoint      string   `json:"api_endpoint" yaml:"api_endpoint"`
+	DefaultTeamID    string   `json:"default_team_id,omitempty" yaml:"default_team_id,omitempty"`
+	DefaultTeam      *Team    `json:"default_team,omitempty" yaml:"default_team,omitempty"`
+	DefaultProjectID string   `json:"default_project_id,omitempty" yaml:"default_project_id,omitempty"`
+	DefaultProject   *Project `json:"default_project,omitempty" yaml:"default_project,omitempty"`
+	BalanceUSD       float64  `json:"balance_usd" yaml:"balance_usd"`
+	Teams            []Team   `json:"teams" yaml:"teams"`
+}
+
 // Domain is a domain in a project.
 type Domain struct {
 	Name         string    `json:"name" yaml:"name"`

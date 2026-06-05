@@ -6,18 +6,20 @@ import (
 	"github.com/learners-superpumped/aic/internal/config"
 )
 
-func TestNewAuthCmdsRegistersAll(t *testing.T) {
+func TestAuthCmdRegistersSubcommands(t *testing.T) {
 	names := map[string]bool{}
-	for _, c := range newAuthCmds() {
+	for _, c := range newAuthCmd().Commands() {
 		names[c.Name()] = true
 	}
-	for _, want := range []string{"login", "logout", "whoami", "configure"} {
+	for _, want := range []string{"login", "logout", "status"} {
 		if !names[want] {
-			t.Errorf("missing auth command %q", want)
+			t.Errorf("missing auth subcommand %q", want)
 		}
 	}
+	if names["whoami"] {
+		t.Errorf("whoami should be replaced by status")
+	}
 }
-
 
 func TestLogoutRemovesProfile(t *testing.T) {
 	dir := t.TempDir()
@@ -32,7 +34,7 @@ func TestLogoutRemovesProfile(t *testing.T) {
 		t.Fatal(err)
 	}
 	root := NewRootCmd()
-	root.SetArgs([]string{"logout", "--profile", "default"})
+	root.SetArgs([]string{"auth", "logout", "--profile", "default"})
 	if err := root.Execute(); err != nil {
 		t.Fatalf("logout: %v", err)
 	}

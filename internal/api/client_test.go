@@ -91,7 +91,6 @@ func TestListProjects(t *testing.T) {
 	}
 }
 
-
 func TestRefreshOn401ThenRetry(t *testing.T) {
 	xCalls := 0
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -141,8 +140,8 @@ func TestFriendly401WithoutRefresh(t *testing.T) {
 
 	c := New(srv.URL, "tok") // no refresh configured
 	err := c.do(context.Background(), http.MethodGet, "/v1/x", nil, nil)
-	if err == nil || !strings.Contains(err.Error(), "aic login") {
-		t.Fatalf("expected 401 error mentioning `aic login`, got %v", err)
+	if err == nil || !strings.Contains(err.Error(), "aic auth login") {
+		t.Fatalf("expected 401 error mentioning `aic auth login`, got %v", err)
 	}
 }
 

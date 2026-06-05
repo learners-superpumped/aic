@@ -1,20 +1,17 @@
 ---
-title: "aic whoami"
-description: "Show the currently authenticated identity"
+title: "aic auth"
+description: "Authenticate and inspect your account"
 sidebar:
-  label: "whoami"
+  label: "Overview"
+  order: 0
 ---
 
-Show the currently authenticated identity
-
-```
-aic whoami [flags]
-```
+Authenticate and inspect your account
 
 ### Options
 
 ```
-  -h, --help   help for whoami
+  -h, --help   help for auth
 ```
 
 ### Options inherited from parent commands
@@ -29,4 +26,7 @@ aic whoami [flags]
 ### SEE ALSO
 
 * [aic](/reference/aic/)	 - aic provisions projects, domains, and email inboxes on our service
+* [aic auth login](/reference/auth/login/)	 - Authenticate via your browser and store credentials
+* [aic auth logout](/reference/auth/logout/)	 - Remove stored credentials for a profile
+* [aic auth status](/reference/auth/status/)	 - Show your account: identity, context, credit, and teams
 

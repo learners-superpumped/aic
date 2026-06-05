@@ -53,7 +53,7 @@ func applyDefaults(p *Profile) {
 // LoadOrDefault returns the named profile with hosted-service defaults
 // applied for any empty endpoint/OIDC fields. A missing credentials file or
 // missing profile section yields a fresh defaulted Profile (no error), so
-// first-run commands like `aic login` work without prior `aic configure`.
+// first-run commands like `aic auth login` work without prior `aic configure`.
 func LoadOrDefault(name string) *Profile {
 	p, err := Load(name)
 	if err != nil {
@@ -128,10 +128,10 @@ func Load(name string) (*Profile, error) {
 	}
 	cred, err := ini.Load(credPath)
 	if err != nil {
-		return nil, fmt.Errorf("no credentials found (run `aic login`): %w", err)
+		return nil, fmt.Errorf("no credentials found (run `aic auth login`): %w", err)
 	}
 	if _, err := cred.GetSection(name); err != nil {
-		return nil, fmt.Errorf("profile %q not found (run `aic login`)", name)
+		return nil, fmt.Errorf("profile %q not found (run `aic auth login`)", name)
 	}
 	sec := cred.Section(name)
 

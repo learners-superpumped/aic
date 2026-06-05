@@ -3,6 +3,7 @@ package cmd
 import (
 	"context"
 	"fmt"
+	"io"
 	"os"
 
 	"github.com/learners-superpumped/aic/internal/api"
@@ -33,13 +34,13 @@ func ensureDefaultTeam(ctx context.Context, client *api.Client, currentDefault s
 	return "", false, nil
 }
 
-func newAuthCmds() []*cobra.Command {
-	return []*cobra.Command{
-		newLoginCmd(),
-		newLogoutCmd(),
-		newWhoamiCmd(),
-		newConfigureCmd(),
-	}
+// newAuthCmd groups the identity commands under `aic auth` (login/logout/status),
+// matching the `gh auth` / `gcloud auth` convention. `configure` is registered
+// separately at the top level — it sets the service endpoint, not your identity.
+func newAuthCmd() *cobra.Command {
+	cmd := &cobra.Command{Use: "auth", Short: "Authenticate and inspect your account"}
+	cmd.AddCommand(newLoginCmd(), newLogoutCmd(), newAuthStatusCmd())
+	return cmd
 }
 
 func newLoginCmd() *cobra.Command {
@@ -116,10 +117,13 @@ func newLogoutCmd() *cobra.Command {
 	}
 }
 
-func newWhoamiCmd() *cobra.Command {
+// newAuthStatusCmd shows the account snapshot: identity, current working context
+// (team/project/credit), and the teams you belong to. Network lookups are
+// best-effort — a failed call leaves its section empty rather than erroring.
+func newAuthStatusCmd() *cobra.Command {
 	return &cobra.Command{
-		Use:   "whoami",
-		Short: "Show the currently authenticated identity",
+		Use:   "status",
+		Short: "Show your account: identity, context, credit, and teams",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			profileName, _ := cmd.Flags().GetString("profile")
 			prof, err := config.Load(profileName)
@@ -127,7 +131,7 @@ func newWhoamiCmd() *cobra.Command {
 				return err
 			}
 			if prof.IDToken == "" {
-				return fmt.Errorf("not logged in: run `aic login`")
+				return fmt.Errorf("not logged in: run `aic auth login`")
 			}
 			sub, email, err := auth.ParseIDTokenClaims(prof.IDToken)
 			if err != nil {
@@ -137,15 +141,72 @@ func newWhoamiCmd() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			return a.Out.Print(
-				map[string]string{"user_id": sub, "email": email},
-				[]string{"USER ID", "EMAIL"},
-				func(v any) []string {
-					m := v.(map[string]string)
-					return []string{m["user_id"], m["email"]}
-				},
-			)
+			ctx := cmd.Context()
+
+			st := api.AuthStatus{
+				UserID: sub, Email: email, APIEndpoint: prof.APIEndpoint,
+				DefaultTeamID: a.Team, DefaultProjectID: a.Project,
+			}
+			if teams, terr := a.Client.ListTeams(ctx); terr == nil {
+				st.Teams = teams
+				for i := range teams {
+					if teams[i].ID == a.Team {
+						st.DefaultTeam = &teams[i]
+					}
+				}
+			}
+			if a.Team != "" {
+				if bal, berr := a.Client.Balance(ctx, a.Team); berr == nil {
+					st.BalanceUSD = bal.BalanceUSD
+				}
+				if a.Project != "" {
+					if projs, perr := a.Client.ListProjects(ctx, a.Team); perr == nil {
+						for i := range projs {
+							if projs[i].ID == a.Project {
+								st.DefaultProject = &projs[i]
+							}
+						}
+					}
+				}
+			}
+
+			if a.Out.Format() != "table" {
+				return a.Out.Print(st, nil, nil)
+			}
+			printAuthStatus(a.Out.Writer(), st)
+			return nil
 		},
+	}
+}
+
+func printAuthStatus(w io.Writer, st api.AuthStatus) {
+	fmt.Fprintf(w, "Identity\n")
+	fmt.Fprintf(w, "  User    %s\n", st.UserID)
+	if st.Email != "" {
+		fmt.Fprintf(w, "  Email   %s\n", st.Email)
+	}
+	team := st.DefaultTeamID
+	if st.DefaultTeam != nil {
+		team = fmt.Sprintf("%s (%s) [%s]", st.DefaultTeam.ID, st.DefaultTeam.Name, st.DefaultTeam.Role)
+	}
+	project := st.DefaultProjectID
+	if st.DefaultProject != nil {
+		project = fmt.Sprintf("%s (%s)", st.DefaultProject.ID, st.DefaultProject.Name)
+	}
+	fmt.Fprintf(w, "\nContext\n")
+	fmt.Fprintf(w, "  Team     %s\n", dashIfEmpty(team))
+	fmt.Fprintf(w, "  Project  %s\n", dashIfEmpty(project))
+	fmt.Fprintf(w, "  Balance  $%.2f\n", st.BalanceUSD)
+	fmt.Fprintf(w, "  API      %s\n", dashIfEmpty(st.APIEndpoint))
+	if len(st.Teams) > 0 {
+		fmt.Fprintf(w, "\nTeams (%d)\n", len(st.Teams))
+		for _, t := range st.Teams {
+			marker := " "
+			if t.ID == st.DefaultTeamID {
+				marker = "*"
+			}
+			fmt.Fprintf(w, "  %s %s  %s  %s\n", marker, t.ID, t.Name, t.Role)
+		}
 	}
 }
 

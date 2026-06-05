@@ -1,21 +1,20 @@
 ---
-title: "aic login"
-description: "Authenticate via your browser and store credentials"
+title: "aic auth logout"
+description: "Remove stored credentials for a profile"
 sidebar:
-  label: "login"
+  label: "logout"
 ---
 
-Authenticate via your browser and store credentials
+Remove stored credentials for a profile
 
 ```
-aic login [flags]
+aic auth logout [flags]
 ```
 
 ### Options
 
 ```
-      --headless   use the device code flow (no local browser)
-  -h, --help       help for login
+  -h, --help   help for logout
 ```
 
 ### Options inherited from parent commands
@@ -29,5 +28,5 @@ aic login [flags]
 
 ### SEE ALSO
 
-* [aic](/reference/aic/)	 - aic provisions projects, domains, and email inboxes on our service
+* [aic auth](/reference/auth/auth/)	 - Authenticate and inspect your account
 

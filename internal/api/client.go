@@ -110,7 +110,7 @@ func apiError(status int, data []byte) error {
 	apiErr := &Error{Status: status}
 	_ = json.Unmarshal(data, apiErr)
 	if status == http.StatusUnauthorized {
-		const hint = "your session has expired — run `aic login`"
+		const hint = "your session has expired — run `aic auth login`"
 		if apiErr.Message == "" {
 			apiErr.Message = hint
 		} else {

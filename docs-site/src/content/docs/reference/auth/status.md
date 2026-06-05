@@ -1,20 +1,20 @@
 ---
-title: "aic logout"
-description: "Remove stored credentials for a profile"
+title: "aic auth status"
+description: "Show your account: identity, context, credit, and teams"
 sidebar:
-  label: "logout"
+  label: "status"
 ---
 
-Remove stored credentials for a profile
+Show your account: identity, context, credit, and teams
 
 ```
-aic logout [flags]
+aic auth status [flags]
 ```
 
 ### Options
 
 ```
-  -h, --help   help for logout
+  -h, --help   help for status
 ```
 
 ### Options inherited from parent commands
@@ -28,5 +28,5 @@ aic logout [flags]
 
 ### SEE ALSO
 
-* [aic](/reference/aic/)	 - aic provisions projects, domains, and email inboxes on our service
+* [aic auth](/reference/auth/auth/)	 - Authenticate and inspect your account
 

@@ -1,5 +1,5 @@
 // Package auth implements the browser-delegated start/open/poll flow shared by
-// `aic login` and `aic billing add-card`.
+// `aic auth login` and `aic billing add-card`.
 package auth
 
 import (

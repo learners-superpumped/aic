@@ -159,11 +159,10 @@ func NewRootCmd() *cobra.Command {
 		return nil
 	}
 
-	// Auth subcommands (login, logout, whoami, configure).
-	// Later tasks add more commands here.
-	for _, c := range newAuthCmds() {
-		root.AddCommand(c)
-	}
+	// Identity grouped under `aic auth` (login/logout/status). `configure` is a
+	// service-endpoint setting, not an identity command, so it stays top-level.
+	root.AddCommand(newAuthCmd())
+	root.AddCommand(newConfigureCmd())
 
 	root.AddCommand(newTeamsCmd())
 	root.AddCommand(newProjectsCmd())
