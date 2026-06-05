@@ -1,22 +1,20 @@
 ---
-title: "aic teams list"
-description: "List teams you belong to"
+title: "aic seo sites show"
+description: "Show a site"
 sidebar:
-  label: "list"
+  label: "show"
 ---
 
-List teams you belong to
+Show a site
 
 ```
-aic teams list [flags]
+aic seo sites show <domain> [flags]
 ```
 
 ### Options
 
 ```
-      --cursor string   next-page cursor from a previous list
-  -h, --help            help for list
-      --limit int       max rows per page (default 50, max 200)
+  -h, --help   help for show
 ```
 
 ### Options inherited from parent commands
@@ -30,5 +28,5 @@ aic teams list [flags]
 
 ### SEE ALSO
 
-* [aic teams](/reference/teams/teams/)	 - Manage teams
+* [aic seo sites](/reference/seo/sites/sites/)	 - Manage SEO sites
 

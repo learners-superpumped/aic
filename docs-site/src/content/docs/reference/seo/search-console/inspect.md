@@ -1,22 +1,20 @@
 ---
-title: "aic teams list"
-description: "List teams you belong to"
+title: "aic seo search-console inspect"
+description: "Inspect a URL's index status"
 sidebar:
-  label: "list"
+  label: "inspect"
 ---
 
-List teams you belong to
+Inspect a URL's index status
 
 ```
-aic teams list [flags]
+aic seo search-console inspect <domain> <url> [flags]
 ```
 
 ### Options
 
 ```
-      --cursor string   next-page cursor from a previous list
-  -h, --help            help for list
-      --limit int       max rows per page (default 50, max 200)
+  -h, --help   help for inspect
 ```
 
 ### Options inherited from parent commands
@@ -30,5 +28,5 @@ aic teams list [flags]
 
 ### SEE ALSO
 
-* [aic teams](/reference/teams/teams/)	 - Manage teams
+* [aic seo search-console](/reference/seo/search-console/search-console/)	 - Query Search Console data
 

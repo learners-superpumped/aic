@@ -14,7 +14,9 @@ aic domains list [flags]
 ### Options
 
 ```
-  -h, --help   help for list
+      --cursor string   next-page cursor from a previous list
+  -h, --help            help for list
+      --limit int       max rows per page (default 50, max 200)
 ```
 
 ### Options inherited from parent commands

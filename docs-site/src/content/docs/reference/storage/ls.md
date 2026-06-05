@@ -14,7 +14,9 @@ aic storage ls <bucket>[/<prefix>] [flags]
 ### Options
 
 ```
-  -h, --help   help for ls
+      --cursor string   next-page cursor from a previous list
+  -h, --help            help for ls
+      --limit int       max rows per page (default 50, max 200)
 ```
 
 ### Options inherited from parent commands
