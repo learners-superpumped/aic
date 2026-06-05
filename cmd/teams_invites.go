@@ -46,7 +46,9 @@ func newTeamsInvitesCmd() *cobra.Command {
 }
 
 func newTeamsInvitesListCmd() *cobra.Command {
-	return &cobra.Command{
+	var limit int
+	var cursor string
+	cmd := &cobra.Command{
 		Use: "list", Aliases: []string{"ls"}, Short: "List pending invites",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			a, err := appFromCmd(cmd)
@@ -56,16 +58,19 @@ func newTeamsInvitesListCmd() *cobra.Command {
 			if err := a.RequireTeam(); err != nil {
 				return err
 			}
-			items, err := a.Client.ListInvites(cmd.Context(), a.Team)
+			page, err := a.Client.ListInvites(cmd.Context(), a.Team, limit, cursor)
 			if err != nil {
 				return err
 			}
-			return a.Out.Print(items, []string{"ID", "EMAIL", "ROLE", "EXPIRES"}, func(v any) []string {
+			return printPage(cmd, a.Out, page, []string{"ID", "EMAIL", "ROLE", "EXPIRES"}, func(v any) []string {
 				i := v.(api.Invite)
 				return []string{i.ID, i.Email, i.Role, i.ExpiresAt.UTC().Format("2006-01-02")}
 			})
 		},
 	}
+	cmd.Flags().IntVar(&limit, "limit", 0, "max rows per page (default 50, max 200)")
+	cmd.Flags().StringVar(&cursor, "cursor", "", "next-page cursor from a previous list")
+	return cmd
 }
 
 func newTeamsInvitesRevokeCmd() *cobra.Command {

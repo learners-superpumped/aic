@@ -34,7 +34,7 @@ func TestProjectsList(t *testing.T) {
 	var gotPath string
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		gotPath = r.URL.Path
-		w.Write([]byte(`[{"id":"p1","name":"alpha"}]`))
+		w.Write([]byte(`{"data":[{"id":"p1","name":"alpha"}],"has_more":false}`))
 	}))
 	defer srv.Close()
 

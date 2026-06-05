@@ -20,7 +20,7 @@ func TestMembersListCmd_Renders(t *testing.T) {
 		if r.Method != http.MethodGet || r.URL.Path != "/v1/teams/team_1/members" {
 			t.Errorf("unexpected %s %s", r.Method, r.URL.Path)
 		}
-		w.Write([]byte(`[{"user_sub":"sub_abc","role":"owner","joined_at":"2026-01-01","email":"alice@example.com","name":"Alice"}]`))
+		w.Write([]byte(`{"data":[{"user_sub":"sub_abc","role":"owner","joined_at":"2026-01-01","email":"alice@example.com","name":"Alice"}],"has_more":false}`))
 	}))
 	defer srv.Close()
 

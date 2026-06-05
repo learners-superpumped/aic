@@ -36,7 +36,9 @@ func projectRows() ([]string, func(any) []string) {
 }
 
 func newProjectsListCmd() *cobra.Command {
-	return &cobra.Command{
+	var limit int
+	var cursor string
+	cmd := &cobra.Command{
 		Use:     "list",
 		Aliases: []string{"ls"},
 		Short:   "List projects",
@@ -48,14 +50,17 @@ func newProjectsListCmd() *cobra.Command {
 			if err := a.RequireTeam(); err != nil {
 				return err
 			}
-			items, err := a.Client.ListProjects(cmd.Context(), a.Team)
+			page, err := a.Client.ListProjects(cmd.Context(), a.Team, limit, cursor)
 			if err != nil {
 				return err
 			}
 			cols, row := projectRows()
-			return a.Out.Print(items, cols, row)
+			return printPage(cmd, a.Out, page, cols, row)
 		},
 	}
+	cmd.Flags().IntVar(&limit, "limit", 0, "max rows per page (default 50, max 200)")
+	cmd.Flags().StringVar(&cursor, "cursor", "", "next-page cursor from a previous list")
+	return cmd
 }
 
 func newProjectsCreateCmd() *cobra.Command {

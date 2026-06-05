@@ -28,7 +28,7 @@ func TestTeamsListRendersTeams(t *testing.T) {
 		if r.URL.Path != "/v1/teams" {
 			t.Errorf("want /v1/teams, got %s", r.URL.Path)
 		}
-		w.Write([]byte(`[{"id":"team_1","name":"acme","role":"owner"}]`))
+		w.Write([]byte(`{"data":[{"id":"team_1","name":"acme","role":"owner"}],"has_more":false}`))
 	}))
 	defer srv.Close()
 
@@ -55,7 +55,7 @@ func TestEnsureDefaultTeamCreatesWhenEmpty(t *testing.T) {
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
 		case http.MethodGet:
-			w.Write([]byte(`[]`))
+			w.Write([]byte(`{"data":[],"has_more":false}`))
 		case http.MethodPost:
 			posted = true
 			w.WriteHeader(http.StatusCreated)
@@ -86,7 +86,7 @@ func TestEnsureDefaultTeamSelectsFirstWhenNoDefault(t *testing.T) {
 		if r.Method == http.MethodPost {
 			t.Errorf("POST must not be called when teams exist")
 		}
-		w.Write([]byte(`[{"id":"team_1","name":"a","role":"owner"},{"id":"team_2","name":"b","role":"member"}]`))
+		w.Write([]byte(`{"data":[{"id":"team_1","name":"a","role":"owner"},{"id":"team_2","name":"b","role":"member"}],"has_more":false}`))
 	}))
 	defer srv.Close()
 
@@ -107,7 +107,7 @@ func TestEnsureDefaultTeamNoopWhenDefaultSet(t *testing.T) {
 		if r.Method == http.MethodPost {
 			t.Errorf("POST must not be called when teams exist")
 		}
-		w.Write([]byte(`[{"id":"team_1","name":"a","role":"owner"}]`))
+		w.Write([]byte(`{"data":[{"id":"team_1","name":"a","role":"owner"}],"has_more":false}`))
 	}))
 	defer srv.Close()
 

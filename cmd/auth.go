@@ -17,11 +17,11 @@ import (
 // "personal" team (the backend never auto-creates). It returns ("", false, nil)
 // when the user already has a default team set and need not change it.
 func ensureDefaultTeam(ctx context.Context, client *api.Client, currentDefault string) (teamID string, created bool, err error) {
-	teams, err := client.ListTeams(ctx)
+	page, err := client.ListTeams(ctx, 1, "")
 	if err != nil {
 		return "", false, err
 	}
-	if len(teams) == 0 {
+	if len(page.Data) == 0 {
 		t, err := client.CreateTeam(ctx, "personal")
 		if err != nil {
 			return "", false, err
@@ -29,7 +29,7 @@ func ensureDefaultTeam(ctx context.Context, client *api.Client, currentDefault s
 		return t.ID, true, nil
 	}
 	if currentDefault == "" {
-		return teams[0].ID, false, nil
+		return page.Data[0].ID, false, nil
 	}
 	return "", false, nil
 }
@@ -147,11 +147,11 @@ func newAuthStatusCmd() *cobra.Command {
 				UserID: sub, Email: email, APIEndpoint: prof.APIEndpoint,
 				DefaultTeamID: a.Team, DefaultProjectID: a.Project,
 			}
-			if teams, terr := a.Client.ListTeams(ctx); terr == nil {
-				st.Teams = teams
-				for i := range teams {
-					if teams[i].ID == a.Team {
-						st.DefaultTeam = &teams[i]
+			if teamsPage, terr := a.Client.ListTeams(ctx, 0, ""); terr == nil {
+				st.Teams = teamsPage.Data
+				for i := range teamsPage.Data {
+					if teamsPage.Data[i].ID == a.Team {
+						st.DefaultTeam = &teamsPage.Data[i]
 					}
 				}
 			}
@@ -160,10 +160,10 @@ func newAuthStatusCmd() *cobra.Command {
 					st.BalanceUSD = bal.BalanceUSD
 				}
 				if a.Project != "" {
-					if projs, perr := a.Client.ListProjects(ctx, a.Team); perr == nil {
-						for i := range projs {
-							if projs[i].ID == a.Project {
-								st.DefaultProject = &projs[i]
+					if projsPage, perr := a.Client.ListProjects(ctx, a.Team, 0, ""); perr == nil {
+						for i := range projsPage.Data {
+							if projsPage.Data[i].ID == a.Project {
+								st.DefaultProject = &projsPage.Data[i]
 							}
 						}
 					}

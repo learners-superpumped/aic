@@ -57,7 +57,7 @@ func TestTeamsInvitesListCmd_Renders(t *testing.T) {
 		if r.Method != http.MethodGet || r.URL.Path != "/v1/teams/team_1/invites" {
 			t.Errorf("unexpected %s %s", r.Method, r.URL.Path)
 		}
-		w.Write([]byte(`[` + makeInviteJSON("inv_1", "alice@example.com", "owner") + `]`))
+		w.Write([]byte(`{"data":[` + makeInviteJSON("inv_1", "alice@example.com", "owner") + `],"has_more":false}`))
 	}))
 	defer srv.Close()
 

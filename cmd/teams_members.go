@@ -14,7 +14,9 @@ func newTeamsMembersCmd() *cobra.Command {
 }
 
 func newMembersListCmd() *cobra.Command {
-	return &cobra.Command{
+	var limit int
+	var cursor string
+	cmd := &cobra.Command{
 		Use: "list", Aliases: []string{"ls"}, Short: "List team members",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			a, err := appFromCmd(cmd)
@@ -24,16 +26,19 @@ func newMembersListCmd() *cobra.Command {
 			if err := a.RequireTeam(); err != nil {
 				return err
 			}
-			items, err := a.Client.ListMembers(cmd.Context(), a.Team)
+			page, err := a.Client.ListMembers(cmd.Context(), a.Team, limit, cursor)
 			if err != nil {
 				return err
 			}
-			return a.Out.Print(items, []string{"USER_SUB", "EMAIL", "NAME", "ROLE", "JOINED"}, func(v any) []string {
+			return printPage(cmd, a.Out, page, []string{"USER_SUB", "EMAIL", "NAME", "ROLE", "JOINED"}, func(v any) []string {
 				m := v.(api.Member)
 				return []string{m.UserSub, m.Email, m.Name, m.Role, m.JoinedAt}
 			})
 		},
 	}
+	cmd.Flags().IntVar(&limit, "limit", 0, "max rows per page (default 50, max 200)")
+	cmd.Flags().StringVar(&cursor, "cursor", "", "next-page cursor from a previous list")
+	return cmd
 }
 
 func newMembersRemoveCmd() *cobra.Command {

@@ -77,16 +77,16 @@ func TestListProjects(t *testing.T) {
 		if r.URL.Path != "/v1/teams/team_1/projects" || r.Method != http.MethodGet {
 			t.Errorf("unexpected request: %s %s", r.Method, r.URL.Path)
 		}
-		w.Write([]byte(`[{"id":"p1","name":"alpha"},{"id":"p2","name":"beta"}]`))
+		w.Write([]byte(`{"data":[{"id":"p1","name":"alpha"},{"id":"p2","name":"beta"}],"has_more":false}`))
 	}))
 	defer srv.Close()
 
 	c := New(srv.URL, "tok")
-	got, err := c.ListProjects(context.Background(), "team_1")
+	got, err := c.ListProjects(context.Background(), "team_1", 0, "")
 	if err != nil {
 		t.Fatal(err)
 	}
-	if len(got) != 2 || got[1].Name != "beta" {
+	if len(got.Data) != 2 || got.Data[1].Name != "beta" {
 		t.Fatalf("unexpected: %+v", got)
 	}
 }
@@ -160,18 +160,18 @@ func TestListTeamsHitsTeamsPath(t *testing.T) {
 	var gotPath string
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		gotPath = r.URL.Path
-		w.Write([]byte(`[{"id":"team_1","name":"acme","role":"owner"}]`))
+		w.Write([]byte(`{"data":[{"id":"team_1","name":"acme","role":"owner"}],"has_more":false}`))
 	}))
 	defer srv.Close()
 
-	teams, err := New(srv.URL, "tok").ListTeams(context.Background())
+	teams, err := New(srv.URL, "tok").ListTeams(context.Background(), 0, "")
 	if err != nil {
 		t.Fatal(err)
 	}
 	if gotPath != "/v1/teams" {
 		t.Fatalf("path: want /v1/teams, got %s", gotPath)
 	}
-	if len(teams) != 1 || teams[0].ID != "team_1" || teams[0].Role != "owner" {
+	if len(teams.Data) != 1 || teams.Data[0].ID != "team_1" || teams.Data[0].Role != "owner" {
 		t.Fatalf("teams: %+v", teams)
 	}
 }
@@ -201,11 +201,11 @@ func TestListProjectsScopedToTeam(t *testing.T) {
 	var gotPath string
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		gotPath = r.URL.Path
-		w.Write([]byte(`[{"id":"p1","name":"alpha"}]`))
+		w.Write([]byte(`{"data":[{"id":"p1","name":"alpha"}],"has_more":false}`))
 	}))
 	defer srv.Close()
 
-	if _, err := New(srv.URL, "tok").ListProjects(context.Background(), "team_1"); err != nil {
+	if _, err := New(srv.URL, "tok").ListProjects(context.Background(), "team_1", 0, ""); err != nil {
 		t.Fatal(err)
 	}
 	if gotPath != "/v1/teams/team_1/projects" {
@@ -239,12 +239,12 @@ func TestListInvitesHitsTeamPath(t *testing.T) {
 		if r.Method != http.MethodGet || r.URL.Path != "/v1/teams/team_1/invites" {
 			t.Errorf("want GET /v1/teams/team_1/invites, got %s %s", r.Method, r.URL.Path)
 		}
-		w.Write([]byte(`[{"id":"inv_1","email":"bob@example.com","role":"member","status":"pending"}]`))
+		w.Write([]byte(`{"data":[{"id":"inv_1","email":"bob@example.com","role":"member","status":"pending"}],"has_more":false}`))
 	}))
 	defer srv.Close()
 
-	invites, err := New(srv.URL, "tok").ListInvites(context.Background(), "team_1")
-	if err != nil || len(invites) != 1 || invites[0].ID != "inv_1" {
+	invites, err := New(srv.URL, "tok").ListInvites(context.Background(), "team_1", 0, "")
+	if err != nil || len(invites.Data) != 1 || invites.Data[0].ID != "inv_1" {
 		t.Fatalf("list invites: %+v err=%v", invites, err)
 	}
 }
@@ -313,12 +313,12 @@ func TestListMembersHitsTeamMembersPath(t *testing.T) {
 		if r.Method != http.MethodGet || r.URL.Path != "/v1/teams/team_1/members" {
 			t.Errorf("want GET /v1/teams/team_1/members, got %s %s", r.Method, r.URL.Path)
 		}
-		w.Write([]byte(`[{"user_sub":"sub_1","role":"owner"},{"user_sub":"sub_2","role":"member"}]`))
+		w.Write([]byte(`{"data":[{"user_sub":"sub_1","role":"owner"},{"user_sub":"sub_2","role":"member"}],"has_more":false}`))
 	}))
 	defer srv.Close()
 
-	members, err := New(srv.URL, "tok").ListMembers(context.Background(), "team_1")
-	if err != nil || len(members) != 2 || members[0].UserSub != "sub_1" {
+	members, err := New(srv.URL, "tok").ListMembers(context.Background(), "team_1", 0, "")
+	if err != nil || len(members.Data) != 2 || members.Data[0].UserSub != "sub_1" {
 		t.Fatalf("list members: %+v err=%v", members, err)
 	}
 }
