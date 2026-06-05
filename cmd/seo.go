@@ -16,6 +16,30 @@ func newSEOCmd() *cobra.Command {
 
 func newSEOSitesCmd() *cobra.Command {
 	cmd := &cobra.Command{Use: "sites", Short: "Manage SEO sites"}
+	var lsLimit int
+	var lsCursor string
+	lsCmd := &cobra.Command{
+		Use: "ls", Short: "List sites", Args: cobra.NoArgs,
+		RunE: func(cmd *cobra.Command, _ []string) error {
+			a, err := appFromCmd(cmd)
+			if err != nil {
+				return err
+			}
+			if err := a.RequireProject(); err != nil {
+				return err
+			}
+			page, err := a.Client.ListSEOSites(cmd.Context(), a.Team, a.Project, lsLimit, lsCursor)
+			if err != nil {
+				return err
+			}
+			return printPage(cmd, a.Out, page, []string{"DOMAIN", "DNS", "STATUS"}, func(v any) []string {
+				s := v.(api.SEOSiteDTO)
+				return []string{s.Domain, boolYN(s.DNSManaged), s.Status}
+			})
+		},
+	}
+	lsCmd.Flags().IntVar(&lsLimit, "limit", 0, "max rows per page (default 50, max 200)")
+	lsCmd.Flags().StringVar(&lsCursor, "cursor", "", "next-page cursor from a previous list")
 	cmd.AddCommand(
 		&cobra.Command{
 			Use: "add <domain>", Short: "Register a site", Args: cobra.ExactArgs(1),
@@ -59,26 +83,7 @@ func newSEOSitesCmd() *cobra.Command {
 				return nil
 			},
 		},
-		&cobra.Command{
-			Use: "ls", Short: "List sites", Args: cobra.NoArgs,
-			RunE: func(cmd *cobra.Command, _ []string) error {
-				a, err := appFromCmd(cmd)
-				if err != nil {
-					return err
-				}
-				if err := a.RequireProject(); err != nil {
-					return err
-				}
-				sites, err := a.Client.ListSEOSites(cmd.Context(), a.Team, a.Project)
-				if err != nil {
-					return err
-				}
-				return a.Out.Print(sites, []string{"DOMAIN", "DNS", "STATUS"}, func(v any) []string {
-					s := v.(api.SEOSiteDTO)
-					return []string{s.Domain, boolYN(s.DNSManaged), s.Status}
-				})
-			},
-		},
+		lsCmd,
 		&cobra.Command{
 			Use: "show <domain>", Short: "Show a site", Args: cobra.ExactArgs(1),
 			RunE: func(cmd *cobra.Command, args []string) error {

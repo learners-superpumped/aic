@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"net/url"
+	"strconv"
 )
 
 type SEOSiteDTO struct {
@@ -48,9 +49,20 @@ func (c *Client) AddSEOSite(ctx context.Context, team, project, domain string) (
 	return out, c.do(ctx, "POST", seoBase(team, project)+"/sites", map[string]string{"domain": domain}, &out)
 }
 
-func (c *Client) ListSEOSites(ctx context.Context, team, project string) ([]SEOSiteDTO, error) {
-	var out []SEOSiteDTO
-	return out, c.do(ctx, "GET", seoBase(team, project)+"/sites", nil, &out)
+func (c *Client) ListSEOSites(ctx context.Context, team, project string, limit int, cursor string) (Page[SEOSiteDTO], error) {
+	q := url.Values{}
+	if limit > 0 {
+		q.Set("limit", strconv.Itoa(limit))
+	}
+	if cursor != "" {
+		q.Set("cursor", cursor)
+	}
+	path := seoBase(team, project) + "/sites"
+	if e := q.Encode(); e != "" {
+		path += "?" + e
+	}
+	var out Page[SEOSiteDTO]
+	return out, c.do(ctx, "GET", path, nil, &out)
 }
 
 func (c *Client) ShowSEOSite(ctx context.Context, team, project, domain string) (SEOSiteDTO, error) {
