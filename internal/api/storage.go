@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"net/url"
+	"strconv"
 	"strings"
 )
 
@@ -43,9 +44,20 @@ func (c *Client) CreateBucket(ctx context.Context, team, project, name string) (
 	return out, c.do(ctx, "POST", storageBasePath(team, project)+"/buckets", map[string]string{"name": name}, &out)
 }
 
-func (c *Client) ListBuckets(ctx context.Context, team, project string) ([]BucketDTO, error) {
-	var out []BucketDTO
-	return out, c.do(ctx, "GET", storageBasePath(team, project)+"/buckets", nil, &out)
+func (c *Client) ListBuckets(ctx context.Context, team, project string, limit int, cursor string) (Page[BucketDTO], error) {
+	q := url.Values{}
+	if limit > 0 {
+		q.Set("limit", strconv.Itoa(limit))
+	}
+	if cursor != "" {
+		q.Set("cursor", cursor)
+	}
+	path := storageBasePath(team, project) + "/buckets"
+	if e := q.Encode(); e != "" {
+		path += "?" + e
+	}
+	var out Page[BucketDTO]
+	return out, c.do(ctx, "GET", path, nil, &out)
 }
 
 func (c *Client) DeleteBucket(ctx context.Context, team, project, bucket string) error {
@@ -68,12 +80,22 @@ func (c *Client) GetObject(ctx context.Context, team, project, bucket, key strin
 	return data, hdr.Get("Content-Type"), nil
 }
 
-func (c *Client) ListObjects(ctx context.Context, team, project, bucket, prefix string) ([]ObjectDTO, error) {
-	path := storageBasePath(team, project) + "/buckets/" + url.PathEscape(bucket) + "/objects"
+func (c *Client) ListObjects(ctx context.Context, team, project, bucket, prefix string, limit int, cursor string) (Page[ObjectDTO], error) {
+	q := url.Values{}
 	if prefix != "" {
-		path += "?" + url.Values{"prefix": {prefix}}.Encode()
+		q.Set("prefix", prefix)
 	}
-	var out []ObjectDTO
+	if limit > 0 {
+		q.Set("limit", strconv.Itoa(limit))
+	}
+	if cursor != "" {
+		q.Set("cursor", cursor)
+	}
+	path := storageBasePath(team, project) + "/buckets/" + url.PathEscape(bucket) + "/objects"
+	if e := q.Encode(); e != "" {
+		path += "?" + e
+	}
+	var out Page[ObjectDTO]
 	return out, c.do(ctx, "GET", path, nil, &out)
 }
 

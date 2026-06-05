@@ -39,6 +39,30 @@ func newStorageCmd() *cobra.Command {
 
 func newStorageBucketsCmd() *cobra.Command {
 	cmd := &cobra.Command{Use: "buckets", Short: "Manage buckets"}
+
+	var lsLimit int
+	var lsCursor string
+	lsCmd := &cobra.Command{
+		Use: "ls", Short: "List buckets", Args: cobra.NoArgs,
+		RunE: func(cmd *cobra.Command, _ []string) error {
+			a, err := appFromCmd(cmd)
+			if err != nil {
+				return err
+			}
+			if err := a.RequireProject(); err != nil {
+				return err
+			}
+			page, err := a.Client.ListBuckets(cmd.Context(), a.Team, a.Project, lsLimit, lsCursor)
+			if err != nil {
+				return err
+			}
+			cols, row := bucketRows()
+			return printPage(cmd, a.Out, page, cols, row)
+		},
+	}
+	lsCmd.Flags().IntVar(&lsLimit, "limit", 0, "max rows per page (default 50, max 200)")
+	lsCmd.Flags().StringVar(&lsCursor, "cursor", "", "next-page cursor from a previous list")
+
 	cmd.AddCommand(
 		&cobra.Command{
 			Use: "create <name>", Short: "Create a bucket", Args: cobra.ExactArgs(1),
@@ -58,24 +82,7 @@ func newStorageBucketsCmd() *cobra.Command {
 				return a.Out.Print(b, cols, row)
 			},
 		},
-		&cobra.Command{
-			Use: "ls", Short: "List buckets", Args: cobra.NoArgs,
-			RunE: func(cmd *cobra.Command, _ []string) error {
-				a, err := appFromCmd(cmd)
-				if err != nil {
-					return err
-				}
-				if err := a.RequireProject(); err != nil {
-					return err
-				}
-				bs, err := a.Client.ListBuckets(cmd.Context(), a.Team, a.Project)
-				if err != nil {
-					return err
-				}
-				cols, row := bucketRows()
-				return a.Out.Print(bs, cols, row)
-			},
-		},
+		lsCmd,
 		&cobra.Command{
 			Use: "rm <name>", Short: "Delete an empty bucket", Args: cobra.ExactArgs(1),
 			RunE: func(cmd *cobra.Command, args []string) error {
@@ -151,7 +158,9 @@ func newStorageCpCmd() *cobra.Command {
 }
 
 func newStorageLsCmd() *cobra.Command {
-	return &cobra.Command{
+	var limit int
+	var cursor string
+	cmd := &cobra.Command{
 		Use: "ls <bucket>[/<prefix>]", Short: "List objects", Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			a, err := appFromCmd(cmd)
@@ -165,14 +174,17 @@ func newStorageLsCmd() *cobra.Command {
 			if i := strings.IndexByte(args[0], '/'); i >= 0 {
 				bucket, prefix = args[0][:i], args[0][i+1:]
 			}
-			objs, err := a.Client.ListObjects(cmd.Context(), a.Team, a.Project, bucket, prefix)
+			page, err := a.Client.ListObjects(cmd.Context(), a.Team, a.Project, bucket, prefix, limit, cursor)
 			if err != nil {
 				return err
 			}
 			cols, row := objectRows()
-			return a.Out.Print(objs, cols, row)
+			return printPage(cmd, a.Out, page, cols, row)
 		},
 	}
+	cmd.Flags().IntVar(&limit, "limit", 0, "max rows per page (default 50, max 200)")
+	cmd.Flags().StringVar(&cursor, "cursor", "", "next-page cursor from a previous list")
+	return cmd
 }
 
 func newStorageCatCmd() *cobra.Command {
