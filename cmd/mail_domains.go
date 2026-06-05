@@ -105,7 +105,9 @@ func newMailDomainsVerifyCmd() *cobra.Command {
 }
 
 func newMailDomainsListCmd() *cobra.Command {
-	return &cobra.Command{
+	var limit int
+	var cursor string
+	cmd := &cobra.Command{
 		Use:     "list",
 		Aliases: []string{"ls"},
 		Short:   "List email-enabled domains",
@@ -117,16 +119,19 @@ func newMailDomainsListCmd() *cobra.Command {
 			if err := a.RequireProject(); err != nil {
 				return err
 			}
-			items, err := a.Client.ListMailDomains(cmd.Context(), a.Team, a.Project)
+			page, err := a.Client.ListMailDomains(cmd.Context(), a.Team, a.Project, limit, cursor)
 			if err != nil {
 				return err
 			}
-			return a.Out.Print(items, []string{"DOMAIN", "STATUS", "VERIFIED_AT"}, func(v any) []string {
+			return printPage(cmd, a.Out, page, []string{"DOMAIN", "STATUS", "VERIFIED_AT"}, func(v any) []string {
 				e := v.(api.MailIdentity)
 				return []string{e.Name, e.Status, e.VerifiedAt}
 			})
 		},
 	}
+	cmd.Flags().IntVar(&limit, "limit", 0, "max rows per page (default 50, max 200)")
+	cmd.Flags().StringVar(&cursor, "cursor", "", "next-page cursor from a previous list")
+	return cmd
 }
 
 func newMailDomainsDisableCmd() *cobra.Command {

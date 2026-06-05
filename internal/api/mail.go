@@ -87,9 +87,20 @@ func (c *Client) VerifyMailDomain(ctx context.Context, teamID, projectID, name s
 	return &out, c.do(ctx, "POST", mailBasePath(teamID, projectID)+"/domains/"+url.PathEscape(name)+"/verify", nil, &out)
 }
 
-func (c *Client) ListMailDomains(ctx context.Context, teamID, projectID string) ([]MailIdentity, error) {
-	var out []MailIdentity
-	return out, c.do(ctx, "GET", mailBasePath(teamID, projectID)+"/domains", nil, &out)
+func (c *Client) ListMailDomains(ctx context.Context, teamID, projectID string, limit int, cursor string) (Page[MailIdentity], error) {
+	q := url.Values{}
+	if limit > 0 {
+		q.Set("limit", fmt.Sprintf("%d", limit))
+	}
+	if cursor != "" {
+		q.Set("cursor", cursor)
+	}
+	path := mailBasePath(teamID, projectID) + "/domains"
+	if enc := q.Encode(); enc != "" {
+		path += "?" + enc
+	}
+	var out Page[MailIdentity]
+	return out, c.do(ctx, "GET", path, nil, &out)
 }
 
 func (c *Client) DisableMailDomain(ctx context.Context, teamID, projectID, name string) error {
@@ -102,9 +113,20 @@ func (c *Client) CreateMailInbox(ctx context.Context, teamID, projectID, domain,
 	return &out, c.do(ctx, "POST", mailBasePath(teamID, projectID)+"/domains/"+url.PathEscape(domain)+"/inboxes", body, &out)
 }
 
-func (c *Client) ListMailInboxes(ctx context.Context, teamID, projectID, domain string) ([]MailInbox, error) {
-	var out []MailInbox
-	return out, c.do(ctx, "GET", mailBasePath(teamID, projectID)+"/domains/"+url.PathEscape(domain)+"/inboxes", nil, &out)
+func (c *Client) ListMailInboxes(ctx context.Context, teamID, projectID, domain string, limit int, cursor string) (Page[MailInbox], error) {
+	q := url.Values{}
+	if limit > 0 {
+		q.Set("limit", fmt.Sprintf("%d", limit))
+	}
+	if cursor != "" {
+		q.Set("cursor", cursor)
+	}
+	path := mailBasePath(teamID, projectID) + "/domains/" + url.PathEscape(domain) + "/inboxes"
+	if enc := q.Encode(); enc != "" {
+		path += "?" + enc
+	}
+	var out Page[MailInbox]
+	return out, c.do(ctx, "GET", path, nil, &out)
 }
 
 func (c *Client) ShowMailInbox(ctx context.Context, teamID, projectID, domain, local string) (*MailInbox, error) {
@@ -158,7 +180,7 @@ type MailMessageDetail struct {
 	RawBase64   string               `json:"raw_base64"`
 }
 
-func (c *Client) ListMailMessages(ctx context.Context, teamID, projectID, direction, inbox string, limit int) ([]MailMessage, error) {
+func (c *Client) ListMailMessages(ctx context.Context, teamID, projectID, direction, inbox string, limit int, cursor string) (Page[MailMessage], error) {
 	q := url.Values{}
 	if direction != "" {
 		q.Set("direction", direction)
@@ -169,11 +191,14 @@ func (c *Client) ListMailMessages(ctx context.Context, teamID, projectID, direct
 	if limit > 0 {
 		q.Set("limit", fmt.Sprintf("%d", limit))
 	}
+	if cursor != "" {
+		q.Set("cursor", cursor)
+	}
 	path := mailBasePath(teamID, projectID) + "/messages"
 	if enc := q.Encode(); enc != "" {
 		path += "?" + enc
 	}
-	var out []MailMessage
+	var out Page[MailMessage]
 	return out, c.do(ctx, "GET", path, nil, &out)
 }
 

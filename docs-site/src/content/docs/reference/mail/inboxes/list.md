@@ -14,8 +14,10 @@ aic mail inboxes list [flags]
 ### Options
 
 ```
+      --cursor string   next-page cursor from a previous list
       --domain string   domain to list inboxes for (required)
   -h, --help            help for list
+      --limit int       max rows per page (default 50, max 200)
 ```
 
 ### Options inherited from parent commands

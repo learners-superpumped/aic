@@ -44,7 +44,7 @@ func newMailMessagesThreadCmd() *cobra.Command {
 }
 
 func newMailMessagesListCmd() *cobra.Command {
-	var direction, inbox string
+	var direction, inbox, cursor string
 	var limit int
 	cmd := &cobra.Command{
 		Use:   "list",
@@ -57,11 +57,11 @@ func newMailMessagesListCmd() *cobra.Command {
 			if err := a.RequireProject(); err != nil {
 				return err
 			}
-			list, err := a.Client.ListMailMessages(cmd.Context(), a.Team, a.Project, direction, inbox, limit)
+			page, err := a.Client.ListMailMessages(cmd.Context(), a.Team, a.Project, direction, inbox, limit, cursor)
 			if err != nil {
 				return err
 			}
-			return a.Out.Print(list, []string{"ID", "DIRECTION", "FROM", "SUBJECT", "STATUS", "CREATED"}, func(v any) []string {
+			return printPage(cmd, a.Out, page, []string{"ID", "DIRECTION", "FROM", "SUBJECT", "STATUS", "CREATED"}, func(v any) []string {
 				x := v.(api.MailMessage)
 				return []string{x.ID, x.Direction, x.From, x.Subject, x.Status, x.CreatedAt}
 			})
@@ -69,7 +69,8 @@ func newMailMessagesListCmd() *cobra.Command {
 	}
 	cmd.Flags().StringVar(&direction, "direction", "", "filter: sent|received")
 	cmd.Flags().StringVar(&inbox, "inbox", "", "filter by inbox address or id")
-	cmd.Flags().IntVar(&limit, "limit", 0, "max rows (default 50)")
+	cmd.Flags().IntVar(&limit, "limit", 0, "max rows per page (default 50, max 200)")
+	cmd.Flags().StringVar(&cursor, "cursor", "", "next-page cursor from a previous list")
 	return cmd
 }
 

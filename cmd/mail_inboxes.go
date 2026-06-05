@@ -65,7 +65,8 @@ func newMailInboxesCreateCmd() *cobra.Command {
 }
 
 func newMailInboxesListCmd() *cobra.Command {
-	var domain string
+	var domain, cursor string
+	var limit int
 	cmd := &cobra.Command{
 		Use:     "list",
 		Aliases: []string{"ls"},
@@ -81,15 +82,17 @@ func newMailInboxesListCmd() *cobra.Command {
 			if domain == "" {
 				return fmt.Errorf("--domain is required")
 			}
-			items, err := a.Client.ListMailInboxes(cmd.Context(), a.Team, a.Project, domain)
+			page, err := a.Client.ListMailInboxes(cmd.Context(), a.Team, a.Project, domain, limit, cursor)
 			if err != nil {
 				return err
 			}
 			cols, row := inboxRows()
-			return a.Out.Print(items, cols, row)
+			return printPage(cmd, a.Out, page, cols, row)
 		},
 	}
 	cmd.Flags().StringVar(&domain, "domain", "", "domain to list inboxes for (required)")
+	cmd.Flags().IntVar(&limit, "limit", 0, "max rows per page (default 50, max 200)")
+	cmd.Flags().StringVar(&cursor, "cursor", "", "next-page cursor from a previous list")
 	return cmd
 }
 
