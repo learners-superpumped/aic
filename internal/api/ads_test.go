@@ -102,11 +102,11 @@ func TestPauseAdPostsToCorrectPath(t *testing.T) {
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		gotMethod = r.Method
 		gotPath = r.URL.Path
-		w.WriteHeader(http.StatusNoContent)
+		_, _ = w.Write([]byte(`{"id":"cmp_1","status":"paused"}`))
 	}))
 	defer srv.Close()
 
-	if err := New(srv.URL, "tok").PauseAd(context.Background(), "team_1", "proj_1", "cmp_1"); err != nil {
+	if _, err := New(srv.URL, "tok").PauseAd(context.Background(), "team_1", "proj_1", "cmp_1"); err != nil {
 		t.Fatalf("PauseAd: %v", err)
 	}
 	if gotMethod != http.MethodPost || gotPath != "/v1/teams/team_1/projects/proj_1/ads/campaigns/cmp_1/pause" {
@@ -119,11 +119,11 @@ func TestResumeAdPostsToCorrectPath(t *testing.T) {
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		gotMethod = r.Method
 		gotPath = r.URL.Path
-		w.WriteHeader(http.StatusNoContent)
+		_, _ = w.Write([]byte(`{"id":"cmp_1","status":"active"}`))
 	}))
 	defer srv.Close()
 
-	if err := New(srv.URL, "tok").ResumeAd(context.Background(), "team_1", "proj_1", "cmp_1"); err != nil {
+	if _, err := New(srv.URL, "tok").ResumeAd(context.Background(), "team_1", "proj_1", "cmp_1"); err != nil {
 		t.Fatalf("ResumeAd: %v", err)
 	}
 	if gotMethod != http.MethodPost || gotPath != "/v1/teams/team_1/projects/proj_1/ads/campaigns/cmp_1/resume" {
@@ -136,11 +136,11 @@ func TestDeleteAdSendsDelete(t *testing.T) {
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		gotMethod = r.Method
 		gotPath = r.URL.Path
-		w.WriteHeader(http.StatusNoContent)
+		_, _ = w.Write([]byte(`{"id":"cmp_1","status":"completed"}`))
 	}))
 	defer srv.Close()
 
-	if err := New(srv.URL, "tok").DeleteAd(context.Background(), "team_1", "proj_1", "cmp_1"); err != nil {
+	if _, err := New(srv.URL, "tok").DeleteAd(context.Background(), "team_1", "proj_1", "cmp_1"); err != nil {
 		t.Fatalf("DeleteAd: %v", err)
 	}
 	if gotMethod != http.MethodDelete || gotPath != "/v1/teams/team_1/projects/proj_1/ads/campaigns/cmp_1" {

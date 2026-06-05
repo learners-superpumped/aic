@@ -163,11 +163,12 @@ type Member struct {
 
 // AdTargeting is the audience-targeting parameters for an ad campaign.
 type AdTargeting struct {
-	Geo       []string `json:"geo,omitempty"`
-	AgeMin    int      `json:"ageMin,omitempty"`
-	AgeMax    int      `json:"ageMax,omitempty"`
-	Genders   []string `json:"genders,omitempty"`
-	Interests []string `json:"interests,omitempty"`
+	Geo               []string `json:"geo,omitempty"`
+	AgeMin            int      `json:"ageMin,omitempty"`
+	AgeMax            int      `json:"ageMax,omitempty"`
+	Genders           []string `json:"genders,omitempty"`
+	Interests         []string `json:"interests,omitempty"`
+	CustomAudienceRef *string  `json:"customAudienceRef,omitempty"`
 }
 
 // AdCreative is the creative content for an ad campaign.
@@ -193,19 +194,29 @@ type AdLaunchRequest struct {
 	Creative        AdCreative     `json:"creative"`
 }
 
+// AdSchedule is the start/end window of a campaign.
+type AdSchedule struct {
+	StartAt time.Time  `json:"start_at" yaml:"start_at"`
+	EndAt   *time.Time `json:"end_at,omitempty" yaml:"end_at,omitempty"`
+}
+
 // AdCampaign is a launched ad campaign as returned by the API.
 type AdCampaign struct {
-	ID           string    `json:"id" yaml:"id"`
-	TeamID       string    `json:"team_id" yaml:"team_id"`
-	ProjectID    string    `json:"project_id" yaml:"project_id"`
-	Provider     string    `json:"provider" yaml:"provider"`
-	Objective    string    `json:"objective" yaml:"objective"`
-	BudgetType   string    `json:"budget_type" yaml:"budget_type"`
-	BudgetNano   int64     `json:"budget_nano" yaml:"budget_nano"`
-	Status       string    `json:"status" yaml:"status"`
-	StatusReason string    `json:"status_reason,omitempty" yaml:"status_reason,omitempty"`
-	LaunchToken  string    `json:"launch_token" yaml:"launch_token"`
-	ExternalID   string    `json:"external_id,omitempty" yaml:"external_id,omitempty"`
+	ID           string     `json:"id" yaml:"id"`
+	TeamID       string     `json:"team_id" yaml:"team_id"`
+	ProjectID    string     `json:"project_id" yaml:"project_id"`
+	Provider     string     `json:"provider" yaml:"provider"`
+	Objective    string     `json:"objective" yaml:"objective"`
+	BudgetType   string     `json:"budget_type" yaml:"budget_type"`
+	BudgetNano   int64      `json:"budget_nano" yaml:"budget_nano"`
+	Schedule     AdSchedule `json:"schedule" yaml:"schedule"`
+	Status       string     `json:"status" yaml:"status"`
+	StatusReason string     `json:"status_reason,omitempty" yaml:"status_reason,omitempty"`
+	ExternalID   string     `json:"external_id,omitempty" yaml:"external_id,omitempty"`
+	LaunchToken  string     `json:"launch_token" yaml:"launch_token"`
+	// SpentNano is actual spend drawn from Meta; ReservedNano is still encumbered.
+	SpentNano    int64     `json:"spent_nano" yaml:"spent_nano"`
+	ReservedNano int64     `json:"reserved_nano" yaml:"reserved_nano"`
 	CreatedAt    time.Time `json:"created_at" yaml:"created_at"`
 	UpdatedAt    time.Time `json:"updated_at" yaml:"updated_at"`
 }

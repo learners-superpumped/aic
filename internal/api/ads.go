@@ -26,14 +26,17 @@ func (c *Client) GetAd(ctx context.Context, teamID, projectID, campaignID string
 	return out, c.do(ctx, "GET", adsBasePath(teamID, projectID)+"/campaigns/"+url.PathEscape(campaignID), nil, &out)
 }
 
-func (c *Client) PauseAd(ctx context.Context, teamID, projectID, campaignID string) error {
-	return c.do(ctx, "POST", adsBasePath(teamID, projectID)+"/campaigns/"+url.PathEscape(campaignID)+"/pause", nil, nil)
+func (c *Client) PauseAd(ctx context.Context, teamID, projectID, campaignID string) (AdCampaign, error) {
+	var out AdCampaign
+	return out, c.do(ctx, "POST", adsBasePath(teamID, projectID)+"/campaigns/"+url.PathEscape(campaignID)+"/pause", nil, &out)
 }
 
-func (c *Client) ResumeAd(ctx context.Context, teamID, projectID, campaignID string) error {
-	return c.do(ctx, "POST", adsBasePath(teamID, projectID)+"/campaigns/"+url.PathEscape(campaignID)+"/resume", nil, nil)
+func (c *Client) ResumeAd(ctx context.Context, teamID, projectID, campaignID string) (AdCampaign, error) {
+	var out AdCampaign
+	return out, c.do(ctx, "POST", adsBasePath(teamID, projectID)+"/campaigns/"+url.PathEscape(campaignID)+"/resume", nil, &out)
 }
 
-func (c *Client) DeleteAd(ctx context.Context, teamID, projectID, campaignID string) error {
-	return c.do(ctx, "DELETE", adsBasePath(teamID, projectID)+"/campaigns/"+url.PathEscape(campaignID), nil, nil)
+func (c *Client) DeleteAd(ctx context.Context, teamID, projectID, campaignID string) (AdCampaign, error) {
+	var out AdCampaign
+	return out, c.do(ctx, "DELETE", adsBasePath(teamID, projectID)+"/campaigns/"+url.PathEscape(campaignID), nil, &out)
 }

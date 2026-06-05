@@ -20,17 +20,19 @@ aic ads launch [flags]
       --budget-type string        budget type: daily|lifetime (default "daily")
       --creative-asset string     storage reference for the creative asset (bucket/key)
       --cta string                call-to-action label, e.g. 'Learn More'
+      --custom-audience string    Meta custom audience ID to target
       --end string                campaign end time (RFC3339); required for lifetime budgets
-      --genders stringArray       target genders (repeatable)
-      --geo stringArray           target country/region codes (repeatable)
+      --genders stringArray       target genders: male|female (repeatable)
+      --geo stringArray           target country/region codes, e.g. KR US (repeatable)
       --headline string           ad headline
   -h, --help                      help for launch
-      --interests stringArray     comma-separated interest keywords
+      --interests stringArray     Meta interest IDs, e.g. 6003107902433 (repeatable)
       --launch-token string       idempotency token (auto-generated if omitted)
       --objective string          campaign objective: traffic|conversions|awareness|engagement|leads (default "traffic")
-      --placements stringArray    ad placements (repeatable)
-      --provider string           ad provider (default "meta")
+      --placements stringArray    ad placements, e.g. facebook_feed instagram_stories (repeatable)
+      --provider string           ad provider (only 'meta' is supported) (default "meta")
       --provider-options string   provider-specific options as a JSON object
+      --start string              campaign start time (RFC3339); defaults to now
       --url string                destination URL for the ad
 ```
 

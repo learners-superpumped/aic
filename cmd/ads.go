@@ -14,11 +14,25 @@ import (
 )
 
 func adCampaignRows() ([]string, func(any) []string) {
-	return []string{"ID", "STATUS", "OBJECTIVE", "BUDGET-TYPE", "BUDGET-NANO", "PROVIDER", "CREATED"},
+	return []string{"ID", "STATUS", "OBJECTIVE", "BUDGET-NANO", "SPENT-NANO", "RESERVED-NANO", "EXTERNAL-ID", "REASON", "CREATED"},
 		func(v any) []string {
 			c := v.(api.AdCampaign)
-			return []string{c.ID, c.Status, c.Objective, c.BudgetType, strconv.FormatInt(c.BudgetNano, 10), c.Provider, c.CreatedAt.Format(time.RFC3339)}
+			return []string{
+				c.ID, c.Status, c.Objective,
+				strconv.FormatInt(c.BudgetNano, 10),
+				strconv.FormatInt(c.SpentNano, 10),
+				strconv.FormatInt(c.ReservedNano, 10),
+				dashIfEmpty(c.ExternalID), dashIfEmpty(c.StatusReason),
+				c.CreatedAt.Format(time.RFC3339),
+			}
 		}
+}
+
+func dashIfEmpty(s string) string {
+	if s == "" {
+		return "-"
+	}
+	return s
 }
 
 func parseAgeRange(s string) (min, max int, err error) {
@@ -77,9 +91,11 @@ func newAdsLaunchCmd() *cobra.Command {
 		destinationURL  string
 		provider        string
 		providerOptions string
+		startAt         string
 		endAt           string
 		launchToken     string
 		placements      []string
+		customAudience  string
 	)
 
 	cmd := &cobra.Command{
@@ -94,9 +110,22 @@ func newAdsLaunchCmd() *cobra.Command {
 				return err
 			}
 
+			if provider != "meta" {
+				return fmt.Errorf("--provider %q is not supported; only 'meta' is available", provider)
+			}
+
 			tok := launchToken
 			if tok == "" {
 				tok = randomToken()
+			}
+
+			start := time.Now().UTC()
+			if startAt != "" {
+				t, err := time.Parse(time.RFC3339, startAt)
+				if err != nil {
+					return fmt.Errorf("--start must be RFC3339, e.g. 2026-12-31T00:00:00Z: %w", err)
+				}
+				start = t
 			}
 
 			req := api.AdLaunchRequest{
@@ -104,7 +133,7 @@ func newAdsLaunchCmd() *cobra.Command {
 				Objective:   objective,
 				BudgetType:  budgetType,
 				BudgetNano:  budgetNano,
-				StartAt:     time.Now().UTC(),
+				StartAt:     start,
 				Placements:  placements,
 				Creative: api.AdCreative{
 					StorageRef:     creativeAsset,
@@ -130,6 +159,9 @@ func newAdsLaunchCmd() *cobra.Command {
 				Interests: interests,
 				Genders:   genders,
 			}
+			if customAudience != "" {
+				targeting.CustomAudienceRef = &customAudience
+			}
 			if age != "" {
 				mn, mx, err := parseAgeRange(age)
 				if err != nil {
@@ -148,8 +180,6 @@ func newAdsLaunchCmd() *cobra.Command {
 				req.ProviderOptions = opts
 			}
 
-			_ = provider
-
 			c, err := a.Client.LaunchAd(cmd.Context(), a.Team, a.Project, req)
 			if err != nil {
 				return err
@@ -162,20 +192,22 @@ func newAdsLaunchCmd() *cobra.Command {
 	cmd.Flags().StringVar(&objective, "objective", "traffic", "campaign objective: traffic|conversions|awareness|engagement|leads")
 	cmd.Flags().StringVar(&budgetType, "budget-type", "daily", "budget type: daily|lifetime")
 	cmd.Flags().Int64Var(&budgetNano, "budget", 0, "budget in nano-dollars (1 USD = 1 000 000 000)")
-	cmd.Flags().StringArrayVar(&geo, "geo", nil, "target country/region codes (repeatable)")
+	cmd.Flags().StringArrayVar(&geo, "geo", nil, "target country/region codes, e.g. KR US (repeatable)")
 	cmd.Flags().StringVar(&age, "age", "", "target age range, e.g. 25-44")
-	cmd.Flags().StringArrayVar(&interests, "interests", nil, "comma-separated interest keywords")
-	cmd.Flags().StringArrayVar(&genders, "genders", nil, "target genders (repeatable)")
+	cmd.Flags().StringArrayVar(&interests, "interests", nil, "Meta interest IDs, e.g. 6003107902433 (repeatable)")
+	cmd.Flags().StringArrayVar(&genders, "genders", nil, "target genders: male|female (repeatable)")
 	cmd.Flags().StringVar(&creativeAsset, "creative-asset", "", "storage reference for the creative asset (bucket/key)")
 	cmd.Flags().StringVar(&headline, "headline", "", "ad headline")
 	cmd.Flags().StringVar(&body, "body", "", "ad body copy")
 	cmd.Flags().StringVar(&cta, "cta", "", "call-to-action label, e.g. 'Learn More'")
 	cmd.Flags().StringVar(&destinationURL, "url", "", "destination URL for the ad")
-	cmd.Flags().StringVar(&provider, "provider", "meta", "ad provider")
+	cmd.Flags().StringVar(&provider, "provider", "meta", "ad provider (only 'meta' is supported)")
 	cmd.Flags().StringVar(&providerOptions, "provider-options", "", "provider-specific options as a JSON object")
+	cmd.Flags().StringVar(&startAt, "start", "", "campaign start time (RFC3339); defaults to now")
 	cmd.Flags().StringVar(&endAt, "end", "", "campaign end time (RFC3339); required for lifetime budgets")
 	cmd.Flags().StringVar(&launchToken, "launch-token", "", "idempotency token (auto-generated if omitted)")
-	cmd.Flags().StringArrayVar(&placements, "placements", nil, "ad placements (repeatable)")
+	cmd.Flags().StringArrayVar(&placements, "placements", nil, "ad placements, e.g. facebook_feed instagram_stories (repeatable)")
+	cmd.Flags().StringVar(&customAudience, "custom-audience", "", "Meta custom audience ID to target")
 
 	return cmd
 }
@@ -239,7 +271,12 @@ func newAdsPauseCmd() *cobra.Command {
 			if err := a.RequireProject(); err != nil {
 				return err
 			}
-			return a.Client.PauseAd(cmd.Context(), a.Team, a.Project, args[0])
+			c, err := a.Client.PauseAd(cmd.Context(), a.Team, a.Project, args[0])
+			if err != nil {
+				return err
+			}
+			cols, row := adCampaignRows()
+			return a.Out.Print(c, cols, row)
 		},
 	}
 }
@@ -257,7 +294,12 @@ func newAdsResumeCmd() *cobra.Command {
 			if err := a.RequireProject(); err != nil {
 				return err
 			}
-			return a.Client.ResumeAd(cmd.Context(), a.Team, a.Project, args[0])
+			c, err := a.Client.ResumeAd(cmd.Context(), a.Team, a.Project, args[0])
+			if err != nil {
+				return err
+			}
+			cols, row := adCampaignRows()
+			return a.Out.Print(c, cols, row)
 		},
 	}
 }
@@ -275,7 +317,12 @@ func newAdsDeleteCmd() *cobra.Command {
 			if err := a.RequireProject(); err != nil {
 				return err
 			}
-			return a.Client.DeleteAd(cmd.Context(), a.Team, a.Project, args[0])
+			c, err := a.Client.DeleteAd(cmd.Context(), a.Team, a.Project, args[0])
+			if err != nil {
+				return err
+			}
+			cols, row := adCampaignRows()
+			return a.Out.Print(c, cols, row)
 		},
 	}
 }
