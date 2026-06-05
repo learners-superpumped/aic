@@ -12,7 +12,10 @@ import (
 func TestSEOSite_RendersAllFormats(t *testing.T) {
 	site := api.SEOSiteDTO{Domain: "example.com", DNSManaged: true, Status: "active"}
 	headers := []string{"DOMAIN", "DNS", "STATUS"}
-	rowFn := func(v any) []string { s := v.(api.SEOSiteDTO); return []string{s.Domain, boolYN(s.DNSManaged), s.Status} }
+	rowFn := func(v any) []string {
+		s := v.(api.SEOSiteDTO)
+		return []string{s.Domain, boolYN(s.DNSManaged), s.Status}
+	}
 
 	for _, format := range []string{"table", "json", "yaml"} {
 		var buf bytes.Buffer

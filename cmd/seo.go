@@ -38,8 +38,7 @@ func newSEOSitesCmd() *cobra.Command {
 			})
 		},
 	}
-	lsCmd.Flags().IntVar(&lsLimit, "limit", 0, "max rows per page (default 50, max 200)")
-	lsCmd.Flags().StringVar(&lsCursor, "cursor", "", "next-page cursor from a previous list")
+	addPaginationFlags(lsCmd, &lsLimit, &lsCursor)
 	cmd.AddCommand(
 		&cobra.Command{
 			Use: "add <domain>", Short: "Register a site", Args: cobra.ExactArgs(1),

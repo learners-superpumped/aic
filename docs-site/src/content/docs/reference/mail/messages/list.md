@@ -14,7 +14,7 @@ aic mail messages list [flags]
 ### Options
 
 ```
-      --cursor string      next-page cursor from a previous list
+      --cursor string      next page's cursor — the 'next_cursor' value from a previous list (shown in -o json output and the table footer)
       --direction string   filter: sent|received
   -h, --help               help for list
       --inbox string       filter by inbox address or id

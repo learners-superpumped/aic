@@ -60,8 +60,7 @@ func newStorageBucketsCmd() *cobra.Command {
 			return printPage(cmd, a.Out, page, cols, row)
 		},
 	}
-	lsCmd.Flags().IntVar(&lsLimit, "limit", 0, "max rows per page (default 50, max 200)")
-	lsCmd.Flags().StringVar(&lsCursor, "cursor", "", "next-page cursor from a previous list")
+	addPaginationFlags(lsCmd, &lsLimit, &lsCursor)
 
 	cmd.AddCommand(
 		&cobra.Command{
@@ -182,8 +181,7 @@ func newStorageLsCmd() *cobra.Command {
 			return printPage(cmd, a.Out, page, cols, row)
 		},
 	}
-	cmd.Flags().IntVar(&limit, "limit", 0, "max rows per page (default 50, max 200)")
-	cmd.Flags().StringVar(&cursor, "cursor", "", "next-page cursor from a previous list")
+	addPaginationFlags(cmd, &limit, &cursor)
 	return cmd
 }
 

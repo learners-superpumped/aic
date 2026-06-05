@@ -14,7 +14,7 @@ aic teams members list [flags]
 ### Options
 
 ```
-      --cursor string   next-page cursor from a previous list
+      --cursor string   next page's cursor — the 'next_cursor' value from a previous list (shown in -o json output and the table footer)
   -h, --help            help for list
       --limit int       max rows per page (default 50, max 200)
 ```

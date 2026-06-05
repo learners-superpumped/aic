@@ -129,8 +129,7 @@ func newMailDomainsListCmd() *cobra.Command {
 			})
 		},
 	}
-	cmd.Flags().IntVar(&limit, "limit", 0, "max rows per page (default 50, max 200)")
-	cmd.Flags().StringVar(&cursor, "cursor", "", "next-page cursor from a previous list")
+	addPaginationFlags(cmd, &limit, &cursor)
 	return cmd
 }
 

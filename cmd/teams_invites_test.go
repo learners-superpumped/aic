@@ -132,4 +132,3 @@ func TestTeamsInvitesResendCmd_CallsPost(t *testing.T) {
 		t.Errorf("unexpected output: %s", out)
 	}
 }
-

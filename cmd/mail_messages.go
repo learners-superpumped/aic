@@ -69,8 +69,7 @@ func newMailMessagesListCmd() *cobra.Command {
 	}
 	cmd.Flags().StringVar(&direction, "direction", "", "filter: sent|received")
 	cmd.Flags().StringVar(&inbox, "inbox", "", "filter by inbox address or id")
-	cmd.Flags().IntVar(&limit, "limit", 0, "max rows per page (default 50, max 200)")
-	cmd.Flags().StringVar(&cursor, "cursor", "", "next-page cursor from a previous list")
+	addPaginationFlags(cmd, &limit, &cursor)
 	return cmd
 }
 

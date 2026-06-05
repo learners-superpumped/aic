@@ -8,6 +8,13 @@ import (
 	"github.com/spf13/cobra"
 )
 
+// addPaginationFlags registers the standard --limit/--cursor flags on a list
+// command. One place so every list surface stays consistent.
+func addPaginationFlags(cmd *cobra.Command, limit *int, cursor *string) {
+	cmd.Flags().IntVar(limit, "limit", 0, "max rows per page (default 50, max 200)")
+	cmd.Flags().StringVar(cursor, "cursor", "", "next page's cursor — the 'next_cursor' value from a previous list (shown in -o json output and the table footer)")
+}
+
 // printPage renders a paginated envelope. In table mode it prints the rows and,
 // when another page exists, a copy-pasteable next-page command. In json/yaml
 // mode it marshals the whole envelope so scripts/agents read next_cursor.
