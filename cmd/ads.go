@@ -323,7 +323,11 @@ func newAdsInsightsCmd() *cobra.Command {
 				cols, row := adInsightsRows()
 				return a.Out.Print(s, cols, row)
 			}
-			rows := append([]api.AdInsights{s.Cumulative}, s.Daily...)
+			total := s.Cumulative
+			if daily {
+				total.DateStart, total.DateStop = "TOTAL", ""
+			}
+			rows := append([]api.AdInsights{total}, s.Daily...)
 			cols, row := adInsightsRows()
 			return a.Out.Print(rows, cols, row)
 		},
