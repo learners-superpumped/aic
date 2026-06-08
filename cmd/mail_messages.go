@@ -44,7 +44,7 @@ func newMailMessagesThreadCmd() *cobra.Command {
 }
 
 func newMailMessagesListCmd() *cobra.Command {
-	var direction, inbox, cursor string
+	var direction, inbox, from, cursor string
 	var limit int
 	cmd := &cobra.Command{
 		Use:   "list",
@@ -57,7 +57,7 @@ func newMailMessagesListCmd() *cobra.Command {
 			if err := a.RequireProject(); err != nil {
 				return err
 			}
-			page, err := a.Client.ListMailMessages(cmd.Context(), a.Team, a.Project, direction, inbox, limit, cursor)
+			page, err := a.Client.ListMailMessages(cmd.Context(), a.Team, a.Project, direction, inbox, from, limit, cursor)
 			if err != nil {
 				return err
 			}
@@ -69,6 +69,7 @@ func newMailMessagesListCmd() *cobra.Command {
 	}
 	cmd.Flags().StringVar(&direction, "direction", "", "filter: sent|received")
 	cmd.Flags().StringVar(&inbox, "inbox", "", "filter by inbox address or id")
+	cmd.Flags().StringVar(&from, "from", "", "filter by sender address")
 	addPaginationFlags(cmd, &limit, &cursor)
 	return cmd
 }

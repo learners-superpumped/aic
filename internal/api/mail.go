@@ -180,13 +180,16 @@ type MailMessageDetail struct {
 	RawBase64   string               `json:"raw_base64"`
 }
 
-func (c *Client) ListMailMessages(ctx context.Context, teamID, projectID, direction, inbox string, limit int, cursor string) (Page[MailMessage], error) {
+func (c *Client) ListMailMessages(ctx context.Context, teamID, projectID, direction, inbox, from string, limit int, cursor string) (Page[MailMessage], error) {
 	q := url.Values{}
 	if direction != "" {
 		q.Set("direction", direction)
 	}
 	if inbox != "" {
 		q.Set("inbox", inbox)
+	}
+	if from != "" {
+		q.Set("from", from)
 	}
 	if limit > 0 {
 		q.Set("limit", fmt.Sprintf("%d", limit))
