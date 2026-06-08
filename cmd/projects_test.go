@@ -67,9 +67,12 @@ func TestProjectsCmdHasSubcommands(t *testing.T) {
 	for _, c := range newProjectsCmd().Commands() {
 		names[c.Name()] = true
 	}
-	for _, want := range []string{"list", "create", "delete", "use", "show"} {
+	for _, want := range []string{"list", "create", "use", "show"} {
 		if !names[want] {
 			t.Errorf("missing projects subcommand %q", want)
 		}
+	}
+	if names["delete"] {
+		t.Error("delete subcommand must be disabled")
 	}
 }

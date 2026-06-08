@@ -133,10 +133,6 @@ func (c *Client) GetProject(ctx context.Context, teamID, id string) (*Project, e
 	return &p, c.do(ctx, http.MethodGet, teamProjectsPath(teamID)+"/"+url.PathEscape(id), nil, &p)
 }
 
-func (c *Client) DeleteProject(ctx context.Context, teamID, id string) error {
-	return c.do(ctx, http.MethodDelete, teamProjectsPath(teamID)+"/"+url.PathEscape(id), nil, nil)
-}
-
 // --- Domains (scoped to a team's project) ---
 
 func teamDomainsPath(teamID, projectID string) string {

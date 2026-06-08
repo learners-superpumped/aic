@@ -27,7 +27,6 @@ Manage projects
 
 * [aic](/reference/aic/)	 - aic provisions projects, domains, and email inboxes on our service
 * [aic projects create](/reference/projects/create/)	 - Create a project
-* [aic projects delete](/reference/projects/delete/)	 - Delete a project
 * [aic projects list](/reference/projects/list/)	 - List projects
 * [aic projects show](/reference/projects/show/)	 - Show a project
 * [aic projects use](/reference/projects/use/)	 - Set the default project for this profile

@@ -17,7 +17,6 @@ func newProjectsCmd() *cobra.Command {
 	cmd.AddCommand(
 		newProjectsListCmd(),
 		newProjectsCreateCmd(),
-		newProjectsDeleteCmd(),
 		newProjectsUseCmd(),
 		newProjectsShowCmd(),
 	)
@@ -81,29 +80,6 @@ func newProjectsCreateCmd() *cobra.Command {
 			}
 			cols, row := projectRows()
 			return a.Out.Print(*p, cols, row)
-		},
-	}
-}
-
-func newProjectsDeleteCmd() *cobra.Command {
-	return &cobra.Command{
-		Use:     "delete <id>",
-		Aliases: []string{"rm"},
-		Short:   "Delete a project",
-		Args:    cobra.ExactArgs(1),
-		RunE: func(cmd *cobra.Command, args []string) error {
-			a, err := appFromCmd(cmd)
-			if err != nil {
-				return err
-			}
-			if err := a.RequireTeam(); err != nil {
-				return err
-			}
-			if err := a.Client.DeleteProject(cmd.Context(), a.Team, args[0]); err != nil {
-				return err
-			}
-			return printAction(a, actionResult{ID: args[0], Status: "deleted"},
-				fmt.Sprintf("Project %s deleted.", args[0]))
 		},
 	}
 }
