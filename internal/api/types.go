@@ -122,11 +122,27 @@ type CreditBalance struct {
 
 // LedgerEntry is one credit ledger row.
 type LedgerEntry struct {
-	ID         string    `json:"id" yaml:"id"`
-	AmountNano int64     `json:"amount_nano" yaml:"amount_nano"`
-	Type       string    `json:"type" yaml:"type"`
-	Reference  string    `json:"reference" yaml:"reference"`
-	CreatedAt  time.Time `json:"created_at" yaml:"created_at"`
+	ID           string    `json:"id" yaml:"id"`
+	AmountNano   int64     `json:"amount_nano" yaml:"amount_nano"`
+	Type         string    `json:"type" yaml:"type"`
+	ResourceType string    `json:"resource_type,omitempty" yaml:"resource_type,omitempty"`
+	Reference    string    `json:"reference" yaml:"reference"`
+	CreatedAt    time.Time `json:"created_at" yaml:"created_at"`
+}
+
+// UsageBucket is one resource's aggregated usage over a window.
+type UsageBucket struct {
+	Resource string `json:"resource" yaml:"resource"`
+	Entries  int64  `json:"entries" yaml:"entries"`
+	SpendUSD string `json:"spend_usd" yaml:"spend_usd"`
+}
+
+// UsageSummary is per-resource usage over a date window.
+type UsageSummary struct {
+	From          string        `json:"from" yaml:"from"`
+	To            string        `json:"to" yaml:"to"`
+	ByResource    []UsageBucket `json:"by_resource" yaml:"by_resource"`
+	TotalSpendUSD string        `json:"total_spend_usd" yaml:"total_spend_usd"`
 }
 
 // TopupResult is the response to a top-up request.

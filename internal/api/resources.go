@@ -33,9 +33,36 @@ func (c *Client) Balance(ctx context.Context, teamID string) (*CreditBalance, er
 	return &b, c.do(ctx, http.MethodGet, teamBillingPath(teamID)+"/balance", nil, &b)
 }
 
-func (c *Client) History(ctx context.Context, teamID string) ([]LedgerEntry, error) {
-	var out []LedgerEntry
-	return out, c.do(ctx, http.MethodGet, teamBillingPath(teamID)+"/history", nil, &out)
+func (c *Client) History(ctx context.Context, teamID string, limit int, cursor string) (Page[LedgerEntry], error) {
+	q := url.Values{}
+	if limit > 0 {
+		q.Set("limit", strconv.Itoa(limit))
+	}
+	if cursor != "" {
+		q.Set("cursor", cursor)
+	}
+	path := teamBillingPath(teamID) + "/history"
+	if e := q.Encode(); e != "" {
+		path += "?" + e
+	}
+	var out Page[LedgerEntry]
+	return out, c.do(ctx, http.MethodGet, path, nil, &out)
+}
+
+func (c *Client) Usage(ctx context.Context, teamID, from, to string) (*UsageSummary, error) {
+	q := url.Values{}
+	if from != "" {
+		q.Set("from", from)
+	}
+	if to != "" {
+		q.Set("to", to)
+	}
+	path := teamBillingPath(teamID) + "/usage"
+	if e := q.Encode(); e != "" {
+		path += "?" + e
+	}
+	var out UsageSummary
+	return &out, c.do(ctx, http.MethodGet, path, nil, &out)
 }
 
 func (c *Client) Topup(ctx context.Context, teamID string, amountCents int64) (*TopupResult, error) {

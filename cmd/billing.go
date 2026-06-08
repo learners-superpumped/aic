@@ -23,6 +23,7 @@ func newBillingCmd() *cobra.Command {
 		newBillingTopupCmd(),
 		newBillingBalanceCmd(),
 		newBillingHistoryCmd(),
+		newBillingUsageCmd(),
 	)
 	return cmd
 }
@@ -150,9 +151,11 @@ func newBillingBalanceCmd() *cobra.Command {
 }
 
 func newBillingHistoryCmd() *cobra.Command {
-	return &cobra.Command{
+	var limit int
+	var cursor string
+	cmd := &cobra.Command{
 		Use:   "history",
-		Short: "Show your credit ledger",
+		Short: "Show your AIC credit ledger",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			a, err := appFromCmd(cmd)
 			if err != nil {
@@ -161,16 +164,61 @@ func newBillingHistoryCmd() *cobra.Command {
 			if err := a.RequireTeam(); err != nil {
 				return err
 			}
-			items, err := a.Client.History(cmd.Context(), a.Team)
+			page, err := a.Client.History(cmd.Context(), a.Team, limit, cursor)
 			if err != nil {
 				return err
 			}
-			return a.Out.Print(items, []string{"ID", "TYPE", "AMOUNT (USD)", "REFERENCE", "WHEN"}, func(v any) []string {
+			cols := []string{"ID", "TYPE", "RESOURCE", "AMOUNT (USD)", "REFERENCE", "WHEN"}
+			return printPage(cmd, a.Out, page, cols, func(v any) []string {
 				e := v.(api.LedgerEntry)
-				return []string{e.ID, e.Type, fmt.Sprintf("$%.4f", float64(e.AmountNano)/1e9), e.Reference, e.CreatedAt.Format(time.RFC3339)}
+				resource := e.ResourceType
+				if resource == "" {
+					resource = "—"
+				}
+				return []string{e.ID, e.Type, resource, fmt.Sprintf("$%.4f", float64(e.AmountNano)/1e9), e.Reference, e.CreatedAt.Format(time.RFC3339)}
 			})
 		},
 	}
+	addPaginationFlags(cmd, &limit, &cursor)
+	return cmd
+}
+
+func newBillingUsageCmd() *cobra.Command {
+	var from, to string
+	cmd := &cobra.Command{
+		Use:   "usage",
+		Short: "Show AIC credit usage by resource",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			a, err := appFromCmd(cmd)
+			if err != nil {
+				return err
+			}
+			if err := a.RequireTeam(); err != nil {
+				return err
+			}
+			summary, err := a.Client.Usage(cmd.Context(), a.Team, from, to)
+			if err != nil {
+				return err
+			}
+			if a.Out.Format() != "table" {
+				return a.Out.Print(*summary, nil, nil)
+			}
+			cols := []string{"RESOURCE", "ENTRIES", "SPEND (USD)"}
+			if err := a.Out.Print(summary.ByResource, cols, func(v any) []string {
+				b := v.(api.UsageBucket)
+				return []string{b.Resource, strconv.FormatInt(b.Entries, 10), b.SpendUSD}
+			}); err != nil {
+				return err
+			}
+			w := a.Out.Writer()
+			fmt.Fprintln(w, strings.Repeat("─", 33))
+			fmt.Fprintf(w, "%-10s %-9s %s\n", "TOTAL", "", summary.TotalSpendUSD)
+			return nil
+		},
+	}
+	cmd.Flags().StringVar(&from, "from", "", "start date YYYY-MM-DD (default 30 days ago)")
+	cmd.Flags().StringVar(&to, "to", "", "end date YYYY-MM-DD (default today)")
+	return cmd
 }
 
 // parseDollarsToCents converts a dollar string ("50", "49.99") to integer cents

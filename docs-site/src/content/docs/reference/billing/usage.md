@@ -1,22 +1,22 @@
 ---
-title: "aic billing history"
-description: "Show your AIC credit ledger"
+title: "aic billing usage"
+description: "Show AIC credit usage by resource"
 sidebar:
-  label: "history"
+  label: "usage"
 ---
 
-Show your AIC credit ledger
+Show AIC credit usage by resource
 
 ```
-aic billing history [flags]
+aic billing usage [flags]
 ```
 
 ### Options
 
 ```
-      --cursor string   next page's cursor — the 'next_cursor' value from a previous list (shown in -o json output and the table footer)
-  -h, --help            help for history
-      --limit int       max rows per page (default 50, max 200)
+      --from string   start date YYYY-MM-DD (default 30 days ago)
+  -h, --help          help for usage
+      --to string     end date YYYY-MM-DD (default today)
 ```
 
 ### Options inherited from parent commands

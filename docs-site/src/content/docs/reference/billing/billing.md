@@ -29,6 +29,7 @@ Manage credits and payment methods
 * [aic billing add-card](/reference/billing/add-card/)	 - Register a card via your browser
 * [aic billing balance](/reference/billing/balance/)	 - Show your credit balance
 * [aic billing cards](/reference/billing/cards/)	 - List registered cards
-* [aic billing history](/reference/billing/history/)	 - Show your credit ledger
+* [aic billing history](/reference/billing/history/)	 - Show your AIC credit ledger
 * [aic billing topup](/reference/billing/topup/)	 - Buy credits by charging your saved card
+* [aic billing usage](/reference/billing/usage/)	 - Show AIC credit usage by resource
 
