@@ -24,6 +24,7 @@ func newBillingCmd() *cobra.Command {
 		newBillingBalanceCmd(),
 		newBillingHistoryCmd(),
 		newBillingUsageCmd(),
+		newBillingAutoRechargeCmd(),
 	)
 	return cmd
 }
@@ -219,6 +220,114 @@ func newBillingUsageCmd() *cobra.Command {
 	cmd.Flags().StringVar(&from, "from", "", "start date YYYY-MM-DD (default 30 days ago)")
 	cmd.Flags().StringVar(&to, "to", "", "end date YYYY-MM-DD (default today)")
 	return cmd
+}
+
+func newBillingAutoRechargeCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "auto-recharge",
+		Short: "Manage automatic credit top-up",
+	}
+	cmd.AddCommand(
+		newBillingAutoRechargeConfigCmd(),
+		newBillingAutoRechargeEnableCmd(),
+		newBillingAutoRechargeDisableCmd(),
+	)
+	return cmd
+}
+
+func newBillingAutoRechargeConfigCmd() *cobra.Command {
+	return &cobra.Command{
+		Use:   "config",
+		Short: "Show auto-recharge configuration",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			a, err := appFromCmd(cmd)
+			if err != nil {
+				return err
+			}
+			if err := a.RequireTeam(); err != nil {
+				return err
+			}
+			cfg, err := a.Client.GetAutoRecharge(cmd.Context(), a.Team)
+			if err != nil {
+				return err
+			}
+			return a.Out.Print(*cfg, []string{"ENABLED", "THRESHOLD (USD)", "AMOUNT (USD)", "MONTHLY LIMIT (USD)"}, func(v any) []string {
+				c := v.(api.AutoRechargeConfig)
+				return []string{
+					fmt.Sprintf("%t", c.Enabled),
+					fmt.Sprintf("$%.2f", c.ThresholdUSD),
+					fmt.Sprintf("$%.2f", c.AmountUSD),
+					fmt.Sprintf("$%.2f", c.MonthlyLimitUSD),
+				}
+			})
+		},
+	}
+}
+
+func newBillingAutoRechargeEnableCmd() *cobra.Command {
+	var threshold, amount, monthlyLimit string
+	cmd := &cobra.Command{
+		Use:   "enable",
+		Short: "Enable automatic credit top-up",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			a, err := appFromCmd(cmd)
+			if err != nil {
+				return err
+			}
+			if err := a.RequireTeam(); err != nil {
+				return err
+			}
+			threshCents, err := parseDollarsToCents(threshold)
+			if err != nil {
+				return fmt.Errorf("--threshold: %w", err)
+			}
+			amtCents, err := parseDollarsToCents(amount)
+			if err != nil {
+				return fmt.Errorf("--amount: %w", err)
+			}
+			limitCents, err := parseDollarsToCents(monthlyLimit)
+			if err != nil {
+				return fmt.Errorf("--monthly-limit: %w", err)
+			}
+			cfg := api.AutoRechargeConfig{
+				Enabled:         true,
+				ThresholdUSD:    float64(threshCents) / 100,
+				AmountUSD:       float64(amtCents) / 100,
+				MonthlyLimitUSD: float64(limitCents) / 100,
+			}
+			if err := a.Client.SetAutoRecharge(cmd.Context(), a.Team, cfg); err != nil {
+				return err
+			}
+			return printAction(a, actionResult{Status: "enabled"}, "Auto-recharge enabled.")
+		},
+	}
+	cmd.Flags().StringVar(&threshold, "threshold", "", "top up when balance drops below this amount in USD (required)")
+	cmd.Flags().StringVar(&amount, "amount", "", "amount in USD to add each time (required)")
+	cmd.Flags().StringVar(&monthlyLimit, "monthly-limit", "", "maximum amount in USD to auto-recharge per calendar month (required)")
+	_ = cmd.MarkFlagRequired("threshold")
+	_ = cmd.MarkFlagRequired("amount")
+	_ = cmd.MarkFlagRequired("monthly-limit")
+	return cmd
+}
+
+func newBillingAutoRechargeDisableCmd() *cobra.Command {
+	return &cobra.Command{
+		Use:   "disable",
+		Short: "Disable automatic credit top-up",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			a, err := appFromCmd(cmd)
+			if err != nil {
+				return err
+			}
+			if err := a.RequireTeam(); err != nil {
+				return err
+			}
+			if err := a.Client.SetAutoRecharge(cmd.Context(), a.Team, api.AutoRechargeConfig{Enabled: false}); err != nil {
+				return err
+			}
+			return printAction(a, actionResult{Status: "disabled"}, "Auto-recharge disabled.")
+		},
+	}
 }
 
 // parseDollarsToCents converts a dollar string ("50", "49.99") to integer cents

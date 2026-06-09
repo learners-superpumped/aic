@@ -27,6 +27,7 @@ Manage credits and payment methods
 
 * [aic](/reference/aic/)	 - aic provisions projects, domains, and email inboxes on our service
 * [aic billing add-card](/reference/billing/add-card/)	 - Register a card via your browser
+* [aic billing auto-recharge](/reference/billing/auto-recharge/auto-recharge/)	 - Manage automatic credit top-up
 * [aic billing balance](/reference/billing/balance/)	 - Show your credit balance
 * [aic billing cards](/reference/billing/cards/)	 - List registered cards
 * [aic billing history](/reference/billing/history/)	 - Show your AIC credit ledger

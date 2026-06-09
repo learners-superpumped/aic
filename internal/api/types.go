@@ -151,6 +151,14 @@ type TopupResult struct {
 	PaymentIntentID string `json:"payment_intent_id" yaml:"payment_intent_id"`
 }
 
+// AutoRechargeConfig is a team's auto top-up policy.
+type AutoRechargeConfig struct {
+	Enabled         bool    `json:"enabled" yaml:"enabled"`
+	ThresholdUSD    float64 `json:"threshold_usd" yaml:"threshold_usd"`
+	AmountUSD       float64 `json:"amount_usd" yaml:"amount_usd"`
+	MonthlyLimitUSD float64 `json:"monthly_limit_usd" yaml:"monthly_limit_usd"`
+}
+
 // Tokens is an auth token set.
 type Tokens struct {
 	AccessToken  string    `json:"access_token"`

@@ -71,6 +71,15 @@ func (c *Client) Topup(ctx context.Context, teamID string, amountCents int64) (*
 		map[string]int64{"amount_cents": amountCents}, &res)
 }
 
+func (c *Client) GetAutoRecharge(ctx context.Context, teamID string) (*AutoRechargeConfig, error) {
+	var cfg AutoRechargeConfig
+	return &cfg, c.do(ctx, http.MethodGet, teamBillingPath(teamID)+"/auto-recharge", nil, &cfg)
+}
+
+func (c *Client) SetAutoRecharge(ctx context.Context, teamID string, cfg AutoRechargeConfig) error {
+	return c.do(ctx, http.MethodPut, teamBillingPath(teamID)+"/auto-recharge", cfg, nil)
+}
+
 // --- Teams ---
 
 func (c *Client) ListTeams(ctx context.Context, limit int, cursor string) (Page[Team], error) {
