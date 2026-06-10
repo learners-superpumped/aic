@@ -20,8 +20,9 @@ func addPaginationFlags(cmd *cobra.Command, limit *int, cursor *string) {
 // shellQuote POSIX-quotes a flag value for the copy-pasteable next-page command
 // so it survives a shell paste verbatim. Values made only of shell-safe chars
 // pass through bare; anything else (whitespace, $, backtick, quotes, …) is
-// single-quoted, which suppresses every shell expansion, with embedded single
-// quotes escaped as '\''. Most list filters are bare (addresses, ids, enums);
+// single-quoted, which suppresses every shell expansion, with each embedded
+// single quote escaped via the POSIX close-escape-reopen idiom. Most list
+// filters are bare (addresses, ids, enums);
 // this only kicks in when they aren't. Note: the footer echoes the user's own
 // already-run input, so this is paste fidelity, not a trust boundary.
 func shellQuote(v string) string {
@@ -40,7 +41,9 @@ func shellQuote(v string) string {
 // printPage renders a paginated envelope. In table mode it prints the rows and,
 // when another page exists, a copy-pasteable next-page command. In json/yaml
 // mode it marshals the whole envelope so scripts/agents read next_cursor.
-func printPage[T any](cmd *cobra.Command, out *output.Renderer, page api.Page[T], headers []string, row output.RowFunc) error {
+// Commands that take positional args (e.g. `storage ls <bucket>`) pass them so
+// the footer command stays runnable.
+func printPage[T any](cmd *cobra.Command, out *output.Renderer, page api.Page[T], headers []string, row output.RowFunc, args ...string) error {
 	if out.Format() != "table" {
 		return out.Print(page, headers, row)
 	}
@@ -49,19 +52,32 @@ func printPage[T any](cmd *cobra.Command, out *output.Renderer, page api.Page[T]
 	}
 	if page.HasMore {
 		// Reconstruct a copy-pasteable next-page command that preserves every
-		// filter the user set (--direction, --inbox, --from, --limit, …) so the
-		// next page queries the SAME result set. Only --cursor is swapped for the
-		// fresh value. Visit the command's own flag set (where Changed is tracked)
-		// and skip inherited globals (--output, --project, …) so only this list's
-		// own flags carry forward.
+		// flag the user set on the command line — local filters (--direction,
+		// --inbox, --from, --limit, …) AND scope overrides (--team, --project,
+		// --profile), since dropping either makes page 2 query a DIFFERENT
+		// result set. Only --cursor is swapped for the fresh value and --output
+		// is skipped (presentation-only; the footer only prints in table mode).
+		// Flags are emitted as --name=value so bool flags round-trip, and slice
+		// flags repeat --name=v per element (Value.String()'s "[a,b]" doesn't
+		// re-parse). Visit only sees Changed flags, so config-sourced defaults
+		// never leak in.
 		next := cmd.CommandPath()
+		for _, a := range args {
+			next += " " + shellQuote(a)
+		}
 		cmd.Flags().Visit(func(f *pflag.Flag) {
-			if f.Name == "cursor" || cmd.InheritedFlags().Lookup(f.Name) != nil {
+			if f.Name == "cursor" || f.Name == "output" {
 				return
 			}
-			next += " --" + f.Name + " " + shellQuote(f.Value.String())
+			if sv, ok := f.Value.(pflag.SliceValue); ok {
+				for _, v := range sv.GetSlice() {
+					next += " --" + f.Name + "=" + shellQuote(v)
+				}
+				return
+			}
+			next += " --" + f.Name + "=" + shellQuote(f.Value.String())
 		})
-		fmt.Fprintf(out.Writer(), "\nMore results available. Next page:\n  %s --cursor %s\n", next, page.NextCursor)
+		fmt.Fprintf(out.Writer(), "\nMore results available. Next page:\n  %s --cursor %s\n", next, shellQuote(page.NextCursor))
 	}
 	return nil
 }

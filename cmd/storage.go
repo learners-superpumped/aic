@@ -178,7 +178,7 @@ func newStorageLsCmd() *cobra.Command {
 				return err
 			}
 			cols, row := objectRows()
-			return printPage(cmd, a.Out, page, cols, row)
+			return printPage(cmd, a.Out, page, cols, row, args[0])
 		},
 	}
 	addPaginationFlags(cmd, &limit, &cursor)

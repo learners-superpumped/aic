@@ -66,10 +66,10 @@ func TestPrintPageTableFooterPreservesFilterFlags(t *testing.T) {
 	out := buf.String()
 	// The next-page command must carry the filter forward, else page 2 queries a
 	// different result set than page 1.
-	if !strings.Contains(out, "--from alice@foo.com") {
+	if !strings.Contains(out, "--from=alice@foo.com") {
 		t.Fatalf("footer dropped --from: %q", out)
 	}
-	if !strings.Contains(out, "--limit 2") {
+	if !strings.Contains(out, "--limit=2") {
 		t.Fatalf("footer dropped --limit: %q", out)
 	}
 	if !strings.Contains(out, "--cursor CUR") {
@@ -86,10 +86,10 @@ func TestPrintPageTableFooterShellQuotesUnsafeValues(t *testing.T) {
 		val  string
 		want string // expected substring in footer
 	}{
-		{"Acme Corp", `--name 'Acme Corp'`},     // whitespace → single-quoted
-		{"a$b@x.com", `--name 'a$b@x.com'`},     // $ must be single-quoted so it can't expand
-		{"a@x.com", `--name a@x.com`},           // bare-safe → unquoted
-		{"O'Brien", `--name 'O'\''Brien'`},      // embedded single quote escaped
+		{"Acme Corp", `--name='Acme Corp'`}, // whitespace → single-quoted
+		{"a$b@x.com", `--name='a$b@x.com'`}, // $ must be single-quoted so it can't expand
+		{"a@x.com", `--name=a@x.com`},       // bare-safe → unquoted
+		{"O'Brien", `--name='O'\''Brien'`},  // embedded single quote escaped
 	}
 	for _, c := range cases {
 		var buf bytes.Buffer
@@ -112,10 +112,12 @@ func TestPrintPageTableFooterShellQuotesUnsafeValues(t *testing.T) {
 	}
 }
 
-func TestPrintPageTableFooterExcludesInheritedGlobals(t *testing.T) {
+func TestPrintPageTableFooterScopeAndOutputGlobals(t *testing.T) {
 	// Drive through cobra Execute so flag parsing + persistent-flag merge happen
 	// exactly as in real CLI use — that's the only state where cmd.Flags().Visit
-	// sees inherited globals as Changed, so it's the real test of the exclusion.
+	// sees inherited globals as Changed. Scope overrides (--project/--team/
+	// --profile) MUST carry forward — dropping them makes page 2 query a
+	// different team/project than page 1. Presentation-only --output must not.
 	var buf bytes.Buffer
 	r, _ := output.New("table", &buf)
 	root := &cobra.Command{Use: "aic"}
@@ -135,11 +137,66 @@ func TestPrintPageTableFooterExcludesInheritedGlobals(t *testing.T) {
 		t.Fatal(err)
 	}
 	out := buf.String()
-	if !strings.Contains(out, "--from a@b.com") || !strings.Contains(out, "--limit 2") {
+	if !strings.Contains(out, "--from=a@b.com") || !strings.Contains(out, "--limit=2") {
 		t.Fatalf("footer lost local filters: %q", out)
 	}
-	if strings.Contains(out, "--project") || strings.Contains(out, "--output") {
-		t.Fatalf("footer leaked inherited global: %q", out)
+	if !strings.Contains(out, "--project=proj_x") {
+		t.Fatalf("footer dropped explicit scope override --project: %q", out)
+	}
+	if strings.Contains(out, "--output") {
+		t.Fatalf("footer leaked presentation flag --output: %q", out)
+	}
+}
+
+func TestPrintPageTableFooterPreservesPositionalArgs(t *testing.T) {
+	// Commands like `storage ls <bucket>` pass their positional args through;
+	// without them the suggested command fails cobra's Args validation.
+	var buf bytes.Buffer
+	r, _ := output.New("table", &buf)
+	root := &cobra.Command{Use: "aic"}
+	ls := &cobra.Command{Use: "ls"}
+	root.AddCommand(ls)
+	page := api.Page[string]{Data: []string{"a"}, HasMore: true, NextCursor: "CUR"}
+	if err := printPage(ls, r, page, []string{"V"}, func(v any) []string { return []string{v.(string)} }, "my bucket/prefix"); err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(buf.String(), "aic ls 'my bucket/prefix' --cursor CUR") {
+		t.Fatalf("footer dropped or misquoted positional arg: %q", buf.String())
+	}
+}
+
+func TestPrintPageTableFooterBoolAndSliceFlags(t *testing.T) {
+	// Bool flags must use --name=value (space-separated 'true' becomes a stray
+	// positional on paste); slice flags must repeat --name=v per element
+	// (Value.String()'s "[a,b]" doesn't re-parse).
+	var buf bytes.Buffer
+	r, _ := output.New("table", &buf)
+	cmd := &cobra.Command{Use: "list"}
+	root := &cobra.Command{Use: "aic"}
+	root.AddCommand(cmd)
+	var archived bool
+	var tags []string
+	cmd.Flags().BoolVar(&archived, "archived", false, "")
+	cmd.Flags().StringSliceVar(&tags, "tag", nil, "")
+	if err := cmd.Flags().Set("archived", "true"); err != nil {
+		t.Fatal(err)
+	}
+	if err := cmd.Flags().Set("tag", "a"); err != nil {
+		t.Fatal(err)
+	}
+	if err := cmd.Flags().Set("tag", "b c"); err != nil {
+		t.Fatal(err)
+	}
+	page := api.Page[string]{Data: []string{"a"}, HasMore: true, NextCursor: "CUR"}
+	if err := printPage(cmd, r, page, []string{"V"}, func(v any) []string { return []string{v.(string)} }); err != nil {
+		t.Fatal(err)
+	}
+	out := buf.String()
+	if !strings.Contains(out, "--archived=true") {
+		t.Fatalf("bool flag not emitted as --name=value: %q", out)
+	}
+	if !strings.Contains(out, "--tag=a --tag='b c'") {
+		t.Fatalf("slice flag not emitted per element: %q", out)
 	}
 }
 
