@@ -28,6 +28,7 @@ aic ads launch [flags]
   -h, --help                      help for launch
       --interests stringArray     Meta interest IDs, e.g. 6003107902433 (repeatable)
       --launch-token string       idempotency token (auto-generated if omitted)
+      --no-wait                   return immediately with the draft instead of waiting for the ad to be prepared
       --objective string          campaign objective: traffic|conversions|awareness|engagement|leads (default "traffic")
       --placements stringArray    ad placements, e.g. facebook_feed instagram_stories (repeatable)
       --provider string           ad provider (only 'meta' is supported) (default "meta")

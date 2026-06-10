@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"context"
 	"crypto/rand"
 	"encoding/hex"
 	"encoding/json"
@@ -10,8 +11,32 @@ import (
 	"time"
 
 	"github.com/learners-superpumped/aic/internal/api"
+	"github.com/learners-superpumped/aic/internal/app"
 	"github.com/spf13/cobra"
 )
+
+// waitForLaunch polls a campaign until it leaves the draft state — the ad is
+// provisioned asynchronously, so the CLI mirrors the old synchronous UX by
+// waiting for the live (or failed) result. The wait is bounded above the
+// server-side video-encode timeout; on timeout the still-draft campaign is
+// returned so the caller can re-check with `aic ads status`.
+func waitForLaunch(ctx context.Context, a *app.App, id string) (api.AdCampaign, error) {
+	deadline := time.Now().Add(12 * time.Minute)
+	for {
+		c, err := a.Client.GetAd(ctx, a.Team, a.Project, id)
+		if err != nil {
+			return c, err
+		}
+		if c.Status != "draft" || time.Now().After(deadline) {
+			return c, nil
+		}
+		select {
+		case <-ctx.Done():
+			return c, ctx.Err()
+		case <-time.After(3 * time.Second):
+		}
+	}
+}
 
 func adCampaignRows() ([]string, func(any) []string) {
 	return []string{"ID", "STATUS", "OBJECTIVE", "BUDGET-NANO", "SPENT-NANO", "RESERVED-NANO", "EXTERNAL-ID", "REASON", "CREATED"},
@@ -108,6 +133,7 @@ func newAdsLaunchCmd() *cobra.Command {
 		launchToken     string
 		placements      []string
 		customAudience  string
+		noWait          bool
 	)
 
 	cmd := &cobra.Command{
@@ -196,6 +222,16 @@ func newAdsLaunchCmd() *cobra.Command {
 			if err != nil {
 				return err
 			}
+			// The launch is provisioned asynchronously and comes back as a draft.
+			// Unless --no-wait, poll until it leaves draft so the printed result is
+			// the live (or failed) campaign, matching the synchronous UX.
+			if !noWait && c.Status == "draft" {
+				fmt.Fprintln(cmd.ErrOrStderr(), "Preparing your ad…")
+				c, err = waitForLaunch(cmd.Context(), a, c.ID)
+				if err != nil {
+					return err
+				}
+			}
 			cols, row := adCampaignRows()
 			return a.Out.Print(c, cols, row)
 		},
@@ -220,6 +256,7 @@ func newAdsLaunchCmd() *cobra.Command {
 	cmd.Flags().StringVar(&launchToken, "launch-token", "", "idempotency token (auto-generated if omitted)")
 	cmd.Flags().StringArrayVar(&placements, "placements", nil, "ad placements, e.g. facebook_feed instagram_stories (repeatable)")
 	cmd.Flags().StringVar(&customAudience, "custom-audience", "", "Meta custom audience ID to target")
+	cmd.Flags().BoolVar(&noWait, "no-wait", false, "return immediately with the draft instead of waiting for the ad to be prepared")
 
 	return cmd
 }
