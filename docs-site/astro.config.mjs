@@ -9,6 +9,10 @@ export default defineConfig({
 		starlight({
 			title: 'aic CLI',
 			description: 'Official command-line interface for AIC.',
+			head: [
+				// Amplitude + PostHog 듀얼 계측 (service="runaic-docs") — public/analytics.js
+				{ tag: 'script', attrs: { src: '/analytics.js', defer: true } },
+			],
 			social: [
 				{ icon: 'github', label: 'GitHub', href: 'https://github.com/learners-superpumped/aic' },
 			],
