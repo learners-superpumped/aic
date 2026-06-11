@@ -116,7 +116,7 @@ func TestKeysCreateCmd_ProjectNotSentUnlessFlagSet(t *testing.T) {
 	cmd.Flags().String("project", "", "")
 	cmd.SetContext(app.NewContext(t.Context(), a))
 	cmd.SetOut(&buf)
-	if err := cmd.Flags().Set("scope", "billing:read"); err != nil {
+	if err := cmd.Flags().Set("scope", "teams:read"); err != nil {
 		t.Fatal(err)
 	}
 	if err := cmd.RunE(cmd, nil); err != nil {
