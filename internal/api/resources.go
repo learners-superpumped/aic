@@ -65,8 +65,8 @@ func (c *Client) GetAutoRecharge(ctx context.Context, teamID string) (*AutoRecha
 	return &cfg, c.do(ctx, http.MethodGet, teamBillingPath(teamID)+"/auto-recharge", nil, &cfg)
 }
 
-func (c *Client) SetAutoRecharge(ctx context.Context, teamID string, cfg AutoRechargeConfig) error {
-	return c.do(ctx, http.MethodPut, teamBillingPath(teamID)+"/auto-recharge", cfg, nil)
+func (c *Client) SetAutoRecharge(ctx context.Context, teamID string, in AutoRechargeInput) error {
+	return c.do(ctx, http.MethodPut, teamBillingPath(teamID)+"/auto-recharge", in, nil)
 }
 
 // --- Teams ---

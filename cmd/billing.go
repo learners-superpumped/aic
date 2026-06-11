@@ -289,13 +289,13 @@ func newBillingAutoRechargeEnableCmd() *cobra.Command {
 			if err != nil {
 				return fmt.Errorf("--monthly-limit: %w", err)
 			}
-			cfg := api.AutoRechargeConfig{
-				Enabled:         true,
-				ThresholdUSD:    float64(threshCents) / 100,
-				AmountUSD:       float64(amtCents) / 100,
-				MonthlyLimitUSD: float64(limitCents) / 100,
+			in := api.AutoRechargeInput{
+				Enabled:           true,
+				ThresholdCents:    threshCents,
+				AmountCents:       amtCents,
+				MonthlyLimitCents: limitCents,
 			}
-			if err := a.Client.SetAutoRecharge(cmd.Context(), a.Team, cfg); err != nil {
+			if err := a.Client.SetAutoRecharge(cmd.Context(), a.Team, in); err != nil {
 				return err
 			}
 			return printAction(a, actionResult{Status: "enabled"}, "Auto-recharge enabled.")
@@ -322,7 +322,7 @@ func newBillingAutoRechargeDisableCmd() *cobra.Command {
 			if err := a.RequireTeam(); err != nil {
 				return err
 			}
-			if err := a.Client.SetAutoRecharge(cmd.Context(), a.Team, api.AutoRechargeConfig{Enabled: false}); err != nil {
+			if err := a.Client.SetAutoRecharge(cmd.Context(), a.Team, api.AutoRechargeInput{Enabled: false}); err != nil {
 				return err
 			}
 			return printAction(a, actionResult{Status: "disabled"}, "Auto-recharge disabled.")
