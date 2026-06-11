@@ -1,11 +1,11 @@
 ---
 title: "aic domains disconnect"
-description: "Remove a connected domain and delete its Route 53 hosted zone"
+description: "Remove a connected domain and delete its AIC-managed DNS zone"
 sidebar:
   label: "disconnect"
 ---
 
-Remove a connected domain and delete its Route 53 hosted zone
+Remove a connected domain and delete its AIC-managed DNS zone
 
 ```
 aic domains disconnect <domain> [flags]

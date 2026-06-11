@@ -30,5 +30,5 @@ aic mail domains list [flags]
 
 ### SEE ALSO
 
-* [aic mail domains](/reference/mail/domains/domains/)	 - Manage SES domain identities
+* [aic mail domains](/reference/mail/domains/domains/)	 - Manage email sending domains
 

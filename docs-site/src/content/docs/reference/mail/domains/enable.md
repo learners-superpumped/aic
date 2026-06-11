@@ -1,11 +1,11 @@
 ---
 title: "aic mail domains enable"
-description: "Enable a domain for outbound mail (SES identity + DKIM)"
+description: "Enable a domain for outbound mail (sets up DKIM)"
 sidebar:
   label: "enable"
 ---
 
-Enable a domain for outbound mail (SES identity + DKIM)
+Enable a domain for outbound mail (sets up DKIM)
 
 ```
 aic mail domains enable <domain> [flags]
@@ -28,5 +28,5 @@ aic mail domains enable <domain> [flags]
 
 ### SEE ALSO
 
-* [aic mail domains](/reference/mail/domains/domains/)	 - Manage SES domain identities
+* [aic mail domains](/reference/mail/domains/domains/)	 - Manage email sending domains
 

@@ -26,8 +26,8 @@ Email sending and inboxes on your domains
 ### SEE ALSO
 
 * [aic](/reference/aic/)	 - Run your company on AIC — domains, email, storage, SEO, and ads
-* [aic mail domains](/reference/mail/domains/domains/)	 - Manage SES domain identities
+* [aic mail domains](/reference/mail/domains/domains/)	 - Manage email sending domains
 * [aic mail inboxes](/reference/mail/inboxes/inboxes/)	 - Manage sending addresses (inboxes)
 * [aic mail messages](/reference/mail/messages/messages/)	 - List and read stored mail messages
-* [aic mail send](/reference/mail/send/)	 - Send mail via SES
+* [aic mail send](/reference/mail/send/)	 - Send mail from your domain
 

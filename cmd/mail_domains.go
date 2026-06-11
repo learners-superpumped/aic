@@ -9,7 +9,7 @@ import (
 )
 
 func newMailDomainsCmd() *cobra.Command {
-	cmd := &cobra.Command{Use: "domains", Short: "Manage SES domain identities"}
+	cmd := &cobra.Command{Use: "domains", Short: "Manage email sending domains"}
 	cmd.AddCommand(
 		newMailDomainsEnableCmd(),
 		newMailDomainsShowCmd(),
@@ -23,7 +23,7 @@ func newMailDomainsCmd() *cobra.Command {
 func newMailDomainsEnableCmd() *cobra.Command {
 	return &cobra.Command{
 		Use:   "enable <domain>",
-		Short: "Enable a domain for outbound mail (SES identity + DKIM)",
+		Short: "Enable a domain for outbound mail (sets up DKIM)",
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			a, err := appFromCmd(cmd)
@@ -52,7 +52,7 @@ func printDomainResponse(a *app.App, out *api.EnableMailDomainResponse) error {
 	if !out.AutoApplied {
 		fmt.Fprintln(w, "\nAdd these DNS records at your provider:")
 	} else {
-		fmt.Fprintln(w, "\nWe applied these records to your Route 53 hosted zone:")
+		fmt.Fprintln(w, "\nWe applied these records to your AIC-managed DNS zone:")
 	}
 	return a.Out.Print(out.Records, []string{"NAME", "TYPE", "VALUE", "TTL"}, func(v any) []string {
 		r := v.(api.MailDNSRecord)

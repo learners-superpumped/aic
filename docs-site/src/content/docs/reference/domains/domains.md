@@ -27,9 +27,9 @@ Domain names — registration and DNS
 
 * [aic](/reference/aic/)	 - Run your company on AIC — domains, email, storage, SEO, and ads
 * [aic domains buy](/reference/domains/buy/)	 - Buy a domain (charges team credits)
-* [aic domains connect](/reference/domains/connect/)	 - Bring an externally-registered domain under our DNS (creates a Route 53 hosted zone)
+* [aic domains connect](/reference/domains/connect/)	 - Bring an externally-registered domain under AIC-managed DNS
 * [aic domains contact](/reference/domains/contact/contact/)	 - Manage WHOIS contact profiles for domain registration
-* [aic domains disconnect](/reference/domains/disconnect/)	 - Remove a connected domain and delete its Route 53 hosted zone
+* [aic domains disconnect](/reference/domains/disconnect/)	 - Remove a connected domain and delete its AIC-managed DNS zone
 * [aic domains list](/reference/domains/list/)	 - List domains in the current project
 * [aic domains records](/reference/domains/records/records/)	 - Manage DNS records for a connected domain
 * [aic domains renew](/reference/domains/renew/)	 - Renew a domain (charges team credits)

@@ -1,11 +1,11 @@
 ---
 title: "aic domains connect"
-description: "Bring an externally-registered domain under our DNS (creates a Route 53 hosted zone)"
+description: "Bring an externally-registered domain under AIC-managed DNS"
 sidebar:
   label: "connect"
 ---
 
-Bring an externally-registered domain under our DNS (creates a Route 53 hosted zone)
+Bring an externally-registered domain under AIC-managed DNS
 
 ```
 aic domains connect <domain> [flags]

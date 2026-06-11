@@ -19,7 +19,7 @@ func newMailSendCmd() *cobra.Command {
 	)
 	cmd := &cobra.Command{
 		Use:   "send",
-		Short: "Send mail via SES",
+		Short: "Send mail from your domain",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			a, err := appFromCmd(cmd)
 			if err != nil {

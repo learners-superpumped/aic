@@ -1,11 +1,11 @@
 ---
 title: "aic mail send"
-description: "Send mail via SES"
+description: "Send mail from your domain"
 sidebar:
   label: "send"
 ---
 
-Send mail via SES
+Send mail from your domain
 
 ```
 aic mail send [flags]

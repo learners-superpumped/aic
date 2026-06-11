@@ -9,7 +9,7 @@ import (
 func newDomainsConnectCmd() *cobra.Command {
 	return &cobra.Command{
 		Use:   "connect <domain>",
-		Short: "Bring an externally-registered domain under our DNS (creates a Route 53 hosted zone)",
+		Short: "Bring an externally-registered domain under AIC-managed DNS",
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			a, err := appFromCmd(cmd)
@@ -77,7 +77,7 @@ func newDomainsVerifyCmd() *cobra.Command {
 func newDomainsDisconnectCmd() *cobra.Command {
 	return &cobra.Command{
 		Use:   "disconnect <domain>",
-		Short: "Remove a connected domain and delete its Route 53 hosted zone",
+		Short: "Remove a connected domain and delete its AIC-managed DNS zone",
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			a, err := appFromCmd(cmd)
