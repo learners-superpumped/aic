@@ -18,6 +18,7 @@ aic ads launch [flags]
       --body string               ad body copy
       --budget int                budget in nano-dollars (1 USD = 1 000 000 000)
       --budget-type string        budget type: daily|lifetime (default "daily")
+      --conversion-event string   pixel conversion event to optimize for, e.g. purchase (requires a pixel on the project)
       --creative-asset string     storage reference for the creative asset (bucket/key)
       --cta string                call-to-action label, e.g. 'Learn More'
       --custom-audience string    Meta custom audience ID to target

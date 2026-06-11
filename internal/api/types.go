@@ -250,16 +250,34 @@ type AdUpdateRequest struct {
 
 // AdLaunchRequest is the payload for launching an ad campaign.
 type AdLaunchRequest struct {
-	LaunchToken     string         `json:"launchToken"`
-	Objective       string         `json:"objective"`
-	BudgetType      string         `json:"budgetType"`
-	BudgetNano      int64          `json:"budgetNano"`
-	StartAt         time.Time      `json:"startAt"`
-	EndAt           *time.Time     `json:"endAt,omitempty"`
-	Targeting       AdTargeting    `json:"targeting,omitempty"`
-	Placements      []string       `json:"placements,omitempty"`
-	ProviderOptions map[string]any `json:"providerOptions,omitempty"`
-	Creative        AdCreative     `json:"creative"`
+	LaunchToken      string         `json:"launchToken"`
+	Objective        string         `json:"objective"`
+	BudgetType       string         `json:"budgetType"`
+	BudgetNano       int64          `json:"budgetNano"`
+	StartAt          time.Time      `json:"startAt"`
+	EndAt            *time.Time     `json:"endAt,omitempty"`
+	Targeting        AdTargeting    `json:"targeting,omitempty"`
+	Placements       []string       `json:"placements,omitempty"`
+	ProviderOptions  map[string]any `json:"providerOptions,omitempty"`
+	Creative         AdCreative     `json:"creative"`
+	ConversionEvent  string         `json:"conversion_event,omitempty"`
+}
+
+// Pixel is a conversion tracking pixel tied to a project.
+type Pixel struct {
+	ProjectID string `json:"project_id"`
+	PixelID   string `json:"pixel_id"`
+	Status    string `json:"status"`
+	CreatedAt string `json:"created_at"`
+}
+
+// PixelStatus is the pixel with live event stats.
+type PixelStatus struct {
+	Pixel
+	Stats struct {
+		HasRecentEvents bool   `json:"has_recent_events"`
+		LastFiredAt     string `json:"last_fired_at,omitempty"`
+	} `json:"stats"`
 }
 
 // AdSchedule is the start/end window of a campaign.

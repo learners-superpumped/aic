@@ -31,6 +31,7 @@ Manage AIC ad campaigns
 * [aic ads launch](/reference/ads/launch/)	 - Launch an ad campaign
 * [aic ads list](/reference/ads/list/)	 - List ad campaigns
 * [aic ads pause](/reference/ads/pause/)	 - Pause a running ad campaign
+* [aic ads pixel](/reference/ads/pixel/pixel/)	 - Manage conversion tracking pixels
 * [aic ads resume](/reference/ads/resume/)	 - Resume a paused ad campaign
 * [aic ads status](/reference/ads/status/)	 - Show status of an ad campaign
 * [aic ads update](/reference/ads/update/)	 - Edit a running ad campaign (budget, targeting, end date)

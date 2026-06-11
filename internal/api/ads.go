@@ -76,3 +76,29 @@ func (c *Client) DeleteAd(ctx context.Context, teamID, projectID, campaignID str
 	var out AdCampaign
 	return out, c.do(ctx, "DELETE", adsBasePath(teamID, projectID)+"/campaigns/"+url.PathEscape(campaignID), nil, &out)
 }
+
+func (c *Client) PixelCreate(ctx context.Context, teamID, projectID string) (Pixel, error) {
+	var out Pixel
+	return out, c.do(ctx, "POST", adsBasePath(teamID, projectID)+"/pixel", nil, &out)
+}
+
+func (c *Client) PixelStatus(ctx context.Context, teamID, projectID string) (PixelStatus, error) {
+	var out PixelStatus
+	return out, c.do(ctx, "GET", adsBasePath(teamID, projectID)+"/pixel", nil, &out)
+}
+
+func (c *Client) PixelList(ctx context.Context, teamID string, limit int, cursor string) (Page[Pixel], error) {
+	q := url.Values{}
+	if limit > 0 {
+		q.Set("limit", strconv.Itoa(limit))
+	}
+	if cursor != "" {
+		q.Set("cursor", cursor)
+	}
+	path := fmt.Sprintf("/v1/teams/%s/ads/pixels", url.PathEscape(teamID))
+	if e := q.Encode(); e != "" {
+		path += "?" + e
+	}
+	var out Page[Pixel]
+	return out, c.do(ctx, "GET", path, nil, &out)
+}

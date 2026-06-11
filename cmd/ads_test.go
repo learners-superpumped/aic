@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"bytes"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -127,5 +128,137 @@ func TestAdsPauseHitsCorrectPath(t *testing.T) {
 	}
 	if gotMethod != http.MethodPost || gotPath != "/v1/teams/t1/projects/p1/ads/campaigns/cmp_1/pause" {
 		t.Errorf("want POST .../pause, got %s %s", gotMethod, gotPath)
+	}
+}
+
+func TestAdsPixelCreateOutputsSnippet(t *testing.T) {
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodPost || r.URL.Path != "/v1/teams/t1/projects/p1/ads/pixel" {
+			t.Errorf("want POST .../ads/pixel, got %s %s", r.Method, r.URL.Path)
+		}
+		w.WriteHeader(http.StatusCreated)
+		w.Write([]byte(`{"project_id":"p1","pixel_id":"px_abc123","status":"active","created_at":"2026-06-11T00:00:00Z"}`))
+	}))
+	defer srv.Close()
+
+	var buf bytes.Buffer
+	r, _ := app.NewRenderer("table", &buf)
+	a := &app.App{Client: api.New(srv.URL, "tok"), Team: "t1", Project: "p1", Out: r}
+
+	pixelCmd := findSub(newAdsCmd(), "pixel")
+	create := findSub(pixelCmd, "create")
+	create.SetContext(ctxWithApp(t, a))
+	create.SetOut(&buf)
+	if err := create.RunE(create, nil); err != nil {
+		t.Fatalf("pixel create: %v", err)
+	}
+	out := buf.String()
+	if !strings.Contains(out, "px_abc123") {
+		t.Errorf("expected pixel id in output: %s", out)
+	}
+	if !strings.Contains(out, "fbq('init'") {
+		t.Errorf("expected fbq('init' snippet in output: %s", out)
+	}
+}
+
+func TestAdsPixelCreateJSONOutput(t *testing.T) {
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusCreated)
+		w.Write([]byte(`{"project_id":"p1","pixel_id":"px_json1","status":"active","created_at":"2026-06-11T00:00:00Z"}`))
+	}))
+	defer srv.Close()
+
+	var buf bytes.Buffer
+	r, _ := app.NewRenderer("json", &buf)
+	a := &app.App{Client: api.New(srv.URL, "tok"), Team: "t1", Project: "p1", Out: r}
+
+	pixelCmd := findSub(newAdsCmd(), "pixel")
+	create := findSub(pixelCmd, "create")
+	create.SetContext(ctxWithApp(t, a))
+	if err := create.RunE(create, nil); err != nil {
+		t.Fatalf("pixel create json: %v", err)
+	}
+	if !strings.Contains(buf.String(), "px_json1") {
+		t.Fatalf("expected pixel id in json output: %s", buf.String())
+	}
+}
+
+func TestAdsPixelStatusReceivingEvents(t *testing.T) {
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodGet || r.URL.Path != "/v1/teams/t1/projects/p1/ads/pixel" {
+			t.Errorf("want GET .../ads/pixel, got %s %s", r.Method, r.URL.Path)
+		}
+		w.Write([]byte(`{"project_id":"p1","pixel_id":"px_abc123","status":"active","created_at":"2026-06-11T00:00:00Z","stats":{"has_recent_events":true,"last_fired_at":"2026-06-11T01:00:00Z"}}`))
+	}))
+	defer srv.Close()
+
+	var buf bytes.Buffer
+	r, _ := app.NewRenderer("table", &buf)
+	a := &app.App{Client: api.New(srv.URL, "tok"), Team: "t1", Project: "p1", Out: r}
+
+	pixelCmd := findSub(newAdsCmd(), "pixel")
+	status := findSub(pixelCmd, "status")
+	status.SetContext(ctxWithApp(t, a))
+	status.SetOut(&buf)
+	if err := status.RunE(status, nil); err != nil {
+		t.Fatalf("pixel status: %v", err)
+	}
+	out := buf.String()
+	if !strings.Contains(out, "receiving events") {
+		t.Errorf("expected 'receiving events' in output: %s", out)
+	}
+}
+
+func TestAdsPixelListHitsTeamPath(t *testing.T) {
+	var gotPath string
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		gotPath = r.URL.Path
+		w.Write([]byte(`{"data":[{"pixel_id":"px_1","project_id":"p1","status":"active","created_at":"2026-06-11T00:00:00Z"}],"has_more":false}`))
+	}))
+	defer srv.Close()
+
+	var buf bytes.Buffer
+	r, _ := app.NewRenderer("json", &buf)
+	a := &app.App{Client: api.New(srv.URL, "tok"), Team: "t1", Project: "p1", Out: r}
+
+	pixelCmd := findSub(newAdsCmd(), "pixel")
+	list := findSub(pixelCmd, "list")
+	list.SetContext(ctxWithApp(t, a))
+	if err := list.RunE(list, nil); err != nil {
+		t.Fatalf("pixel list: %v", err)
+	}
+	if gotPath != "/v1/teams/t1/ads/pixels" {
+		t.Errorf("want /v1/teams/t1/ads/pixels, got %s", gotPath)
+	}
+	if !strings.Contains(buf.String(), "px_1") {
+		t.Fatalf("expected px_1 in output: %s", buf.String())
+	}
+}
+
+func TestAdsLaunchConversionEvent(t *testing.T) {
+	var body []byte
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		body, _ = io.ReadAll(r.Body)
+		w.WriteHeader(http.StatusCreated)
+		w.Write([]byte(`{"id":"cmp_2","status":"submitted","objective":"conversions","budget_type":"daily","budget_nano":5000000000,"created_at":"2026-06-11T00:00:00Z","updated_at":"2026-06-11T00:00:00Z"}`))
+	}))
+	defer srv.Close()
+
+	var buf bytes.Buffer
+	r, _ := app.NewRenderer("json", &buf)
+	a := &app.App{Client: api.New(srv.URL, "tok"), Team: "t1", Project: "p1", Out: r}
+
+	launch := findSub(newAdsCmd(), "launch")
+	launch.SetContext(ctxWithApp(t, a))
+	launch.Flags().Set("objective", "conversions")
+	launch.Flags().Set("budget-type", "daily")
+	launch.Flags().Set("budget", "5000000000")
+	launch.Flags().Set("conversion-event", "Purchase")
+
+	if err := launch.RunE(launch, nil); err != nil {
+		t.Fatalf("launch with conversion-event: %v", err)
+	}
+	if !strings.Contains(string(body), `"conversion_event":"Purchase"`) {
+		t.Errorf("expected conversion_event in request body: %s", body)
 	}
 }

@@ -108,6 +108,7 @@ func newAdsCmd() *cobra.Command {
 		newAdsPauseCmd(),
 		newAdsResumeCmd(),
 		newAdsDeleteCmd(),
+		newAdsPixelCmd(),
 	)
 	return cmd
 }
@@ -134,6 +135,7 @@ func newAdsLaunchCmd() *cobra.Command {
 		placements      []string
 		customAudience  string
 		noWait          bool
+		conversionEvent string
 	)
 
 	cmd := &cobra.Command{
@@ -167,12 +169,13 @@ func newAdsLaunchCmd() *cobra.Command {
 			}
 
 			req := api.AdLaunchRequest{
-				LaunchToken: tok,
-				Objective:   objective,
-				BudgetType:  budgetType,
-				BudgetNano:  budgetNano,
-				StartAt:     start,
-				Placements:  placements,
+				LaunchToken:     tok,
+				Objective:       objective,
+				BudgetType:      budgetType,
+				BudgetNano:      budgetNano,
+				StartAt:         start,
+				Placements:      placements,
+				ConversionEvent: conversionEvent,
 				Creative: api.AdCreative{
 					StorageRef:     creativeAsset,
 					Headline:       headline,
@@ -257,6 +260,7 @@ func newAdsLaunchCmd() *cobra.Command {
 	cmd.Flags().StringArrayVar(&placements, "placements", nil, "ad placements, e.g. facebook_feed instagram_stories (repeatable)")
 	cmd.Flags().StringVar(&customAudience, "custom-audience", "", "Meta custom audience ID to target")
 	cmd.Flags().BoolVar(&noWait, "no-wait", false, "return immediately with the draft instead of waiting for the ad to be prepared")
+	cmd.Flags().StringVar(&conversionEvent, "conversion-event", "", "pixel conversion event to optimize for, e.g. purchase (requires a pixel on the project)")
 
 	return cmd
 }
@@ -511,4 +515,114 @@ func newAdsDeleteCmd() *cobra.Command {
 			return a.Out.Print(c, cols, row)
 		},
 	}
+}
+
+func pixelSnippet(pixelID string) string {
+	return fmt.Sprintf(`<!-- AIC pixel -->
+<script>
+!function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;
+n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;
+t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}(window,
+document,'script','https://connect.facebook.net/en_US/fbevents.js');
+fbq('init', '%s');
+fbq('track', 'PageView');
+</script>`, pixelID)
+}
+
+func newAdsPixelCmd() *cobra.Command {
+	cmd := &cobra.Command{Use: "pixel", Short: "Manage conversion tracking pixels"}
+	cmd.AddCommand(
+		newAdsPixelCreateCmd(),
+		newAdsPixelStatusCmd(),
+		newAdsPixelListCmd(),
+	)
+	return cmd
+}
+
+func newAdsPixelCreateCmd() *cobra.Command {
+	return &cobra.Command{
+		Use:   "create",
+		Short: "Create a conversion tracking pixel for the project",
+		Args:  cobra.NoArgs,
+		RunE: func(cmd *cobra.Command, _ []string) error {
+			a, err := appFromCmd(cmd)
+			if err != nil {
+				return err
+			}
+			if err := a.RequireProject(); err != nil {
+				return err
+			}
+			p, err := a.Client.PixelCreate(cmd.Context(), a.Team, a.Project)
+			if err != nil {
+				return err
+			}
+			if a.Out.Format() != "table" {
+				return a.Out.Print(p, nil, nil)
+			}
+			fmt.Fprintf(cmd.OutOrStdout(), "Pixel: %s\n\n%s\n", p.PixelID, pixelSnippet(p.PixelID))
+			return nil
+		},
+	}
+}
+
+func newAdsPixelStatusCmd() *cobra.Command {
+	return &cobra.Command{
+		Use:   "status",
+		Short: "Show status and event activity for the project pixel",
+		Args:  cobra.NoArgs,
+		RunE: func(cmd *cobra.Command, _ []string) error {
+			a, err := appFromCmd(cmd)
+			if err != nil {
+				return err
+			}
+			if err := a.RequireProject(); err != nil {
+				return err
+			}
+			ps, err := a.Client.PixelStatus(cmd.Context(), a.Team, a.Project)
+			if err != nil {
+				return err
+			}
+			if a.Out.Format() != "table" {
+				return a.Out.Print(ps, nil, nil)
+			}
+			events := "no events yet"
+			if ps.Stats.HasRecentEvents {
+				events = "receiving events"
+			}
+			fmt.Fprintf(cmd.OutOrStdout(), "Pixel: %s\nStatus: %s\nEvents: %s\n", ps.PixelID, ps.Status, events)
+			return nil
+		},
+	}
+}
+
+func newAdsPixelListCmd() *cobra.Command {
+	var limit int
+	var cursor string
+	cmd := &cobra.Command{
+		Use:   "list",
+		Short: "List all pixels for the team",
+		Args:  cobra.NoArgs,
+		RunE: func(cmd *cobra.Command, _ []string) error {
+			a, err := appFromCmd(cmd)
+			if err != nil {
+				return err
+			}
+			if err := a.RequireTeam(); err != nil {
+				return err
+			}
+			page, err := a.Client.PixelList(cmd.Context(), a.Team, limit, cursor)
+			if err != nil {
+				return err
+			}
+			headers := []string{"PIXEL-ID", "PROJECT-ID", "STATUS", "CREATED"}
+			row := func(v any) []string {
+				p := v.(api.Pixel)
+				return []string{p.PixelID, p.ProjectID, p.Status, p.CreatedAt}
+			}
+			return printPage(cmd, a.Out, page, headers, row)
+		},
+	}
+	addPaginationFlags(cmd, &limit, &cursor)
+	return cmd
 }
