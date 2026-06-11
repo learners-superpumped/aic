@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"net/url"
-	"strconv"
 	"strings"
 )
 
@@ -45,17 +44,7 @@ func (c *Client) CreateBucket(ctx context.Context, team, project, name string) (
 }
 
 func (c *Client) ListBuckets(ctx context.Context, team, project string, limit int, cursor string) (Page[BucketDTO], error) {
-	q := url.Values{}
-	if limit > 0 {
-		q.Set("limit", strconv.Itoa(limit))
-	}
-	if cursor != "" {
-		q.Set("cursor", cursor)
-	}
-	path := storageBasePath(team, project) + "/buckets"
-	if e := q.Encode(); e != "" {
-		path += "?" + e
-	}
+	path := listPath(storageBasePath(team, project)+"/buckets", limit, cursor, nil)
 	var out Page[BucketDTO]
 	return out, c.do(ctx, "GET", path, nil, &out)
 }
@@ -81,20 +70,8 @@ func (c *Client) GetObject(ctx context.Context, team, project, bucket, key strin
 }
 
 func (c *Client) ListObjects(ctx context.Context, team, project, bucket, prefix string, limit int, cursor string) (Page[ObjectDTO], error) {
-	q := url.Values{}
-	if prefix != "" {
-		q.Set("prefix", prefix)
-	}
-	if limit > 0 {
-		q.Set("limit", strconv.Itoa(limit))
-	}
-	if cursor != "" {
-		q.Set("cursor", cursor)
-	}
-	path := storageBasePath(team, project) + "/buckets/" + url.PathEscape(bucket) + "/objects"
-	if e := q.Encode(); e != "" {
-		path += "?" + e
-	}
+	base := storageBasePath(team, project) + "/buckets/" + url.PathEscape(bucket) + "/objects"
+	path := listPath(base, limit, cursor, url.Values{"prefix": {prefix}})
 	var out Page[ObjectDTO]
 	return out, c.do(ctx, "GET", path, nil, &out)
 }

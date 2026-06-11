@@ -2,6 +2,7 @@
 package config
 
 import (
+	"bytes"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -9,6 +10,16 @@ import (
 
 	"gopkg.in/ini.v1"
 )
+
+// writeFile0600 renders an ini file to a buffer and writes it at mode 0600,
+// so the credentials are never momentarily world-readable.
+func writeFile0600(f *ini.File, path string) error {
+	var buf bytes.Buffer
+	if _, err := f.WriteTo(&buf); err != nil {
+		return err
+	}
+	return os.WriteFile(path, buf.Bytes(), 0o600)
+}
 
 // Profile is one named set of credentials + config.
 type Profile struct {
@@ -101,10 +112,7 @@ func Save(p *Profile) error {
 	if !p.ExpiresAt.IsZero() {
 		sec.Key("expires_at").SetValue(p.ExpiresAt.UTC().Format(timeFormat))
 	}
-	if err := cred.SaveTo(credPath); err != nil {
-		return err
-	}
-	if err := os.Chmod(credPath, 0o600); err != nil {
+	if err := writeFile0600(cred, credPath); err != nil {
 		return err
 	}
 
@@ -167,10 +175,9 @@ func Delete(name string) error {
 	}
 	if f, err := ini.Load(credPath); err == nil {
 		f.DeleteSection(name)
-		if err := f.SaveTo(credPath); err != nil {
+		if err := writeFile0600(f, credPath); err != nil {
 			return err
 		}
-		_ = os.Chmod(credPath, 0o600)
 	}
 	if f, err := ini.Load(cfgPath); err == nil {
 		f.DeleteSection(name)

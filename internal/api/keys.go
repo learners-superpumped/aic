@@ -4,7 +4,6 @@ import (
 	"context"
 	"net/http"
 	"net/url"
-	"strconv"
 	"time"
 )
 
@@ -40,20 +39,8 @@ func (c *Client) CreateAPIKey(ctx context.Context, teamID string, req CreateAPIK
 }
 
 func (c *Client) ListAPIKeys(ctx context.Context, teamID, projectID string, limit int, cursor string) (Page[APIKey], error) {
-	q := url.Values{}
-	if projectID != "" {
-		q.Set("project", projectID)
-	}
-	if limit > 0 {
-		q.Set("limit", strconv.Itoa(limit))
-	}
-	if cursor != "" {
-		q.Set("cursor", cursor)
-	}
-	path := "/v1/teams/" + url.PathEscape(teamID) + "/keys"
-	if len(q) > 0 {
-		path += "?" + q.Encode()
-	}
+	base := "/v1/teams/" + url.PathEscape(teamID) + "/keys"
+	path := listPath(base, limit, cursor, url.Values{"project": {projectID}})
 	var page Page[APIKey]
 	err := c.do(ctx, http.MethodGet, path, nil, &page)
 	return page, err

@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"net/url"
-	"strconv"
 	"strings"
 )
 
@@ -19,20 +18,11 @@ func (c *Client) LaunchAd(ctx context.Context, teamID, projectID string, req AdL
 }
 
 func (c *Client) ListAds(ctx context.Context, teamID, projectID string, statuses []string, limit int, cursor string) (Page[AdCampaign], error) {
-	q := url.Values{}
-	if limit > 0 {
-		q.Set("limit", strconv.Itoa(limit))
-	}
-	if cursor != "" {
-		q.Set("cursor", cursor)
-	}
+	var extra url.Values
 	if len(statuses) > 0 {
-		q.Set("status", strings.Join(statuses, ","))
+		extra = url.Values{"status": {strings.Join(statuses, ",")}}
 	}
-	path := adsBasePath(teamID, projectID) + "/campaigns"
-	if e := q.Encode(); e != "" {
-		path += "?" + e
-	}
+	path := listPath(adsBasePath(teamID, projectID)+"/campaigns", limit, cursor, extra)
 	var out Page[AdCampaign]
 	return out, c.do(ctx, "GET", path, nil, &out)
 }
@@ -92,17 +82,7 @@ func (c *Client) PixelStatus(ctx context.Context, teamID, projectID string) (Pix
 }
 
 func (c *Client) PixelList(ctx context.Context, teamID string, limit int, cursor string) (Page[Pixel], error) {
-	q := url.Values{}
-	if limit > 0 {
-		q.Set("limit", strconv.Itoa(limit))
-	}
-	if cursor != "" {
-		q.Set("cursor", cursor)
-	}
-	path := fmt.Sprintf("/v1/teams/%s/ads/pixels", url.PathEscape(teamID))
-	if e := q.Encode(); e != "" {
-		path += "?" + e
-	}
+	base := fmt.Sprintf("/v1/teams/%s/ads/pixels", url.PathEscape(teamID))
 	var out Page[Pixel]
-	return out, c.do(ctx, "GET", path, nil, &out)
+	return out, c.do(ctx, "GET", listPath(base, limit, cursor, nil), nil, &out)
 }

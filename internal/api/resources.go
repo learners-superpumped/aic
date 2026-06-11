@@ -4,7 +4,6 @@ import (
 	"context"
 	"net/http"
 	"net/url"
-	"strconv"
 )
 
 // --- Billing (scoped to a team) ---
@@ -34,17 +33,7 @@ func (c *Client) Balance(ctx context.Context, teamID string) (*CreditBalance, er
 }
 
 func (c *Client) History(ctx context.Context, teamID string, limit int, cursor string) (Page[LedgerEntry], error) {
-	q := url.Values{}
-	if limit > 0 {
-		q.Set("limit", strconv.Itoa(limit))
-	}
-	if cursor != "" {
-		q.Set("cursor", cursor)
-	}
-	path := teamBillingPath(teamID) + "/history"
-	if e := q.Encode(); e != "" {
-		path += "?" + e
-	}
+	path := listPath(teamBillingPath(teamID)+"/history", limit, cursor, nil)
 	var out Page[LedgerEntry]
 	return out, c.do(ctx, http.MethodGet, path, nil, &out)
 }
@@ -83,19 +72,8 @@ func (c *Client) SetAutoRecharge(ctx context.Context, teamID string, cfg AutoRec
 // --- Teams ---
 
 func (c *Client) ListTeams(ctx context.Context, limit int, cursor string) (Page[Team], error) {
-	q := url.Values{}
-	if limit > 0 {
-		q.Set("limit", strconv.Itoa(limit))
-	}
-	if cursor != "" {
-		q.Set("cursor", cursor)
-	}
-	path := "/v1/teams"
-	if e := q.Encode(); e != "" {
-		path += "?" + e
-	}
 	var out Page[Team]
-	return out, c.do(ctx, http.MethodGet, path, nil, &out)
+	return out, c.do(ctx, http.MethodGet, listPath("/v1/teams", limit, cursor, nil), nil, &out)
 }
 
 func (c *Client) CreateTeam(ctx context.Context, name string) (*Team, error) {
@@ -116,19 +94,8 @@ func teamProjectsPath(teamID string) string {
 }
 
 func (c *Client) ListProjects(ctx context.Context, teamID string, limit int, cursor string) (Page[Project], error) {
-	q := url.Values{}
-	if limit > 0 {
-		q.Set("limit", strconv.Itoa(limit))
-	}
-	if cursor != "" {
-		q.Set("cursor", cursor)
-	}
-	path := teamProjectsPath(teamID)
-	if e := q.Encode(); e != "" {
-		path += "?" + e
-	}
 	var out Page[Project]
-	return out, c.do(ctx, http.MethodGet, path, nil, &out)
+	return out, c.do(ctx, http.MethodGet, listPath(teamProjectsPath(teamID), limit, cursor, nil), nil, &out)
 }
 
 func (c *Client) CreateProject(ctx context.Context, teamID, name string) (*Project, error) {
@@ -174,19 +141,8 @@ func (c *Client) CreateDomainContact(ctx context.Context, teamID string, in Doma
 }
 
 func (c *Client) ListDomainContacts(ctx context.Context, teamID string, limit int, cursor string) (Page[DomainContact], error) {
-	q := url.Values{}
-	if limit > 0 {
-		q.Set("limit", strconv.Itoa(limit))
-	}
-	if cursor != "" {
-		q.Set("cursor", cursor)
-	}
-	path := teamDomainContactsPath(teamID)
-	if e := q.Encode(); e != "" {
-		path += "?" + e
-	}
 	var out Page[DomainContact]
-	return out, c.do(ctx, http.MethodGet, path, nil, &out)
+	return out, c.do(ctx, http.MethodGet, listPath(teamDomainContactsPath(teamID), limit, cursor, nil), nil, &out)
 }
 
 func (c *Client) GetDomainContact(ctx context.Context, teamID, name string) (*DomainContact, error) {
@@ -214,19 +170,8 @@ func (c *Client) RenewDomain(ctx context.Context, teamID, projectID, domain stri
 }
 
 func (c *Client) ListDomains(ctx context.Context, teamID, projectID string, limit int, cursor string) (Page[Domain], error) {
-	q := url.Values{}
-	if limit > 0 {
-		q.Set("limit", strconv.Itoa(limit))
-	}
-	if cursor != "" {
-		q.Set("cursor", cursor)
-	}
-	path := teamDomainsPath(teamID, projectID)
-	if e := q.Encode(); e != "" {
-		path += "?" + e
-	}
 	var out Page[Domain]
-	return out, c.do(ctx, http.MethodGet, path, nil, &out)
+	return out, c.do(ctx, http.MethodGet, listPath(teamDomainsPath(teamID, projectID), limit, cursor, nil), nil, &out)
 }
 
 func (c *Client) GetDomain(ctx context.Context, teamID, projectID, domain string) (*Domain, error) {
@@ -262,19 +207,8 @@ func (c *Client) CreateInvite(ctx context.Context, teamID, email, role string) (
 }
 
 func (c *Client) ListInvites(ctx context.Context, teamID string, limit int, cursor string) (Page[Invite], error) {
-	q := url.Values{}
-	if limit > 0 {
-		q.Set("limit", strconv.Itoa(limit))
-	}
-	if cursor != "" {
-		q.Set("cursor", cursor)
-	}
-	path := teamInvitesPath(teamID)
-	if e := q.Encode(); e != "" {
-		path += "?" + e
-	}
 	var out Page[Invite]
-	return out, c.do(ctx, http.MethodGet, path, nil, &out)
+	return out, c.do(ctx, http.MethodGet, listPath(teamInvitesPath(teamID), limit, cursor, nil), nil, &out)
 }
 
 func (c *Client) RevokeInvite(ctx context.Context, teamID, id string) error {
@@ -305,19 +239,8 @@ func teamMembersPath(teamID string) string {
 }
 
 func (c *Client) ListMembers(ctx context.Context, teamID string, limit int, cursor string) (Page[Member], error) {
-	q := url.Values{}
-	if limit > 0 {
-		q.Set("limit", strconv.Itoa(limit))
-	}
-	if cursor != "" {
-		q.Set("cursor", cursor)
-	}
-	path := teamMembersPath(teamID)
-	if e := q.Encode(); e != "" {
-		path += "?" + e
-	}
 	var out Page[Member]
-	return out, c.do(ctx, http.MethodGet, path, nil, &out)
+	return out, c.do(ctx, http.MethodGet, listPath(teamMembersPath(teamID), limit, cursor, nil), nil, &out)
 }
 
 func (c *Client) RemoveMember(ctx context.Context, teamID, userSub string) error {
