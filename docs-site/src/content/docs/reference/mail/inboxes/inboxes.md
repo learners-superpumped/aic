@@ -25,7 +25,7 @@ Manage sending addresses (inboxes)
 
 ### SEE ALSO
 
-* [aic mail](/reference/mail/mail/)	 - Manage outbound mail (SES identities, inboxes, send)
+* [aic mail](/reference/mail/mail/)	 - Email sending and inboxes on your domains
 * [aic mail inboxes create](/reference/mail/inboxes/create/)	 - Register a sending address on an email-enabled domain
 * [aic mail inboxes delete](/reference/mail/inboxes/delete/)	 - Delete an inbox
 * [aic mail inboxes list](/reference/mail/inboxes/list/)	 - List inboxes for a domain

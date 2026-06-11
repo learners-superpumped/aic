@@ -1,12 +1,12 @@
 ---
 title: "aic storage"
-description: "Manage AIC storage buckets and objects"
+description: "Object storage buckets"
 sidebar:
   label: "Overview"
   order: 0
 ---
 
-Manage AIC storage buckets and objects
+Object storage buckets
 
 ### Options
 
@@ -25,7 +25,7 @@ Manage AIC storage buckets and objects
 
 ### SEE ALSO
 
-* [aic](/reference/aic/)	 - aic provisions projects, domains, and email inboxes on our service
+* [aic](/reference/aic/)	 - Run your company on AIC — domains, email, storage, SEO, and ads
 * [aic storage buckets](/reference/storage/buckets/buckets/)	 - Manage buckets
 * [aic storage cat](/reference/storage/cat/)	 - Print an object to stdout
 * [aic storage cp](/reference/storage/cp/)	 - Upload or download an object

@@ -1,12 +1,12 @@
 ---
 title: "aic auth"
-description: "Authenticate and inspect your account"
+description: "Your account and login session"
 sidebar:
   label: "Overview"
   order: 0
 ---
 
-Authenticate and inspect your account
+Your account and login session
 
 ### Options
 
@@ -25,7 +25,7 @@ Authenticate and inspect your account
 
 ### SEE ALSO
 
-* [aic](/reference/aic/)	 - aic provisions projects, domains, and email inboxes on our service
+* [aic](/reference/aic/)	 - Run your company on AIC — domains, email, storage, SEO, and ads
 * [aic auth login](/reference/auth/login/)	 - Authenticate via your browser and store credentials
 * [aic auth logout](/reference/auth/logout/)	 - Remove stored credentials for a profile
 * [aic auth status](/reference/auth/status/)	 - Show your account: identity, context, credit, and teams

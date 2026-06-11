@@ -15,7 +15,7 @@ import (
 func newBillingCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "billing",
-		Short: "Manage credits and payment methods",
+		Short: "Credits, payment methods, and auto-recharge",
 	}
 	cmd.AddCommand(
 		newBillingAddCardCmd(),

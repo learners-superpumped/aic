@@ -25,7 +25,7 @@ Manage automatic credit top-up
 
 ### SEE ALSO
 
-* [aic billing](/reference/billing/billing/)	 - Manage credits and payment methods
+* [aic billing](/reference/billing/billing/)	 - Credits, payment methods, and auto-recharge
 * [aic billing auto-recharge config](/reference/billing/auto-recharge/config/)	 - Show auto-recharge configuration
 * [aic billing auto-recharge disable](/reference/billing/auto-recharge/disable/)	 - Disable automatic credit top-up
 * [aic billing auto-recharge enable](/reference/billing/auto-recharge/enable/)	 - Enable automatic credit top-up

@@ -1,11 +1,11 @@
 ---
 title: "aic upgrade"
-description: "Upgrade aic to the latest version"
+description: "Update aic to the latest version"
 sidebar:
   label: "upgrade"
 ---
 
-Upgrade aic to the latest version
+Update aic to the latest version
 
 ```
 aic upgrade [flags]
@@ -28,5 +28,5 @@ aic upgrade [flags]
 
 ### SEE ALSO
 
-* [aic](/reference/aic/)	 - aic provisions projects, domains, and email inboxes on our service
+* [aic](/reference/aic/)	 - Run your company on AIC — domains, email, storage, SEO, and ads
 

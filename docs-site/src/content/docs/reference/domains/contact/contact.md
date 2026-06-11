@@ -25,7 +25,7 @@ Manage WHOIS contact profiles for domain registration
 
 ### SEE ALSO
 
-* [aic domains](/reference/domains/domains/)	 - Search, buy, and renew domains
+* [aic domains](/reference/domains/domains/)	 - Domain names — registration and DNS
 * [aic domains contact create](/reference/domains/contact/create/)	 - Create a WHOIS contact profile
 * [aic domains contact delete](/reference/domains/contact/delete/)	 - Delete a WHOIS contact profile (refuses if used by any domain)
 * [aic domains contact list](/reference/domains/contact/list/)	 - List WHOIS contact profiles

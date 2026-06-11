@@ -1,12 +1,12 @@
 ---
 title: "aic invites"
-description: "Accept or preview team invites"
+description: "Pending invites to other teams"
 sidebar:
   label: "Overview"
   order: 0
 ---
 
-Accept or preview team invites
+Pending invites to other teams
 
 ### Options
 
@@ -25,7 +25,7 @@ Accept or preview team invites
 
 ### SEE ALSO
 
-* [aic](/reference/aic/)	 - aic provisions projects, domains, and email inboxes on our service
+* [aic](/reference/aic/)	 - Run your company on AIC — domains, email, storage, SEO, and ads
 * [aic invites accept](/reference/invites/accept/)	 - Accept a team invite
 * [aic invites show](/reference/invites/show/)	 - Preview a team invite
 

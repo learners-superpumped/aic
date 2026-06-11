@@ -28,5 +28,5 @@ aic auth status [flags]
 
 ### SEE ALSO
 
-* [aic auth](/reference/auth/auth/)	 - Authenticate and inspect your account
+* [aic auth](/reference/auth/auth/)	 - Your account and login session
 

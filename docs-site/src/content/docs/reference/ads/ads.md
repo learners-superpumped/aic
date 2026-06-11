@@ -1,12 +1,12 @@
 ---
 title: "aic ads"
-description: "Manage AIC ad campaigns"
+description: "Managed ad campaigns"
 sidebar:
   label: "Overview"
   order: 0
 ---
 
-Manage AIC ad campaigns
+Managed ad campaigns
 
 ### Options
 
@@ -25,7 +25,7 @@ Manage AIC ad campaigns
 
 ### SEE ALSO
 
-* [aic](/reference/aic/)	 - aic provisions projects, domains, and email inboxes on our service
+* [aic](/reference/aic/)	 - Run your company on AIC — domains, email, storage, SEO, and ads
 * [aic ads delete](/reference/ads/delete/)	 - Delete an ad campaign
 * [aic ads insights](/reference/ads/insights/)	 - Show performance metrics for an ad campaign
 * [aic ads launch](/reference/ads/launch/)	 - Launch an ad campaign

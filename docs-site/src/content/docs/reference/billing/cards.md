@@ -28,5 +28,5 @@ aic billing cards [flags]
 
 ### SEE ALSO
 
-* [aic billing](/reference/billing/billing/)	 - Manage credits and payment methods
+* [aic billing](/reference/billing/billing/)	 - Credits, payment methods, and auto-recharge
 

@@ -28,5 +28,5 @@ aic invites show <token> [flags]
 
 ### SEE ALSO
 
-* [aic invites](/reference/invites/invites/)	 - Accept or preview team invites
+* [aic invites](/reference/invites/invites/)	 - Pending invites to other teams
 

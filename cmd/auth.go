@@ -38,7 +38,7 @@ func ensureDefaultTeam(ctx context.Context, client *api.Client, currentDefault s
 // matching the `gh auth` / `gcloud auth` convention. `configure` is registered
 // separately at the top level — it sets the service endpoint, not your identity.
 func newAuthCmd() *cobra.Command {
-	cmd := &cobra.Command{Use: "auth", Short: "Authenticate and inspect your account"}
+	cmd := &cobra.Command{Use: "auth", Short: "Your account and login session"}
 	cmd.AddCommand(newLoginCmd(), newLogoutCmd(), newAuthStatusCmd())
 	return cmd
 }
@@ -214,7 +214,7 @@ func newConfigureCmd() *cobra.Command {
 	var endpoint, output, issuer, clientID, audienceScope string
 	cmd := &cobra.Command{
 		Use:   "configure",
-		Short: "Override the hosted-service defaults (only needed for dev/staging or self-hosted)",
+		Short: "Point aic at a non-default service (dev/self-hosted)",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			profileName, _ := cmd.Flags().GetString("profile")
 			prof, _ := config.Load(profileName)

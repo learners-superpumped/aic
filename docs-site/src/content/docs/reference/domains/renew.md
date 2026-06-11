@@ -29,5 +29,5 @@ aic domains renew <domain> [flags]
 
 ### SEE ALSO
 
-* [aic domains](/reference/domains/domains/)	 - Search, buy, and renew domains
+* [aic domains](/reference/domains/domains/)	 - Domain names — registration and DNS
 

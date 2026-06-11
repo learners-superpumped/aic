@@ -10,7 +10,7 @@ func newTeamsCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "teams",
 		Aliases: []string{"team"},
-		Short:   "Manage teams",
+		Short:   "Teams you own or belong to",
 	}
 	cmd.AddCommand(
 		newTeamsListCmd(),

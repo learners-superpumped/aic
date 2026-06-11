@@ -32,7 +32,7 @@ var resolveExecPath = func() (string, error) {
 func newUpgradeCmd() *cobra.Command {
 	return &cobra.Command{
 		Use:   "upgrade",
-		Short: "Upgrade aic to the latest version",
+		Short: "Update aic to the latest version",
 		Args:  cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			out := cmd.OutOrStdout()

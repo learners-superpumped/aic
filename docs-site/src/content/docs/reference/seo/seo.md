@@ -1,12 +1,12 @@
 ---
 title: "aic seo"
-description: "Manage AIC SEO integrations (Search Console)"
+description: "Search engine indexing and Search Console"
 sidebar:
   label: "Overview"
   order: 0
 ---
 
-Manage AIC SEO integrations (Search Console)
+Search engine indexing and Search Console
 
 ### Options
 
@@ -25,7 +25,7 @@ Manage AIC SEO integrations (Search Console)
 
 ### SEE ALSO
 
-* [aic](/reference/aic/)	 - aic provisions projects, domains, and email inboxes on our service
+* [aic](/reference/aic/)	 - Run your company on AIC — domains, email, storage, SEO, and ads
 * [aic seo search-console](/reference/seo/search-console/search-console/)	 - Query Search Console data
 * [aic seo sites](/reference/seo/sites/sites/)	 - Manage SEO sites
 

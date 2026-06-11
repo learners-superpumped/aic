@@ -25,7 +25,7 @@ Manage SES domain identities
 
 ### SEE ALSO
 
-* [aic mail](/reference/mail/mail/)	 - Manage outbound mail (SES identities, inboxes, send)
+* [aic mail](/reference/mail/mail/)	 - Email sending and inboxes on your domains
 * [aic mail domains disable](/reference/mail/domains/disable/)	 - Disable a domain (deletes identity + DKIM records)
 * [aic mail domains enable](/reference/mail/domains/enable/)	 - Enable a domain for outbound mail (SES identity + DKIM)
 * [aic mail domains list](/reference/mail/domains/list/)	 - List email-enabled domains

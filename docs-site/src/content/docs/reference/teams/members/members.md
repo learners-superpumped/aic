@@ -25,7 +25,7 @@ Manage team members
 
 ### SEE ALSO
 
-* [aic teams](/reference/teams/teams/)	 - Manage teams
+* [aic teams](/reference/teams/teams/)	 - Teams you own or belong to
 * [aic teams members list](/reference/teams/members/list/)	 - List team members
 * [aic teams members remove](/reference/teams/members/remove/)	 - Remove a member from the team
 * [aic teams members set-role](/reference/teams/members/set-role/)	 - Change a member's role

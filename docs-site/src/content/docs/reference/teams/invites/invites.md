@@ -25,7 +25,7 @@ Manage pending invites
 
 ### SEE ALSO
 
-* [aic teams](/reference/teams/teams/)	 - Manage teams
+* [aic teams](/reference/teams/teams/)	 - Teams you own or belong to
 * [aic teams invites list](/reference/teams/invites/list/)	 - List pending invites
 * [aic teams invites resend](/reference/teams/invites/resend/)	 - Rotate token and resend the invite email
 * [aic teams invites revoke](/reference/teams/invites/revoke/)	 - Revoke a pending invite

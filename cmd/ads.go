@@ -98,7 +98,7 @@ func randomToken() string {
 }
 
 func newAdsCmd() *cobra.Command {
-	cmd := &cobra.Command{Use: "ads", Short: "Manage AIC ad campaigns"}
+	cmd := &cobra.Command{Use: "ads", Short: "Managed ad campaigns"}
 	cmd.AddCommand(
 		newAdsLaunchCmd(),
 		newAdsListCmd(),

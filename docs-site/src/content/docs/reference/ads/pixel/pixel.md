@@ -25,7 +25,7 @@ Manage conversion tracking pixels
 
 ### SEE ALSO
 
-* [aic ads](/reference/ads/ads/)	 - Manage AIC ad campaigns
+* [aic ads](/reference/ads/ads/)	 - Managed ad campaigns
 * [aic ads pixel create](/reference/ads/pixel/create/)	 - Create a conversion tracking pixel for the project
 * [aic ads pixel list](/reference/ads/pixel/list/)	 - List all pixels for the team
 * [aic ads pixel status](/reference/ads/pixel/status/)	 - Show status and event activity for the project pixel

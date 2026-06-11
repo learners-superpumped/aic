@@ -40,5 +40,5 @@ aic mail send [flags]
 
 ### SEE ALSO
 
-* [aic mail](/reference/mail/mail/)	 - Manage outbound mail (SES identities, inboxes, send)
+* [aic mail](/reference/mail/mail/)	 - Email sending and inboxes on your domains
 

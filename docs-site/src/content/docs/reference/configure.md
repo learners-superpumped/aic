@@ -1,11 +1,11 @@
 ---
 title: "aic configure"
-description: "Override the hosted-service defaults (only needed for dev/staging or self-hosted)"
+description: "Point aic at a non-default service (dev/self-hosted)"
 sidebar:
   label: "configure"
 ---
 
-Override the hosted-service defaults (only needed for dev/staging or self-hosted)
+Point aic at a non-default service (dev/self-hosted)
 
 ```
 aic configure [flags]
@@ -33,5 +33,5 @@ aic configure [flags]
 
 ### SEE ALSO
 
-* [aic](/reference/aic/)	 - aic provisions projects, domains, and email inboxes on our service
+* [aic](/reference/aic/)	 - Run your company on AIC — domains, email, storage, SEO, and ads
 

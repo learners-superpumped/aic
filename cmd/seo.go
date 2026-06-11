@@ -9,7 +9,7 @@ import (
 )
 
 func newSEOCmd() *cobra.Command {
-	cmd := &cobra.Command{Use: "seo", Short: "Manage AIC SEO integrations (Search Console)"}
+	cmd := &cobra.Command{Use: "seo", Short: "Search engine indexing and Search Console"}
 	cmd.AddCommand(newSEOSitesCmd(), newSearchConsoleCmd())
 	return cmd
 }

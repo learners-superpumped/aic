@@ -28,5 +28,5 @@ aic projects create <name> [flags]
 
 ### SEE ALSO
 
-* [aic projects](/reference/projects/projects/)	 - Manage projects
+* [aic projects](/reference/projects/projects/)	 - Projects within a team
 

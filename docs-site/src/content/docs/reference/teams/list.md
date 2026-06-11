@@ -30,5 +30,5 @@ aic teams list [flags]
 
 ### SEE ALSO
 
-* [aic teams](/reference/teams/teams/)	 - Manage teams
+* [aic teams](/reference/teams/teams/)	 - Teams you own or belong to
 

@@ -7,7 +7,7 @@ import (
 )
 
 func newInvitesCmd() *cobra.Command {
-	cmd := &cobra.Command{Use: "invites", Short: "Accept or preview team invites"}
+	cmd := &cobra.Command{Use: "invites", Short: "Pending invites to other teams"}
 	cmd.AddCommand(newInvitesAcceptCmd(), newInvitesShowCmd())
 	return cmd
 }

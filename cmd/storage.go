@@ -31,7 +31,7 @@ type presignResult struct {
 }
 
 func newStorageCmd() *cobra.Command {
-	cmd := &cobra.Command{Use: "storage", Short: "Manage AIC storage buckets and objects"}
+	cmd := &cobra.Command{Use: "storage", Short: "Object storage buckets"}
 	cmd.AddCommand(newStorageBucketsCmd(), newStorageCpCmd(), newStorageLsCmd(),
 		newStorageCatCmd(), newStorageRmCmd(), newStoragePresignCmd())
 	return cmd

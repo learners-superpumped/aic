@@ -25,7 +25,7 @@ Manage DNS records for a connected domain
 
 ### SEE ALSO
 
-* [aic domains](/reference/domains/domains/)	 - Search, buy, and renew domains
+* [aic domains](/reference/domains/domains/)	 - Domain names — registration and DNS
 * [aic domains records add](/reference/domains/records/add/)	 - Add a DNS record (fails if it already exists)
 * [aic domains records delete](/reference/domains/records/delete/)	 - Delete a DNS record set
 * [aic domains records import](/reference/domains/records/import/)	 - Best-effort scan existing records and apply to the zone

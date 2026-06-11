@@ -30,5 +30,5 @@ aic storage ls <bucket>[/<prefix>] [flags]
 
 ### SEE ALSO
 
-* [aic storage](/reference/storage/storage/)	 - Manage AIC storage buckets and objects
+* [aic storage](/reference/storage/storage/)	 - Object storage buckets
 

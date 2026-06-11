@@ -1,12 +1,12 @@
 ---
 title: "aic mail"
-description: "Manage outbound mail (SES identities, inboxes, send)"
+description: "Email sending and inboxes on your domains"
 sidebar:
   label: "Overview"
   order: 0
 ---
 
-Manage outbound mail (SES identities, inboxes, send)
+Email sending and inboxes on your domains
 
 ### Options
 
@@ -25,7 +25,7 @@ Manage outbound mail (SES identities, inboxes, send)
 
 ### SEE ALSO
 
-* [aic](/reference/aic/)	 - aic provisions projects, domains, and email inboxes on our service
+* [aic](/reference/aic/)	 - Run your company on AIC — domains, email, storage, SEO, and ads
 * [aic mail domains](/reference/mail/domains/domains/)	 - Manage SES domain identities
 * [aic mail inboxes](/reference/mail/inboxes/inboxes/)	 - Manage sending addresses (inboxes)
 * [aic mail messages](/reference/mail/messages/messages/)	 - List and read stored mail messages

@@ -9,7 +9,7 @@ import (
 )
 
 func newDomainsCmd() *cobra.Command {
-	cmd := &cobra.Command{Use: "domains", Aliases: []string{"domain"}, Short: "Search, buy, and renew domains"}
+	cmd := &cobra.Command{Use: "domains", Aliases: []string{"domain"}, Short: "Domain names — registration and DNS"}
 	cmd.AddCommand(
 		newDomainsSearchCmd(),
 		newDomainsBuyCmd(),

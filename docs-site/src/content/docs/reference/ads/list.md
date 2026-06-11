@@ -31,5 +31,5 @@ aic ads list [flags]
 
 ### SEE ALSO
 
-* [aic ads](/reference/ads/ads/)	 - Manage AIC ad campaigns
+* [aic ads](/reference/ads/ads/)	 - Managed ad campaigns
 

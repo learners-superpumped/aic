@@ -12,7 +12,7 @@ func newProjectsCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "projects",
 		Aliases: []string{"project", "proj"},
-		Short:   "Manage projects",
+		Short:   "Projects within a team",
 	}
 	cmd.AddCommand(
 		newProjectsListCmd(),

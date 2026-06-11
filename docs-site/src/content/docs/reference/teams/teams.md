@@ -1,12 +1,12 @@
 ---
 title: "aic teams"
-description: "Manage teams"
+description: "Teams you own or belong to"
 sidebar:
   label: "Overview"
   order: 0
 ---
 
-Manage teams
+Teams you own or belong to
 
 ### Options
 
@@ -25,7 +25,7 @@ Manage teams
 
 ### SEE ALSO
 
-* [aic](/reference/aic/)	 - aic provisions projects, domains, and email inboxes on our service
+* [aic](/reference/aic/)	 - Run your company on AIC — domains, email, storage, SEO, and ads
 * [aic teams create](/reference/teams/create/)	 - Create a team
 * [aic teams invite](/reference/teams/invite/)	 - Invite a user to the current team
 * [aic teams invites](/reference/teams/invites/invites/)	 - Manage pending invites

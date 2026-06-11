@@ -1,12 +1,12 @@
 ---
 title: "aic domains"
-description: "Search, buy, and renew domains"
+description: "Domain names — registration and DNS"
 sidebar:
   label: "Overview"
   order: 0
 ---
 
-Search, buy, and renew domains
+Domain names — registration and DNS
 
 ### Options
 
@@ -25,7 +25,7 @@ Search, buy, and renew domains
 
 ### SEE ALSO
 
-* [aic](/reference/aic/)	 - aic provisions projects, domains, and email inboxes on our service
+* [aic](/reference/aic/)	 - Run your company on AIC — domains, email, storage, SEO, and ads
 * [aic domains buy](/reference/domains/buy/)	 - Buy a domain (charges team credits)
 * [aic domains connect](/reference/domains/connect/)	 - Bring an externally-registered domain under our DNS (creates a Route 53 hosted zone)
 * [aic domains contact](/reference/domains/contact/contact/)	 - Manage WHOIS contact profiles for domain registration

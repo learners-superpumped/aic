@@ -17,6 +17,12 @@ import (
 // for local builds.
 var Version = "dev"
 
+const (
+	groupWorkspace = "workspace"
+	groupResources = "resources"
+	groupCLI       = "cli"
+)
+
 // SetVersion overrides Version (used in tests and by main before Execute).
 func SetVersion(v string) { Version = v }
 
@@ -87,7 +93,7 @@ func validateOutputFormat(format string) error {
 func NewRootCmd() *cobra.Command {
 	root := &cobra.Command{
 		Use:           "aic",
-		Short:         "aic provisions projects, domains, and email inboxes on our service",
+		Short:         "Run your company on AIC — domains, email, storage, SEO, and ads",
 		Version:       Version,
 		SilenceUsage:  true,
 		SilenceErrors: true,
@@ -159,21 +165,33 @@ func NewRootCmd() *cobra.Command {
 		return nil
 	}
 
-	// Identity grouped under `aic auth` (login/logout/status). `configure` is a
-	// service-endpoint setting, not an identity command, so it stays top-level.
-	root.AddCommand(newAuthCmd())
-	root.AddCommand(newConfigureCmd())
+	root.AddGroup(
+		&cobra.Group{ID: groupWorkspace, Title: "Workspace (account, org, billing):"},
+		&cobra.Group{ID: groupResources, Title: "Resources (what your agents operate):"},
+		&cobra.Group{ID: groupCLI, Title: "CLI:"},
+	)
 
-	root.AddCommand(newTeamsCmd())
-	root.AddCommand(newProjectsCmd())
-	root.AddCommand(newDomainsCmd())
-	root.AddCommand(newMailCmd())
-	root.AddCommand(newStorageCmd())
-	root.AddCommand(newSEOCmd())
-	root.AddCommand(newBillingCmd())
-	root.AddCommand(newInvitesCmd())
-	root.AddCommand(newUpgradeCmd())
-	root.AddCommand(newAdsCmd())
+	add := func(c *cobra.Command, group string) {
+		c.GroupID = group
+		root.AddCommand(c)
+	}
+
+	add(newAuthCmd(), groupWorkspace)
+	add(newTeamsCmd(), groupWorkspace)
+	add(newInvitesCmd(), groupWorkspace)
+	add(newProjectsCmd(), groupWorkspace)
+	add(newBillingCmd(), groupWorkspace)
+
+	add(newDomainsCmd(), groupResources)
+	add(newMailCmd(), groupResources)
+	add(newStorageCmd(), groupResources)
+	add(newSEOCmd(), groupResources)
+	add(newAdsCmd(), groupResources)
+
+	add(newConfigureCmd(), groupCLI)
+	add(newUpgradeCmd(), groupCLI)
+
+	root.CompletionOptions.HiddenDefaultCmd = true
 
 	return root
 }

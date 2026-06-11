@@ -25,7 +25,7 @@ Query Search Console data
 
 ### SEE ALSO
 
-* [aic seo](/reference/seo/seo/)	 - Manage AIC SEO integrations (Search Console)
+* [aic seo](/reference/seo/seo/)	 - Search engine indexing and Search Console
 * [aic seo search-console inspect](/reference/seo/search-console/inspect/)	 - Inspect a URL's index status
 * [aic seo search-console query](/reference/seo/search-console/query/)	 - Search analytics
 * [aic seo search-console sitemaps](/reference/seo/search-console/sitemaps/sitemaps/)	 - List, submit, or delete sitemaps

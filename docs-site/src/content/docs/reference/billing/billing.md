@@ -1,12 +1,12 @@
 ---
 title: "aic billing"
-description: "Manage credits and payment methods"
+description: "Credits, payment methods, and auto-recharge"
 sidebar:
   label: "Overview"
   order: 0
 ---
 
-Manage credits and payment methods
+Credits, payment methods, and auto-recharge
 
 ### Options
 
@@ -25,7 +25,7 @@ Manage credits and payment methods
 
 ### SEE ALSO
 
-* [aic](/reference/aic/)	 - aic provisions projects, domains, and email inboxes on our service
+* [aic](/reference/aic/)	 - Run your company on AIC — domains, email, storage, SEO, and ads
 * [aic billing add-card](/reference/billing/add-card/)	 - Register a card via your browser
 * [aic billing auto-recharge](/reference/billing/auto-recharge/auto-recharge/)	 - Manage automatic credit top-up
 * [aic billing balance](/reference/billing/balance/)	 - Show your credit balance

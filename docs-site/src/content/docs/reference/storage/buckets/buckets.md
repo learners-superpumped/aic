@@ -25,7 +25,7 @@ Manage buckets
 
 ### SEE ALSO
 
-* [aic storage](/reference/storage/storage/)	 - Manage AIC storage buckets and objects
+* [aic storage](/reference/storage/storage/)	 - Object storage buckets
 * [aic storage buckets create](/reference/storage/buckets/create/)	 - Create a bucket
 * [aic storage buckets ls](/reference/storage/buckets/ls/)	 - List buckets
 * [aic storage buckets rm](/reference/storage/buckets/rm/)	 - Delete an empty bucket

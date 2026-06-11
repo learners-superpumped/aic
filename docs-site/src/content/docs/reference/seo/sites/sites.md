@@ -25,7 +25,7 @@ Manage SEO sites
 
 ### SEE ALSO
 
-* [aic seo](/reference/seo/seo/)	 - Manage AIC SEO integrations (Search Console)
+* [aic seo](/reference/seo/seo/)	 - Search engine indexing and Search Console
 * [aic seo sites add](/reference/seo/sites/add/)	 - Register a site
 * [aic seo sites ls](/reference/seo/sites/ls/)	 - List sites
 * [aic seo sites rm](/reference/seo/sites/rm/)	 - Deregister a site
