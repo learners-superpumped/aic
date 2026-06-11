@@ -107,8 +107,9 @@ func rawBody(body []byte, contentType string) bodyFn {
 }
 
 // doOnce performs a single HTTP request and returns its status, response
-// headers, body, and any transport-level error.
-func (c *Client) doOnce(ctx context.Context, method, path string, mk bodyFn) (int, http.Header, []byte, error) {
+// headers, body, and any transport-level error. extraHeaders, when non-nil, are
+// set on the request (e.g. a per-request Idempotency-Key).
+func (c *Client) doOnce(ctx context.Context, method, path string, mk bodyFn, extraHeaders http.Header) (int, http.Header, []byte, error) {
 	reader, contentType, err := mk()
 	if err != nil {
 		return 0, nil, nil, err
@@ -122,6 +123,11 @@ func (c *Client) doOnce(ctx context.Context, method, path string, mk bodyFn) (in
 	}
 	if contentType != "" {
 		req.Header.Set("Content-Type", contentType)
+	}
+	for k, vs := range extraHeaders {
+		for _, v := range vs {
+			req.Header.Set(k, v)
+		}
 	}
 	resp, err := c.http.Do(req)
 	if err != nil {
@@ -139,13 +145,20 @@ func (c *Client) doOnce(ctx context.Context, method, path string, mk bodyFn) (in
 // single retry path shared by do (JSON), doRaw (binary GET), and doBytes
 // (binary upload).
 func (c *Client) doRequest(ctx context.Context, method, path string, mk bodyFn) (int, http.Header, []byte, error) {
-	status, hdr, data, err := c.doOnce(ctx, method, path, mk)
+	return c.doRequestWithHeaders(ctx, method, path, mk, nil)
+}
+
+// doRequestWithHeaders is doRequest with per-request headers; the same key is
+// reused on the 401 refresh-and-retry, so a client-supplied Idempotency-Key
+// survives the transparent retry.
+func (c *Client) doRequestWithHeaders(ctx context.Context, method, path string, mk bodyFn, extraHeaders http.Header) (int, http.Header, []byte, error) {
+	status, hdr, data, err := c.doOnce(ctx, method, path, mk, extraHeaders)
 	if err != nil {
 		return 0, nil, nil, err
 	}
 	if status == http.StatusUnauthorized && c.refreshFn != nil {
 		if rerr := c.refresh(ctx); rerr == nil {
-			status, hdr, data, err = c.doOnce(ctx, method, path, mk)
+			status, hdr, data, err = c.doOnce(ctx, method, path, mk, extraHeaders)
 			if err != nil {
 				return 0, nil, nil, err
 			}
@@ -182,7 +195,12 @@ func (c *Client) refresh(ctx context.Context) error {
 }
 
 func (c *Client) do(ctx context.Context, method, path string, body, out any) error {
-	status, _, data, err := c.doRequest(ctx, method, path, jsonBody(body))
+	return c.doWithHeaders(ctx, method, path, body, out, nil)
+}
+
+// doWithHeaders is do with per-request headers (e.g. Idempotency-Key).
+func (c *Client) doWithHeaders(ctx context.Context, method, path string, body, out any, extraHeaders http.Header) error {
+	status, _, data, err := c.doRequestWithHeaders(ctx, method, path, jsonBody(body), extraHeaders)
 	if err != nil {
 		return err
 	}

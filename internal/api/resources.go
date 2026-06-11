@@ -2,9 +2,20 @@ package api
 
 import (
 	"context"
+	"crypto/rand"
+	"encoding/hex"
 	"net/http"
 	"net/url"
 )
+
+// newIdempotencyKey returns a fresh random key for a single command invocation.
+// One key per Topup call means the transport's transparent retries reuse it, so a
+// timed-out/lost-response retry charges the card exactly once.
+func newIdempotencyKey() string {
+	b := make([]byte, 16)
+	_, _ = rand.Read(b)
+	return hex.EncodeToString(b)
+}
 
 // --- Billing (scoped to a team) ---
 
@@ -56,8 +67,9 @@ func (c *Client) Usage(ctx context.Context, teamID, from, to string) (*UsageSumm
 
 func (c *Client) Topup(ctx context.Context, teamID string, amountCents int64) (*TopupResult, error) {
 	var res TopupResult
-	return &res, c.do(ctx, http.MethodPost, teamBillingPath(teamID)+"/topup",
-		map[string]int64{"amount_cents": amountCents}, &res)
+	headers := http.Header{"Idempotency-Key": []string{newIdempotencyKey()}}
+	return &res, c.doWithHeaders(ctx, http.MethodPost, teamBillingPath(teamID)+"/topup",
+		map[string]int64{"amount_cents": amountCents}, &res, headers)
 }
 
 func (c *Client) GetAutoRecharge(ctx context.Context, teamID string) (*AutoRechargeConfig, error) {

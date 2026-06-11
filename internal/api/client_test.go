@@ -29,6 +29,24 @@ func TestDoSendsAuthHeaderAndDecodes(t *testing.T) {
 	}
 }
 
+func TestTopupSendsIdempotencyKeyHeader(t *testing.T) {
+	var gotKey string
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		gotKey = r.Header.Get("Idempotency-Key")
+		w.Header().Set("Content-Type", "application/json")
+		w.Write([]byte(`{"status":"succeeded","payment_intent_id":"pi_1"}`))
+	}))
+	defer srv.Close()
+
+	c := New(srv.URL, "tok")
+	if _, err := c.Topup(context.Background(), "team1", 5000); err != nil {
+		t.Fatalf("topup: %v", err)
+	}
+	if gotKey == "" {
+		t.Fatalf("Idempotency-Key header was not sent")
+	}
+}
+
 func TestDoStructuredError(t *testing.T) {
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusForbidden)
