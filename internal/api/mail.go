@@ -88,17 +88,7 @@ func (c *Client) VerifyMailDomain(ctx context.Context, teamID, projectID, name s
 }
 
 func (c *Client) ListMailDomains(ctx context.Context, teamID, projectID string, limit int, cursor string) (Page[MailIdentity], error) {
-	q := url.Values{}
-	if limit > 0 {
-		q.Set("limit", fmt.Sprintf("%d", limit))
-	}
-	if cursor != "" {
-		q.Set("cursor", cursor)
-	}
-	path := mailBasePath(teamID, projectID) + "/domains"
-	if enc := q.Encode(); enc != "" {
-		path += "?" + enc
-	}
+	path := listPath(mailBasePath(teamID, projectID)+"/domains", limit, cursor, nil)
 	var out Page[MailIdentity]
 	return out, c.do(ctx, "GET", path, nil, &out)
 }
@@ -114,19 +104,9 @@ func (c *Client) CreateMailInbox(ctx context.Context, teamID, projectID, domain,
 }
 
 func (c *Client) ListMailInboxes(ctx context.Context, teamID, projectID, domain string, limit int, cursor string) (Page[MailInbox], error) {
-	q := url.Values{}
-	if limit > 0 {
-		q.Set("limit", fmt.Sprintf("%d", limit))
-	}
-	if cursor != "" {
-		q.Set("cursor", cursor)
-	}
-	path := mailBasePath(teamID, projectID) + "/domains/" + url.PathEscape(domain) + "/inboxes"
-	if enc := q.Encode(); enc != "" {
-		path += "?" + enc
-	}
+	base := mailBasePath(teamID, projectID) + "/domains/" + url.PathEscape(domain) + "/inboxes"
 	var out Page[MailInbox]
-	return out, c.do(ctx, "GET", path, nil, &out)
+	return out, c.do(ctx, "GET", listPath(base, limit, cursor, nil), nil, &out)
 }
 
 func (c *Client) ShowMailInbox(ctx context.Context, teamID, projectID, domain, local string) (*MailInbox, error) {
@@ -181,26 +161,8 @@ type MailMessageDetail struct {
 }
 
 func (c *Client) ListMailMessages(ctx context.Context, teamID, projectID, direction, inbox, from string, limit int, cursor string) (Page[MailMessage], error) {
-	q := url.Values{}
-	if direction != "" {
-		q.Set("direction", direction)
-	}
-	if inbox != "" {
-		q.Set("inbox", inbox)
-	}
-	if from != "" {
-		q.Set("from", from)
-	}
-	if limit > 0 {
-		q.Set("limit", fmt.Sprintf("%d", limit))
-	}
-	if cursor != "" {
-		q.Set("cursor", cursor)
-	}
-	path := mailBasePath(teamID, projectID) + "/messages"
-	if enc := q.Encode(); enc != "" {
-		path += "?" + enc
-	}
+	extra := url.Values{"direction": {direction}, "inbox": {inbox}, "from": {from}}
+	path := listPath(mailBasePath(teamID, projectID)+"/messages", limit, cursor, extra)
 	var out Page[MailMessage]
 	return out, c.do(ctx, "GET", path, nil, &out)
 }
