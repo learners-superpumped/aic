@@ -39,7 +39,7 @@ func waitForLaunch(ctx context.Context, a *app.App, id string) (api.AdCampaign, 
 }
 
 func adCampaignRows() ([]string, func(any) []string) {
-	return []string{"ID", "STATUS", "OBJECTIVE", "BUDGET-NANO", "SPENT-NANO", "RESERVED-NANO", "EXTERNAL-ID", "REASON", "CREATED"},
+	return []string{"ID", "STATUS", "OBJECTIVE", "BUDGET-NANO", "SPENT-NANO", "RESERVED-NANO", "REASON", "CREATED"},
 		func(v any) []string {
 			c := v.(api.AdCampaign)
 			return []string{
@@ -47,7 +47,7 @@ func adCampaignRows() ([]string, func(any) []string) {
 				strconv.FormatInt(c.BudgetNano, 10),
 				strconv.FormatInt(c.SpentNano, 10),
 				strconv.FormatInt(c.ReservedNano, 10),
-				dashIfEmpty(c.ExternalID), dashIfEmpty(truncate(c.StatusReason, 60)),
+				dashIfEmpty(truncate(c.StatusReason, 60)),
 				c.CreatedAt.Format(time.RFC3339),
 			}
 		}
@@ -268,6 +268,7 @@ func newAdsLaunchCmd() *cobra.Command {
 func newAdsListCmd() *cobra.Command {
 	var limit int
 	var cursor string
+	var statuses []string
 	cmd := &cobra.Command{
 		Use:   "list",
 		Short: "List ad campaigns",
@@ -280,7 +281,7 @@ func newAdsListCmd() *cobra.Command {
 			if err := a.RequireProject(); err != nil {
 				return err
 			}
-			page, err := a.Client.ListAds(cmd.Context(), a.Team, a.Project, limit, cursor)
+			page, err := a.Client.ListAds(cmd.Context(), a.Team, a.Project, statuses, limit, cursor)
 			if err != nil {
 				return err
 			}
@@ -288,6 +289,7 @@ func newAdsListCmd() *cobra.Command {
 			return printPage(cmd, a.Out, page, cols, row)
 		},
 	}
+	cmd.Flags().StringSliceVar(&statuses, "status", nil, "filter by status (repeatable or comma-separated): draft, submitted, in_review, active, paused, completed, rejected, failed, suspended")
 	addPaginationFlags(cmd, &limit, &cursor)
 	return cmd
 }

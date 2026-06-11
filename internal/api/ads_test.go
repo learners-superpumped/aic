@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
+	"net/url"
 	"testing"
 	"time"
 )
@@ -85,7 +86,7 @@ func TestListAdsHitsCorrectPath(t *testing.T) {
 	defer srv.Close()
 
 	c := New(srv.URL, "tok")
-	got, err := c.ListAds(context.Background(), "team_1", "proj_1", 0, "")
+	got, err := c.ListAds(context.Background(), "team_1", "proj_1", nil, 0, "")
 	if err != nil {
 		t.Fatalf("ListAds: %v", err)
 	}
@@ -94,6 +95,23 @@ func TestListAdsHitsCorrectPath(t *testing.T) {
 	}
 	if len(got.Data) != 2 || got.Data[1].Status != "paused" {
 		t.Errorf("list decode mismatch: %+v", got)
+	}
+}
+
+func TestListAdsSendsStatusFilter(t *testing.T) {
+	var gotQuery url.Values
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		gotQuery = r.URL.Query()
+		w.Write([]byte(`{"data":[],"has_more":false}`))
+	}))
+	defer srv.Close()
+
+	c := New(srv.URL, "tok")
+	if _, err := c.ListAds(context.Background(), "team_1", "proj_1", []string{"active", "paused"}, 0, ""); err != nil {
+		t.Fatalf("ListAds: %v", err)
+	}
+	if got := gotQuery["status"]; len(got) != 1 || got[0] != "active,paused" {
+		t.Errorf("status query = %v, want [active,paused]", got)
 	}
 }
 

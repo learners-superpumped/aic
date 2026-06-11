@@ -298,7 +298,6 @@ type AdCampaign struct {
 	Schedule     AdSchedule `json:"schedule" yaml:"schedule"`
 	Status       string     `json:"status" yaml:"status"`
 	StatusReason string     `json:"status_reason,omitempty" yaml:"status_reason,omitempty"`
-	ExternalID   string     `json:"external_id,omitempty" yaml:"external_id,omitempty"`
 	LaunchToken  string     `json:"launch_token" yaml:"launch_token"`
 	// SpentNano is actual spend drawn from Meta; ReservedNano is still encumbered.
 	SpentNano    int64     `json:"spent_nano" yaml:"spent_nano"`
