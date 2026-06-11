@@ -181,6 +181,7 @@ func NewRootCmd() *cobra.Command {
 	add(newInvitesCmd(), groupWorkspace)
 	add(newProjectsCmd(), groupWorkspace)
 	add(newBillingCmd(), groupWorkspace)
+	add(newKeysCmd(), groupWorkspace)
 
 	add(newDomainsCmd(), groupResources)
 	add(newMailCmd(), groupResources)

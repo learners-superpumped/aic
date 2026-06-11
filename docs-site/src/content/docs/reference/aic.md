@@ -25,6 +25,7 @@ Run your company on AIC — domains, email, storage, SEO, and ads
 * [aic configure](/reference/configure/)	 - Point aic at a non-default service (dev/self-hosted)
 * [aic domains](/reference/domains/domains/)	 - Domain names — registration and DNS
 * [aic invites](/reference/invites/invites/)	 - Pending invites to other teams
+* [aic keys](/reference/keys/keys/)	 - Manage AIC API keys (scoped machine credentials)
 * [aic mail](/reference/mail/mail/)	 - Email sending and inboxes on your domains
 * [aic projects](/reference/projects/projects/)	 - Projects within a team
 * [aic seo](/reference/seo/seo/)	 - Search engine indexing and Search Console
