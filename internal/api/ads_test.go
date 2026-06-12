@@ -3,6 +3,7 @@ package api
 import (
 	"context"
 	"encoding/json"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
@@ -163,5 +164,45 @@ func TestDeleteAdSendsDelete(t *testing.T) {
 	}
 	if gotMethod != http.MethodDelete || gotPath != "/v1/teams/team_1/projects/proj_1/ads/campaigns/cmp_1" {
 		t.Errorf("want DELETE .../campaigns/cmp_1, got %s %s", gotMethod, gotPath)
+	}
+}
+
+// TestSendConversionsRelaysVerbatim guards the verbatim contract: SendConversions
+// uses doRequest (not do), so a >=400 upstream response is returned as
+// status+body, NOT converted to a typed error — letting Meta's own error body
+// print as-is. A refactor to c.do would silently break this.
+func TestSendConversionsRelaysVerbatim(t *testing.T) {
+	const respBody = `{"error":{"message":"bad event"}}`
+	var gotMethod, gotPath string
+	var gotReqBody []byte
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		gotMethod = r.Method
+		gotPath = r.URL.Path
+		gotReqBody, _ = io.ReadAll(r.Body)
+		w.WriteHeader(http.StatusBadRequest)
+		_, _ = w.Write([]byte(respBody))
+	}))
+	defer srv.Close()
+
+	payload := []byte(`{"data":[{}]}`)
+	status, body, err := New(srv.URL, "tok").
+		SendConversions(context.Background(), "team_1", "proj_1", payload)
+	if err != nil {
+		t.Fatalf("SendConversions returned an error, want verbatim relay: %v", err)
+	}
+	if gotMethod != http.MethodPost {
+		t.Errorf("method: want POST, got %s", gotMethod)
+	}
+	if gotPath != "/v1/teams/team_1/projects/proj_1/ads/meta/conversions" {
+		t.Errorf("path: want .../ads/meta/conversions, got %s", gotPath)
+	}
+	if status != http.StatusBadRequest {
+		t.Errorf("status: want 400, got %d", status)
+	}
+	if string(body) != respBody {
+		t.Errorf("body: want %q, got %q", respBody, string(body))
+	}
+	if string(gotReqBody) != string(payload) {
+		t.Errorf("forwarded request body: want %q, got %q", payload, gotReqBody)
 	}
 }
