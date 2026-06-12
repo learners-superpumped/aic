@@ -25,11 +25,10 @@ type APIKey struct {
 }
 
 type CreateAPIKeyRequest struct {
-	Scopes     []string `json:"scopes,omitempty"`
-	FullAccess bool     `json:"full_access,omitempty"`
-	ProjectID  string   `json:"project_id,omitempty"`
-	Name       string   `json:"name,omitempty"`
-	ExpiresIn  int64    `json:"expires_in_seconds,omitempty"`
+	Scopes    []string `json:"scopes,omitempty"`
+	ProjectID string   `json:"project_id,omitempty"`
+	Name      string   `json:"name,omitempty"`
+	ExpiresIn int64    `json:"expires_in_seconds,omitempty"`
 }
 
 func (c *Client) CreateAPIKey(ctx context.Context, teamID string, req CreateAPIKeyRequest) (APIKey, error) {

@@ -19,26 +19,31 @@ func newKeysCmd() *cobra.Command {
 	return cmd
 }
 
-const fullAccessBanner = `WARNING: this is a FULL-ACCESS key. It can act with the team owner's
+const teamFullAccessBanner = `WARNING: this is a TEAM FULL-ACCESS key. It can act with the team owner's
 authority on every resource in this team, INCLUDING SPEND (ads, billing,
 domain purchases). Store it like a password and revoke it immediately if
 it is ever exposed.`
 
+const projectFullAccessBanner = `WARNING: this is a PROJECT FULL-ACCESS key. It can act with full authority
+on every primitive in the bound project, INCLUDING SPEND (ads, domain
+purchases). It cannot touch other projects or team-level billing. Store it
+like a password and revoke it immediately if it is ever exposed.`
+
 func newKeysCreateCmd() *cobra.Command {
 	var (
-		scopes     []string
-		fullAccess bool
-		name       string
-		expiresIn  string
+		scopes    []string
+		name      string
+		expiresIn string
 	)
 	cmd := &cobra.Command{
 		Use:   "create",
 		Short: "Create an AIC API key (shown once — copy it immediately)",
 		Long: `Create an AIC API key for server-to-server calls.
 
-Scoped keys carry one or more --scope values (all project-level or all
-team-level). Project-level scopes require --project. --full-access mints a
-key with the team owner's full authority instead (no --scope/--project).
+Keys carry one or more --scope values. Project-level scopes require --project.
+Use --scope '*' for a full-access key: with --project it is project-owner over
+that project's primitives; without --project it is team-owner over the whole
+team. The full-access scope cannot be combined with other scopes.
 
 The raw key is printed once and cannot be recovered; rotate by creating a
 new key and revoking the old one.`,
@@ -51,39 +56,37 @@ new key and revoking the old one.`,
 			if err := a.RequireTeam(); err != nil {
 				return err
 			}
-			if fullAccess && len(scopes) > 0 {
-				return fmt.Errorf("--full-access cannot be combined with --scope")
+			if len(scopes) == 0 {
+				return fmt.Errorf("pass at least one --scope (use --scope '*' for a full-access key)")
 			}
-			if !fullAccess && len(scopes) == 0 {
-				return fmt.Errorf("pass at least one --scope, or --full-access")
+			if isStarScope(scopes) && len(scopes) > 1 {
+				return fmt.Errorf("--scope '*' cannot be combined with other scopes")
 			}
 			expSecs, err := parseExpiresIn(expiresIn)
 			if err != nil {
 				return err
 			}
-			// Bind to a project only when --project was explicitly set on the
-			// command line: a profile's default project must never silently
-			// bind a credential.
+			// only bind if --project was explicitly passed, never from the profile default
 			projectID := ""
 			if cmd.Flags().Changed("project") {
 				projectID = a.Project
 			}
-			if fullAccess && projectID != "" {
-				return fmt.Errorf("--full-access keys are team-level; do not pass --project")
-			}
 			k, err := a.Client.CreateAPIKey(cmd.Context(), a.Team, api.CreateAPIKeyRequest{
-				Scopes:     scopes,
-				FullAccess: fullAccess,
-				ProjectID:  projectID,
-				Name:       name,
-				ExpiresIn:  expSecs,
+				Scopes:    scopes,
+				ProjectID: projectID,
+				Name:      name,
+				ExpiresIn: expSecs,
 			})
 			if err != nil {
 				return err
 			}
 			out := cmd.OutOrStdout()
-			if fullAccess {
-				fmt.Fprintln(out, fullAccessBanner)
+			if isStarScope(scopes) {
+				if projectID != "" {
+					fmt.Fprintln(out, projectFullAccessBanner)
+				} else {
+					fmt.Fprintln(out, teamFullAccessBanner)
+				}
 				fmt.Fprintln(out)
 			}
 			fmt.Fprintf(out, "Created AIC API key %s (prefix %s)\n\n  %s\n\nCopy it now — it will not be shown again.\n",
@@ -92,13 +95,20 @@ new key and revoking the old one.`,
 		},
 	}
 	cmd.Flags().StringArrayVar(&scopes, "scope", nil,
-		"capability scope, repeatable (e.g. --scope storage:read --scope storage:write)")
-	cmd.Flags().BoolVar(&fullAccess, "full-access", false,
-		"mint a full-access key acting with the team owner's authority (use with care)")
+		"capability scope, repeatable (e.g. --scope storage:read --scope storage:write, or --scope '*')")
 	cmd.Flags().StringVar(&name, "name", "", "human label for the key")
 	cmd.Flags().StringVar(&expiresIn, "expires-in", "",
 		"key lifetime, e.g. 90d, 12h, 30m (default: no expiry; manage by revoke)")
 	return cmd
+}
+
+func isStarScope(scopes []string) bool {
+	for _, s := range scopes {
+		if s == "*" {
+			return true
+		}
+	}
+	return false
 }
 
 func newKeysListCmd() *cobra.Command {

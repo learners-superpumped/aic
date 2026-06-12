@@ -11,9 +11,10 @@ Create an AIC API key (shown once — copy it immediately)
 
 Create an AIC API key for server-to-server calls.
 
-Scoped keys carry one or more --scope values (all project-level or all
-team-level). Project-level scopes require --project. --full-access mints a
-key with the team owner's full authority instead (no --scope/--project).
+Keys carry one or more --scope values. Project-level scopes require --project.
+Use --scope '*' for a full-access key: with --project it is project-owner over
+that project's primitives; without --project it is team-owner over the whole
+team. The full-access scope cannot be combined with other scopes.
 
 The raw key is printed once and cannot be recovered; rotate by creating a
 new key and revoking the old one.
@@ -26,10 +27,9 @@ aic keys create [flags]
 
 ```
       --expires-in string   key lifetime, e.g. 90d, 12h, 30m (default: no expiry; manage by revoke)
-      --full-access         mint a full-access key acting with the team owner's authority (use with care)
   -h, --help                help for create
       --name string         human label for the key
-      --scope stringArray   capability scope, repeatable (e.g. --scope storage:read --scope storage:write)
+      --scope stringArray   capability scope, repeatable (e.g. --scope storage:read --scope storage:write, or --scope '*')
 ```
 
 ### Options inherited from parent commands

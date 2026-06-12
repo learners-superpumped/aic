@@ -124,12 +124,13 @@ func TestKeysCreateCmd_ProjectNotSentUnlessFlagSet(t *testing.T) {
 	}
 }
 
-func TestKeysCreateCmd_FullAccess_Banner_AndMutualExclusion(t *testing.T) {
+func TestKeysCreateCmd_Star_Banner_AndProjectBinding(t *testing.T) {
+	// team-bound "*": banner prints, no project sent
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		var req api.CreateAPIKeyRequest
 		_ = json.NewDecoder(r.Body).Decode(&req)
-		if !req.FullAccess || len(req.Scopes) != 0 {
-			t.Errorf("request = %+v", req)
+		if len(req.Scopes) != 1 || req.Scopes[0] != "*" || req.ProjectID != "" {
+			t.Errorf("team-bound request = %+v", req)
 		}
 		w.WriteHeader(http.StatusCreated)
 		_ = json.NewEncoder(w).Encode(api.APIKey{
@@ -146,25 +147,72 @@ func TestKeysCreateCmd_FullAccess_Banner_AndMutualExclusion(t *testing.T) {
 	cmd.Flags().String("project", "", "")
 	cmd.SetContext(app.NewContext(t.Context(), a))
 	cmd.SetOut(&buf)
-	if err := cmd.Flags().Set("full-access", "true"); err != nil {
+	if err := cmd.Flags().Set("scope", "*"); err != nil {
 		t.Fatal(err)
 	}
 	if err := cmd.RunE(cmd, nil); err != nil {
-		t.Fatalf("create: %v", err)
+		t.Fatalf("team-bound star create: %v", err)
 	}
-	if !strings.Contains(buf.String(), "FULL-ACCESS") {
-		t.Errorf("missing danger banner:\n%s", buf.String())
+	if !strings.Contains(buf.String(), "TEAM FULL-ACCESS") {
+		t.Errorf("missing team danger banner:\n%s", buf.String())
 	}
 
-	// --full-access with --scope must fail client-side before any request
+	// project-bound "*": project is sent, project banner shown
+	var buf2 bytes.Buffer
+	r2, _ := app.NewRenderer("table", &buf2)
+	srv2 := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		var req api.CreateAPIKeyRequest
+		_ = json.NewDecoder(r.Body).Decode(&req)
+		if len(req.Scopes) != 1 || req.Scopes[0] != "*" || req.ProjectID != "proj_1" {
+			t.Errorf("project-bound request = %+v", req)
+		}
+		w.WriteHeader(http.StatusCreated)
+		_ = json.NewEncoder(w).Encode(api.APIKey{
+			ID: "key_3", Scopes: []string{"*"}, ProjectID: "proj_1", Status: "active", Key: "aic_sk_PROJSTAR",
+		})
+	}))
+	defer srv2.Close()
+
+	a2 := &app.App{Client: api.New(srv2.URL, "tok"), Team: "team_1", Project: "proj_1", Out: r2}
 	cmd2 := newKeysCreateCmd()
 	cmd2.Flags().String("project", "", "")
-	cmd2.SetContext(app.NewContext(t.Context(), a))
-	cmd2.SetOut(&buf)
-	_ = cmd2.Flags().Set("full-access", "true")
-	_ = cmd2.Flags().Set("scope", "storage:read")
-	if err := cmd2.RunE(cmd2, nil); err == nil {
-		t.Fatal("want error for --full-access with --scope")
+	cmd2.SetContext(app.NewContext(t.Context(), a2))
+	cmd2.SetOut(&buf2)
+	if err := cmd2.Flags().Set("scope", "*"); err != nil {
+		t.Fatal(err)
+	}
+	if err := cmd2.Flags().Set("project", "proj_1"); err != nil {
+		t.Fatal(err)
+	}
+	if err := cmd2.RunE(cmd2, nil); err != nil {
+		t.Fatalf("project-bound star create: %v", err)
+	}
+	if !strings.Contains(buf2.String(), "PROJECT FULL-ACCESS") {
+		t.Errorf("missing project danger banner:\n%s", buf2.String())
+	}
+}
+
+func TestKeysCreateCmd_Star_RejectsCombinedScopes(t *testing.T) {
+	var buf bytes.Buffer
+	r, _ := app.NewRenderer("table", &buf)
+	a := &app.App{Client: api.New("http://unused", "tok"), Team: "team_1", Out: r}
+
+	cmd := newKeysCreateCmd()
+	cmd.Flags().String("project", "", "")
+	cmd.SetContext(app.NewContext(t.Context(), a))
+	cmd.SetOut(&buf)
+	if err := cmd.Flags().Set("scope", "*"); err != nil {
+		t.Fatal(err)
+	}
+	if err := cmd.Flags().Set("scope", "storage:read"); err != nil {
+		t.Fatal(err)
+	}
+	err := cmd.RunE(cmd, nil)
+	if err == nil {
+		t.Fatal("want error for --scope '*' combined with another scope")
+	}
+	if !strings.Contains(err.Error(), "cannot be combined") {
+		t.Errorf("unexpected error: %v", err)
 	}
 }
 
