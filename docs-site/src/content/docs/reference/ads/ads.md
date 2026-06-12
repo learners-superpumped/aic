@@ -26,6 +26,7 @@ Managed ad campaigns
 ### SEE ALSO
 
 * [aic](/reference/aic/)	 - Run your company on AIC — domains, email, storage, SEO, and ads
+* [aic ads conversions](/reference/ads/conversions/conversions/)	 - Send server-side conversion events (Meta CAPI passthrough)
 * [aic ads delete](/reference/ads/delete/)	 - Delete an ad campaign
 * [aic ads insights](/reference/ads/insights/)	 - Show performance metrics for an ad campaign
 * [aic ads launch](/reference/ads/launch/)	 - Launch an ad campaign

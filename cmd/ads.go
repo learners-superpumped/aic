@@ -6,6 +6,8 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
+	"io"
+	"os"
 	"strconv"
 	"strings"
 	"time"
@@ -109,6 +111,7 @@ func newAdsCmd() *cobra.Command {
 		newAdsResumeCmd(),
 		newAdsDeleteCmd(),
 		newAdsPixelCmd(),
+		newAdsConversionsCmd(),
 	)
 	return cmd
 }
@@ -626,5 +629,53 @@ func newAdsPixelListCmd() *cobra.Command {
 		},
 	}
 	addPaginationFlags(cmd, &limit, &cursor)
+	return cmd
+}
+
+func newAdsConversionsCmd() *cobra.Command {
+	cmd := &cobra.Command{Use: "conversions", Short: "Send server-side conversion events (Meta CAPI passthrough)"}
+	cmd.AddCommand(newAdsConversionsSendCmd())
+	return cmd
+}
+
+func newAdsConversionsSendCmd() *cobra.Command {
+	var file string
+	cmd := &cobra.Command{
+		Use:   "send",
+		Short: "Relay a Meta CAPI events payload through AIC",
+		Long: "Reads a Meta Conversions API JSON body ({\"data\":[...]}) from --file or stdin\n" +
+			"and relays it to Meta for this project's pixel. PII (em, ph, ...) must be\n" +
+			"SHA-256 hashed by you per Meta's rules — AIC forwards the payload as-is.",
+		Args: cobra.NoArgs,
+		RunE: func(cmd *cobra.Command, _ []string) error {
+			var payload []byte
+			var err error
+			if file != "" {
+				payload, err = os.ReadFile(file)
+			} else {
+				payload, err = io.ReadAll(cmd.InOrStdin())
+			}
+			if err != nil {
+				return err
+			}
+			a, err := appFromCmd(cmd)
+			if err != nil {
+				return err
+			}
+			if err := a.RequireProject(); err != nil {
+				return err
+			}
+			status, body, err := a.Client.SendConversions(cmd.Context(), a.Team, a.Project, payload)
+			if err != nil {
+				return err
+			}
+			fmt.Fprintln(cmd.OutOrStdout(), string(body))
+			if status >= 400 {
+				return fmt.Errorf("conversions send failed with status %d", status)
+			}
+			return nil
+		},
+	}
+	cmd.Flags().StringVar(&file, "file", "", "path to a Meta CAPI JSON body (default: stdin)")
 	return cmd
 }

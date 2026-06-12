@@ -86,3 +86,16 @@ func (c *Client) PixelList(ctx context.Context, teamID string, limit int, cursor
 	var out Page[Pixel]
 	return out, c.do(ctx, "GET", listPath(base, limit, cursor, nil), nil, &out)
 }
+
+// SendConversions relays a raw Meta CAPI JSON payload and returns the upstream
+// status + body verbatim (no JSON decoding, no >=400 -> error conversion) so the
+// caller can print Meta's own response.
+func (c *Client) SendConversions(ctx context.Context, teamID, projectID string, payload []byte) (int, []byte, error) {
+	status, _, data, err := c.doRequest(ctx, "POST",
+		adsBasePath(teamID, projectID)+"/meta/conversions",
+		rawBody(payload, "application/json"))
+	if err != nil {
+		return 0, nil, err
+	}
+	return status, data, nil
+}
