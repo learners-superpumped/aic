@@ -260,17 +260,17 @@ type AdUpdateRequest struct {
 
 // AdLaunchRequest is the payload for launching an ad campaign.
 type AdLaunchRequest struct {
-	LaunchToken      string         `json:"launchToken"`
-	Objective        string         `json:"objective"`
-	BudgetType       string         `json:"budgetType"`
-	BudgetNano       int64          `json:"budgetNano"`
-	StartAt          time.Time      `json:"startAt"`
-	EndAt            *time.Time     `json:"endAt,omitempty"`
-	Targeting        AdTargeting    `json:"targeting,omitempty"`
-	Placements       []string       `json:"placements,omitempty"`
-	ProviderOptions  map[string]any `json:"providerOptions,omitempty"`
-	Creative         AdCreative     `json:"creative"`
-	ConversionEvent  string         `json:"conversion_event,omitempty"`
+	LaunchToken     string         `json:"launchToken"`
+	Objective       string         `json:"objective"`
+	BudgetType      string         `json:"budgetType"`
+	BudgetNano      int64          `json:"budgetNano"`
+	StartAt         time.Time      `json:"startAt"`
+	EndAt           *time.Time     `json:"endAt,omitempty"`
+	Targeting       AdTargeting    `json:"targeting,omitempty"`
+	Placements      []string       `json:"placements,omitempty"`
+	ProviderOptions map[string]any `json:"providerOptions,omitempty"`
+	Creative        AdCreative     `json:"creative"`
+	ConversionEvent string         `json:"conversion_event,omitempty"`
 }
 
 // Pixel is a conversion tracking pixel tied to a project.
@@ -314,4 +314,8 @@ type AdCampaign struct {
 	ReservedNano int64     `json:"reserved_nano" yaml:"reserved_nano"`
 	CreatedAt    time.Time `json:"created_at" yaml:"created_at"`
 	UpdatedAt    time.Time `json:"updated_at" yaml:"updated_at"`
+	// Targeting and Placements are populated on single reads (ads status), so the
+	// audience config can be inspected and re-supplied on update. Nil on list.
+	Targeting  *AdTargeting `json:"targeting,omitempty" yaml:"targeting,omitempty"`
+	Placements []string     `json:"placements,omitempty" yaml:"placements,omitempty"`
 }

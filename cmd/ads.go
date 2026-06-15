@@ -99,6 +99,10 @@ func randomToken() string {
 	return hex.EncodeToString(b)
 }
 
+// advantageAudienceHelp is shared by launch and update so the two flags stay in
+// sync.
+const advantageAudienceHelp = "enable Advantage+ audience (Meta auto-expands targeting); off restricts delivery to the exact targeting"
+
 func newAdsCmd() *cobra.Command {
 	cmd := &cobra.Command{Use: "ads", Short: "Managed ad campaigns"}
 	cmd.AddCommand(
@@ -266,7 +270,7 @@ func newAdsLaunchCmd() *cobra.Command {
 	cmd.Flags().StringVar(&customAudience, "custom-audience", "", "Meta custom audience ID to target")
 	cmd.Flags().BoolVar(&noWait, "no-wait", false, "return immediately with the draft instead of waiting for the ad to be prepared")
 	cmd.Flags().StringVar(&conversionEvent, "conversion-event", "", "pixel conversion event to optimize for, e.g. purchase (requires a pixel on the project)")
-	cmd.Flags().BoolVar(&advantageAud, "advantage-audience", false, "enable Advantage+ audience (Meta auto-expands targeting); off restricts delivery to the exact targeting")
+	cmd.Flags().BoolVar(&advantageAud, "advantage-audience", false, advantageAudienceHelp)
 
 	return cmd
 }
@@ -454,7 +458,7 @@ func newAdsUpdateCmd() *cobra.Command {
 	cmd.Flags().StringArrayVar(&interests, "interests", nil, "replace Meta interest IDs (repeatable)")
 	cmd.Flags().StringArrayVar(&placements, "placements", nil, "replace placements (repeatable)")
 	cmd.Flags().StringVar(&endAt, "end", "", "new campaign end time (RFC3339)")
-	cmd.Flags().BoolVar(&advantageAud, "advantage-audience", false, "enable Advantage+ audience (Meta auto-expands targeting); off restricts delivery to the exact targeting")
+	cmd.Flags().BoolVar(&advantageAud, "advantage-audience", false, advantageAudienceHelp)
 	return cmd
 }
 
