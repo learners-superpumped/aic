@@ -73,17 +73,26 @@ func truncate(s string, max int) string {
 	return string(r[:max-1]) + "…"
 }
 
+// parseAgeRange parses "MIN-MAX" (e.g. 25-44) or an open-ended upper bound
+// "MIN-" / "MIN+" (e.g. 24-), which yields max 0 so the targeting omits age_max.
+// An open upper bound is required for Advantage+ audience, which rejects a hard
+// maximum age.
 func parseAgeRange(s string) (min, max int, err error) {
-	if s == "" {
-		return 0, 0, fmt.Errorf("age range must be in the form MIN-MAX, e.g. 25-44")
+	s = strings.TrimSpace(s)
+	if rest, ok := strings.CutSuffix(s, "+"); ok {
+		s = rest + "-"
 	}
+	const form = "age range must be MIN-MAX (e.g. 25-44) or MIN- for no upper bound (e.g. 24-)"
 	parts := strings.SplitN(s, "-", 2)
-	if len(parts) != 2 || parts[0] == "" || parts[1] == "" {
-		return 0, 0, fmt.Errorf("age range must be in the form MIN-MAX, e.g. 25-44")
+	if len(parts) != 2 || parts[0] == "" {
+		return 0, 0, fmt.Errorf("%s", form)
 	}
 	minVal, err := strconv.Atoi(parts[0])
 	if err != nil {
 		return 0, 0, fmt.Errorf("age range min %q is not a number", parts[0])
+	}
+	if parts[1] == "" {
+		return minVal, 0, nil
 	}
 	maxVal, err := strconv.Atoi(parts[1])
 	if err != nil {
@@ -254,7 +263,7 @@ func newAdsLaunchCmd() *cobra.Command {
 	cmd.Flags().StringVar(&budgetType, "budget-type", "daily", "budget type: daily|lifetime")
 	cmd.Flags().Int64Var(&budgetNano, "budget", 0, "budget in nano-dollars (1 USD = 1 000 000 000)")
 	cmd.Flags().StringArrayVar(&geo, "geo", nil, "target country/region codes, e.g. KR US (repeatable)")
-	cmd.Flags().StringVar(&age, "age", "", "target age range, e.g. 25-44")
+	cmd.Flags().StringVar(&age, "age", "", "target age range, e.g. 25-44; use 24- for no upper bound (required with --advantage-audience)")
 	cmd.Flags().StringArrayVar(&interests, "interests", nil, "Meta interest IDs, e.g. 6003107902433 (repeatable)")
 	cmd.Flags().StringArrayVar(&genders, "genders", nil, "target genders: male|female (repeatable)")
 	cmd.Flags().StringVar(&creativeAsset, "creative-asset", "", "storage reference for the creative asset (bucket/key)")
@@ -454,7 +463,7 @@ func newAdsUpdateCmd() *cobra.Command {
 	}
 	cmd.Flags().Int64Var(&budgetNano, "budget", 0, "new budget in nano-dollars")
 	cmd.Flags().StringArrayVar(&geo, "geo", nil, "replace target country/region codes (repeatable)")
-	cmd.Flags().StringVar(&age, "age", "", "replace target age range, e.g. 25-44")
+	cmd.Flags().StringVar(&age, "age", "", "replace target age range, e.g. 25-44; use 24- for no upper bound (required with --advantage-audience)")
 	cmd.Flags().StringArrayVar(&genders, "genders", nil, "replace target genders: male|female (repeatable)")
 	cmd.Flags().StringArrayVar(&interests, "interests", nil, "replace Meta interest IDs (repeatable)")
 	cmd.Flags().StringArrayVar(&placements, "placements", nil, "replace placements (repeatable)")

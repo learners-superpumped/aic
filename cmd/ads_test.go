@@ -76,9 +76,23 @@ func TestAdsLaunchAgeRangeParsed(t *testing.T) {
 }
 
 func TestAdsLaunchAgeRangeInvalidRejected(t *testing.T) {
-	for _, bad := range []string{"", "25", "25-", "-44", "abc-def", "25-abc"} {
+	for _, bad := range []string{"", "25", "-44", "abc-def", "25-abc", "-"} {
 		if _, _, err := parseAgeRange(bad); err == nil {
 			t.Errorf("parseAgeRange(%q) expected error, got nil", bad)
+		}
+	}
+}
+
+// An open-ended upper bound ("24-" / "24+") yields max 0 so the targeting omits
+// age_max — required for Advantage+ audience, which rejects a hard maximum age.
+func TestAdsLaunchAgeRangeOpenUpperBound(t *testing.T) {
+	for _, in := range []string{"24-", "24+", " 24- "} {
+		mn, mx, err := parseAgeRange(in)
+		if err != nil {
+			t.Fatalf("parseAgeRange(%q): %v", in, err)
+		}
+		if mn != 24 || mx != 0 {
+			t.Errorf("parseAgeRange(%q) = %d/%d, want 24/0", in, mn, mx)
 		}
 	}
 }
