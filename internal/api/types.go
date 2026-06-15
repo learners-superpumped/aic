@@ -285,8 +285,9 @@ type Pixel struct {
 type PixelStatus struct {
 	Pixel
 	Stats struct {
-		HasRecentEvents bool   `json:"has_recent_events"`
-		LastFiredAt     string `json:"last_fired_at,omitempty"`
+		HasRecentEvents bool             `json:"has_recent_events"`
+		LastFiredAt     string           `json:"last_fired_at,omitempty"`
+		RecentEvents    map[string]int64 `json:"recent_events,omitempty"`
 	} `json:"stats"`
 }
 

@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"sort"
 	"strconv"
 	"strings"
 	"time"
@@ -605,6 +606,20 @@ func newAdsPixelStatusCmd() *cobra.Command {
 				events = "receiving events"
 			}
 			fmt.Fprintf(cmd.OutOrStdout(), "Pixel: %s\nStatus: %s\nEvents: %s\n", ps.PixelID, ps.Status, events)
+			if ps.Stats.LastFiredAt != "" {
+				fmt.Fprintf(cmd.OutOrStdout(), "Last fired: %s (hour)\n", ps.Stats.LastFiredAt)
+			}
+			if len(ps.Stats.RecentEvents) > 0 {
+				names := make([]string, 0, len(ps.Stats.RecentEvents))
+				for n := range ps.Stats.RecentEvents {
+					names = append(names, n)
+				}
+				sort.Strings(names)
+				fmt.Fprintln(cmd.OutOrStdout(), "Recent activity (~48h):")
+				for _, n := range names {
+					fmt.Fprintf(cmd.OutOrStdout(), "  %-22s %d\n", n, ps.Stats.RecentEvents[n])
+				}
+			}
 			return nil
 		},
 	}
