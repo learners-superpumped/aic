@@ -14,15 +14,17 @@ aic ads update <campaign-id> [flags]
 ### Options
 
 ```
-      --advantage-audience       enable Advantage+ audience (Meta auto-expands targeting); off restricts delivery to the exact targeting
-      --age string               replace target age range, e.g. 25-44; use 24- for no upper bound (required with --advantage-audience)
-      --budget int               new budget in nano-dollars
-      --end string               new campaign end time (RFC3339)
-      --genders stringArray      replace target genders: male|female (repeatable)
-      --geo stringArray          replace target country/region codes (repeatable)
-  -h, --help                     help for update
-      --interests stringArray    replace Meta interest IDs (repeatable)
-      --placements stringArray   replace placements (repeatable)
+      --advantage-audience        enable Advantage+ audience (Meta auto-expands targeting); off restricts delivery to the exact targeting
+      --age string                replace target age range, e.g. 25-44; use 24- for no upper bound (required with --advantage-audience)
+      --budget int                new budget in nano-dollars
+      --custom-audience string    replace Meta custom audience ID to target
+      --end string                new campaign end time (RFC3339)
+      --genders stringArray       replace target genders: male|female (repeatable)
+      --geo stringArray           replace target country/region codes (repeatable)
+  -h, --help                      help for update
+      --interests stringArray     replace Meta interest IDs (repeatable)
+      --placements stringArray    replace placements (repeatable)
+      --provider-options string   provider-specific options as a JSON object
 ```
 
 ### Options inherited from parent commands

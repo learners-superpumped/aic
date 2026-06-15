@@ -219,6 +219,17 @@ type AdTargeting struct {
 	AdvantageAudience bool     `json:"advantageAudience,omitempty"`
 }
 
+// TargetingOption is one match from `aic ads targeting search` — the provider
+// id/key to pass back into targeting plus context to choose it.
+type TargetingOption struct {
+	ID           string   `json:"id" yaml:"id"`
+	Name         string   `json:"name" yaml:"name"`
+	Type         string   `json:"type,omitempty" yaml:"type,omitempty"`
+	AudienceSize int64    `json:"audience_size,omitempty" yaml:"audience_size,omitempty"`
+	Path         []string `json:"path,omitempty" yaml:"path,omitempty"`
+	Description  string   `json:"description,omitempty" yaml:"description,omitempty"`
+}
+
 // AdCreative is the creative content for an ad campaign.
 type AdCreative struct {
 	StorageRef     string `json:"storageRef,omitempty"`
@@ -252,10 +263,11 @@ type AdInsightsSeries struct {
 
 // AdUpdateRequest carries in-place edits to a running campaign.
 type AdUpdateRequest struct {
-	BudgetNano *int64       `json:"budgetNano,omitempty"`
-	Targeting  *AdTargeting `json:"targeting,omitempty"`
-	Placements []string     `json:"placements,omitempty"`
-	EndAt      *time.Time   `json:"endAt,omitempty"`
+	BudgetNano      *int64         `json:"budgetNano,omitempty"`
+	Targeting       *AdTargeting   `json:"targeting,omitempty"`
+	Placements      []string       `json:"placements,omitempty"`
+	ProviderOptions map[string]any `json:"providerOptions,omitempty"`
+	EndAt           *time.Time     `json:"endAt,omitempty"`
 }
 
 // AdLaunchRequest is the payload for launching an ad campaign.

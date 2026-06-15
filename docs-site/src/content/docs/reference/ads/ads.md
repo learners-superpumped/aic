@@ -35,5 +35,6 @@ Managed ad campaigns
 * [aic ads pixel](/reference/ads/pixel/pixel/)	 - Manage conversion tracking pixels
 * [aic ads resume](/reference/ads/resume/)	 - Resume a paused ad campaign
 * [aic ads status](/reference/ads/status/)	 - Show status of an ad campaign
+* [aic ads targeting](/reference/ads/targeting/targeting/)	 - Look up targeting options
 * [aic ads update](/reference/ads/update/)	 - Edit a running ad campaign (budget, targeting, end date)
 

@@ -32,6 +32,18 @@ func (c *Client) GetAd(ctx context.Context, teamID, projectID, campaignID string
 	return out, c.do(ctx, "GET", adsBasePath(teamID, projectID)+"/campaigns/"+url.PathEscape(campaignID), nil, &out)
 }
 
+func (c *Client) SearchTargeting(ctx context.Context, teamID, projectID, dimension, query string, limit int) ([]TargetingOption, error) {
+	q := url.Values{"dimension": {dimension}, "q": {query}}
+	if limit > 0 {
+		q.Set("limit", fmt.Sprintf("%d", limit))
+	}
+	var out struct {
+		Data []TargetingOption `json:"data"`
+	}
+	path := adsBasePath(teamID, projectID) + "/targeting/search?" + q.Encode()
+	return out.Data, c.do(ctx, "GET", path, nil, &out)
+}
+
 func (c *Client) AdInsights(ctx context.Context, teamID, projectID, campaignID string, daily bool, since, until string) (AdInsightsSeries, error) {
 	q := url.Values{}
 	if daily {

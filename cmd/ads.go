@@ -126,7 +126,53 @@ func newAdsCmd() *cobra.Command {
 		newAdsDeleteCmd(),
 		newAdsPixelCmd(),
 		newAdsConversionsCmd(),
+		newAdsTargetingCmd(),
 	)
+	return cmd
+}
+
+func newAdsTargetingCmd() *cobra.Command {
+	cmd := &cobra.Command{Use: "targeting", Short: "Look up targeting options"}
+	cmd.AddCommand(newAdsTargetingSearchCmd())
+	return cmd
+}
+
+func newAdsTargetingSearchCmd() *cobra.Command {
+	var (
+		dimension string
+		query     string
+		limit     int
+	)
+	cmd := &cobra.Command{
+		Use:   "search",
+		Short: "Search the targeting catalog (interests, behaviors, …) for ids to target",
+		Args:  cobra.NoArgs,
+		RunE: func(cmd *cobra.Command, args []string) error {
+			a, err := appFromCmd(cmd)
+			if err != nil {
+				return err
+			}
+			if err := a.RequireProject(); err != nil {
+				return err
+			}
+			if query == "" {
+				return fmt.Errorf("--query is required")
+			}
+			opts, err := a.Client.SearchTargeting(cmd.Context(), a.Team, a.Project, dimension, query, limit)
+			if err != nil {
+				return err
+			}
+			cols := []string{"ID", "NAME", "TYPE", "AUDIENCE", "PATH"}
+			row := func(v any) []string {
+				o := v.(api.TargetingOption)
+				return []string{o.ID, o.Name, o.Type, strconv.FormatInt(o.AudienceSize, 10), strings.Join(o.Path, " > ")}
+			}
+			return a.Out.Print(opts, cols, row)
+		},
+	}
+	cmd.Flags().StringVar(&dimension, "dimension", "interests", "catalog: interests|behaviors|life_events|demographics|locales|geo")
+	cmd.Flags().StringVarP(&query, "query", "q", "", "free-text search query (required)")
+	cmd.Flags().IntVar(&limit, "limit", 25, "max results (1-50)")
 	return cmd
 }
 
@@ -403,14 +449,16 @@ func newAdsInsightsCmd() *cobra.Command {
 
 func newAdsUpdateCmd() *cobra.Command {
 	var (
-		budgetNano   int64
-		geo          []string
-		age          string
-		genders      []string
-		interests    []string
-		placements   []string
-		endAt        string
-		advantageAud bool
+		budgetNano      int64
+		geo             []string
+		age             string
+		genders         []string
+		interests       []string
+		placements      []string
+		endAt           string
+		advantageAud    bool
+		customAudience  string
+		providerOptions string
 	)
 	cmd := &cobra.Command{
 		Use:   "update <campaign-id>",
@@ -436,8 +484,11 @@ func newAdsUpdateCmd() *cobra.Command {
 				}
 				req.EndAt = &t
 			}
-			if f.Changed("geo") || f.Changed("age") || f.Changed("genders") || f.Changed("interests") || f.Changed("advantage-audience") {
+			if f.Changed("geo") || f.Changed("age") || f.Changed("genders") || f.Changed("interests") || f.Changed("advantage-audience") || f.Changed("custom-audience") {
 				tgt := &api.AdTargeting{Geo: geo, Genders: genders, Interests: interests, AdvantageAudience: advantageAud}
+				if customAudience != "" {
+					tgt.CustomAudienceRef = &customAudience
+				}
 				if age != "" {
 					mn, mx, err := parseAgeRange(age)
 					if err != nil {
@@ -450,8 +501,15 @@ func newAdsUpdateCmd() *cobra.Command {
 			if f.Changed("placements") {
 				req.Placements = placements
 			}
-			if req.BudgetNano == nil && req.Targeting == nil && req.EndAt == nil && req.Placements == nil {
-				return fmt.Errorf("nothing to update: pass at least one of --budget/--geo/--age/--genders/--interests/--advantage-audience/--placements/--end")
+			if f.Changed("provider-options") {
+				var opts map[string]any
+				if err := json.Unmarshal([]byte(providerOptions), &opts); err != nil {
+					return fmt.Errorf("--provider-options: %w", err)
+				}
+				req.ProviderOptions = opts
+			}
+			if req.BudgetNano == nil && req.Targeting == nil && req.EndAt == nil && req.Placements == nil && req.ProviderOptions == nil {
+				return fmt.Errorf("nothing to update: pass at least one of --budget/--geo/--age/--genders/--interests/--advantage-audience/--custom-audience/--provider-options/--placements/--end")
 			}
 			c, err := a.Client.UpdateAd(cmd.Context(), a.Team, a.Project, args[0], req)
 			if err != nil {
@@ -469,6 +527,8 @@ func newAdsUpdateCmd() *cobra.Command {
 	cmd.Flags().StringArrayVar(&placements, "placements", nil, "replace placements (repeatable)")
 	cmd.Flags().StringVar(&endAt, "end", "", "new campaign end time (RFC3339)")
 	cmd.Flags().BoolVar(&advantageAud, "advantage-audience", false, advantageAudienceHelp)
+	cmd.Flags().StringVar(&customAudience, "custom-audience", "", "replace Meta custom audience ID to target")
+	cmd.Flags().StringVar(&providerOptions, "provider-options", "", "provider-specific options as a JSON object")
 	return cmd
 }
 
