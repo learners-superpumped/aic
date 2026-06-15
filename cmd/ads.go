@@ -139,6 +139,7 @@ func newAdsLaunchCmd() *cobra.Command {
 		customAudience  string
 		noWait          bool
 		conversionEvent string
+		advantageAud    bool
 	)
 
 	cmd := &cobra.Command{
@@ -199,9 +200,10 @@ func newAdsLaunchCmd() *cobra.Command {
 			}
 
 			targeting := api.AdTargeting{
-				Geo:       geo,
-				Interests: interests,
-				Genders:   genders,
+				Geo:               geo,
+				Interests:         interests,
+				Genders:           genders,
+				AdvantageAudience: advantageAud,
 			}
 			if customAudience != "" {
 				targeting.CustomAudienceRef = &customAudience
@@ -264,6 +266,7 @@ func newAdsLaunchCmd() *cobra.Command {
 	cmd.Flags().StringVar(&customAudience, "custom-audience", "", "Meta custom audience ID to target")
 	cmd.Flags().BoolVar(&noWait, "no-wait", false, "return immediately with the draft instead of waiting for the ad to be prepared")
 	cmd.Flags().StringVar(&conversionEvent, "conversion-event", "", "pixel conversion event to optimize for, e.g. purchase (requires a pixel on the project)")
+	cmd.Flags().BoolVar(&advantageAud, "advantage-audience", false, "enable Advantage+ audience (Meta auto-expands targeting); off restricts delivery to the exact targeting")
 
 	return cmd
 }
@@ -386,13 +389,14 @@ func newAdsInsightsCmd() *cobra.Command {
 
 func newAdsUpdateCmd() *cobra.Command {
 	var (
-		budgetNano int64
-		geo        []string
-		age        string
-		genders    []string
-		interests  []string
-		placements []string
-		endAt      string
+		budgetNano   int64
+		geo          []string
+		age          string
+		genders      []string
+		interests    []string
+		placements   []string
+		endAt        string
+		advantageAud bool
 	)
 	cmd := &cobra.Command{
 		Use:   "update <campaign-id>",
@@ -418,8 +422,8 @@ func newAdsUpdateCmd() *cobra.Command {
 				}
 				req.EndAt = &t
 			}
-			if f.Changed("geo") || f.Changed("age") || f.Changed("genders") || f.Changed("interests") {
-				tgt := &api.AdTargeting{Geo: geo, Genders: genders, Interests: interests}
+			if f.Changed("geo") || f.Changed("age") || f.Changed("genders") || f.Changed("interests") || f.Changed("advantage-audience") {
+				tgt := &api.AdTargeting{Geo: geo, Genders: genders, Interests: interests, AdvantageAudience: advantageAud}
 				if age != "" {
 					mn, mx, err := parseAgeRange(age)
 					if err != nil {
@@ -433,7 +437,7 @@ func newAdsUpdateCmd() *cobra.Command {
 				req.Placements = placements
 			}
 			if req.BudgetNano == nil && req.Targeting == nil && req.EndAt == nil && req.Placements == nil {
-				return fmt.Errorf("nothing to update: pass at least one of --budget/--geo/--age/--genders/--interests/--placements/--end")
+				return fmt.Errorf("nothing to update: pass at least one of --budget/--geo/--age/--genders/--interests/--advantage-audience/--placements/--end")
 			}
 			c, err := a.Client.UpdateAd(cmd.Context(), a.Team, a.Project, args[0], req)
 			if err != nil {
@@ -450,6 +454,7 @@ func newAdsUpdateCmd() *cobra.Command {
 	cmd.Flags().StringArrayVar(&interests, "interests", nil, "replace Meta interest IDs (repeatable)")
 	cmd.Flags().StringArrayVar(&placements, "placements", nil, "replace placements (repeatable)")
 	cmd.Flags().StringVar(&endAt, "end", "", "new campaign end time (RFC3339)")
+	cmd.Flags().BoolVar(&advantageAud, "advantage-audience", false, "enable Advantage+ audience (Meta auto-expands targeting); off restricts delivery to the exact targeting")
 	return cmd
 }
 

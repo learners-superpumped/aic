@@ -14,6 +14,7 @@ aic ads update <campaign-id> [flags]
 ### Options
 
 ```
+      --advantage-audience       enable Advantage+ audience (Meta auto-expands targeting); off restricts delivery to the exact targeting
       --age string               replace target age range, e.g. 25-44
       --budget int               new budget in nano-dollars
       --end string               new campaign end time (RFC3339)

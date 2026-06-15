@@ -216,6 +216,7 @@ type AdTargeting struct {
 	Genders           []string `json:"genders,omitempty"`
 	Interests         []string `json:"interests,omitempty"`
 	CustomAudienceRef *string  `json:"customAudienceRef,omitempty"`
+	AdvantageAudience bool     `json:"advantageAudience,omitempty"`
 }
 
 // AdCreative is the creative content for an ad campaign.

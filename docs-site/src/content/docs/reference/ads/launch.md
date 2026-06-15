@@ -14,6 +14,7 @@ aic ads launch [flags]
 ### Options
 
 ```
+      --advantage-audience        enable Advantage+ audience (Meta auto-expands targeting); off restricts delivery to the exact targeting
       --age string                target age range, e.g. 25-44
       --body string               ad body copy
       --budget int                budget in nano-dollars (1 USD = 1 000 000 000)
